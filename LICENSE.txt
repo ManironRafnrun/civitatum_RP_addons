@@ -1,3 +1,0 @@
-Copyright (c) 2026 Civitatum Team. All rights reserved.
-Permission is granted to use and redistribute unmodified builds in Minecraft modpacks.
-Source is provided for personal modification and reproducible builds.
