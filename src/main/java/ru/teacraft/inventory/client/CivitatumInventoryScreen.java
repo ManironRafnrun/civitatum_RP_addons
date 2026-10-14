@@ -228,10 +228,12 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
             return s.index>=46;
         }).toList();
         for(var slot:menu.slots)place(slot,-10000,-10000);
-        int cols=columns(),cell=pitch(),gx=items.x+(items.width-cols*cell)/2,rows=mainRows();playerRow=Math.max(0,Math.min(playerRow,(27+cols-1)/cols-rows));
+        int cols=columns(),cell=pitch(),gx=items.x+(items.width-cols*cell)/2,rows=mainRows(),totalRows=(27+cols-1)/cols;
+        playerRow=Math.max(0,Math.min(playerRow,totalRows-rows));
         for(var slot:menu.slots)if(slot.container==player.getInventory()){
-            int i=slot.getContainerSlot(),r=(i-9)/cols-playerRow;
-            if(i>=9&&i<36&&(!extras||kind==CompatBridge.Kind.BACKPACK||kind==CompatBridge.Kind.BLOCK)&&r>=0&&r<rows)assign(slot,items,gx+(i-9)%cols*cell,gridTop()+r*cell);
+            int i=slot.getContainerSlot(),r=(i-9)%totalRows-playerRow;
+            // Fill each column from top to bottom; menu and storage IDs stay intact.
+            if(i>=9&&i<36&&(!extras||kind==CompatBridge.Kind.BACKPACK||kind==CompatBridge.Kind.BLOCK)&&r>=0&&r<rows)assign(slot,items,gx+(i-9)/totalRows*cell,gridTop()+r*cell);
             else if(i>=0&&i<9)assign(slot,items,items.x+(items.width-9*Math.round(18*hotbarScale()))/2+i*Math.round(18*hotbarScale()),hotbarTop());
             else if(i>=36&&i<=39&&equipment.visible)assign(slot,equipment,equipment.x+10,equipment.y+34+(39-i)*22);
             else if(i==40&&equipment.visible)assign(slot,equipment,equipment.x+equipment.width-28,equipment.y+100);
@@ -240,9 +242,9 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         if(kind==CompatBridge.Kind.BLOCK){
             if(CompatBridge.storageGrid(menu)){
                 int blockCols=menu instanceof net.minecraft.world.inventory.HopperMenu?5:menu instanceof net.minecraft.world.inventory.DispenserMenu?3:9;
-                blockCols=Math.max(1,Math.min(blockCols,(container.width-22)/cell));int visible=Math.max(1,(container.height-48)/cell),total=(extraSlots.size()+blockCols-1)/blockCols;
+                blockCols=Math.max(1,Math.min(blockCols,(container.width-22)/cell));int visible=Math.max(1,(container.height-48)/cell),total=Math.max(1,(extraSlots.size()+blockCols-1)/blockCols);
                 blockRow=Math.max(0,Math.min(blockRow,total-visible));
-                for(int i=0;i<extraSlots.size();i++){int r=i/blockCols-blockRow;if(r>=0&&r<visible)assign(extraSlots.get(i),container,container.x+(container.width-blockCols*cell)/2+i%blockCols*cell,container.y+30+r*cell);}
+                for(int i=0;i<extraSlots.size();i++){int r=i%total-blockRow;if(r>=0&&r<visible)assign(extraSlots.get(i),container,container.x+(container.width-blockCols*cell)/2+i/total*cell,container.y+30+r*cell);}
             }else{
                 int minX=10000,maxX=0,minY=10000,maxY=0;
                 for(var slot:extraSlots){int[] xy=original.get(slot);minX=Math.min(minX,xy[0]);maxX=Math.max(maxX,xy[0]+16);minY=Math.min(minY,xy[1]);maxY=Math.max(maxY,xy[1]+16);}
@@ -256,9 +258,9 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         }else if(extras||kind==CompatBridge.Kind.BACKPACK){
             int columns=Math.min(cols,kind==CompatBridge.Kind.BACKPACK&&extraSlots.size()==24?8:9);
             int top=kind==CompatBridge.Kind.BACKPACK?bagTop():gridTop();
-            int visible=Math.max(1,(hotbarTop()-10-top)/cell),total=(extraSlots.size()+columns-1)/columns;
+            int visible=Math.max(1,(hotbarTop()-10-top)/cell),total=Math.max(1,(extraSlots.size()+columns-1)/columns);
             extraRow=Math.max(0,Math.min(extraRow,total-visible));
-            for(int i=0;i<extraSlots.size();i++){int r=i/columns-extraRow;if(r>=0&&r<visible)assign(extraSlots.get(i),items,items.x+(items.width-columns*cell)/2+i%columns*cell,top+r*cell);}
+            for(int i=0;i<extraSlots.size();i++){int r=i%total-extraRow;if(r>=0&&r<visible)assign(extraSlots.get(i),items,items.x+(items.width-columns*cell)/2+i/total*cell,top+r*cell);}
         }
         if(equipment.visible&&hasCraftGrid()){
             int cy=equipment.y+equipment.height-53;
