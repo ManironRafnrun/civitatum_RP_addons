@@ -40,7 +40,7 @@ public final class InventorySmoke {
         } else if(phase==2 && mc.player!=null && mc.screen==null) {
             mc.options.guiScale().set(2);mc.resizeDisplay();
             mc.options.languageCode="ru_ru";mc.getLanguageManager().setSelected("ru_ru");mc.reloadResourcePacks();
-            InventoryPreferences.get().enabled=true;InventoryPreferences.get().panels.clear();
+            InventoryPreferences.get().enabled=true;InventoryPreferences.get().panels.clear();InventoryPreferences.get().slotScale=1;
             mc.getSingleplayerServer().execute(()->{
                 var p=mc.getSingleplayerServer().getPlayerList().getPlayer(mc.player.getUUID());
                 p.setGameMode(GameType.SURVIVAL);p.getInventory().clearContent();p.getAbilities().invulnerable=true;
@@ -58,6 +58,12 @@ public final class InventorySmoke {
         } else if(phase==4 && mc.screen instanceof CivitatumInventoryScreen screen && ticks>40) {
             if(Boolean.getBoolean("inventory.smoke.compatOnly")){next(29);return;}
             check(screen.getMenu().slots.get(9).getItem().getCount()==32,"server inventory seeded");
+            var first=screen.getMenu().slots.get(9);var second=screen.getMenu().slots.get(10);
+            var third=screen.getMenu().slots.get(11);var fourth=screen.getMenu().slots.get(12);
+            check(first.x==second.x&&second.x==third.x&&first.y<second.y&&second.y<third.y,"inventory fills the first column vertically");
+            check(fourth.x>first.x&&fourth.y==first.y,"fourth inventory slot starts the next column");
+            for(var slot:screen.getMenu().slots)if(slot.container==mc.player.getInventory()&&slot.getContainerSlot()>=9&&slot.getContainerSlot()<36)
+                check(screen.pickSlot(slot.x+8,slot.y+8)==slot,"vertical grid hit testing uses real slot "+slot.getContainerSlot());
             capture(mc,"01-inventory.png");
             var p=screen.itemsPanel();
             screen.mouseClicked(p.x+20,p.y+56,0);screen.mouseReleased(p.x+20,p.y+56,0);
@@ -109,6 +115,12 @@ public final class InventorySmoke {
         } else if(phase==150 && mc.screen instanceof CivitatumInventoryScreen screen && ticks>30) {
             check(screen.width==320 && screen.height==240,"minimum GUI resolution 320x240");
             checkBounds(screen);capture(mc,"05-small.png");
+            InventoryPreferences.get().slotScale=2;screen.containerTick();
+            var first=screen.getMenu().slots.get(9);var second=screen.getMenu().slots.get(10);int fx=first.x,fy=first.y;
+            check(first.x>=0&&second.x<0,"large vertical slots clip rows beyond the viewport");
+            screen.mouseScrolled(fx+8,fy+8,0,-1);
+            check(second.x==fx&&second.y==fy&&first.x<0,"scroll reveals the next slot in the same column");
+            screen.mouseScrolled(fx+8,fy+8,0,1);InventoryPreferences.get().slotScale=1;screen.containerTick();
             screen.equipmentPanel().x=screen.itemsPanel().x+4;
             click(screen,35,12,0);checkBounds(screen);
             check(screen.equipmentPanel().visible,"equipment remains accessible at minimum GUI scale");
