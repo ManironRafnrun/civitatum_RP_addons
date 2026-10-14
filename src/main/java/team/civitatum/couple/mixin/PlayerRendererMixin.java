@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import team.civitatum.couple.CarryGeometry;
 import team.civitatum.couple.CarryHooks;
+import team.civitatum.couple.core.CarryPose;
 
 @Mixin(PlayerRenderer.class)
 public abstract class PlayerRendererMixin {
@@ -23,9 +24,12 @@ public abstract class PlayerRendererMixin {
         if (carrier == null) return;
         float bodyYaw = Mth.rotLerp(partial, carrier.yBodyRotO, carrier.yBodyRot);
         pose.mulPose(Axis.YP.rotationDegrees(180.0F - bodyYaw));
-        pose.translate(0, 0.28, 0);
-        pose.mulPose(Axis.ZP.rotationDegrees(-65.0F));
-        pose.translate(0, -0.82, 0);
+        pose.translate(0, CarryPose.LIFT, 0);
+        pose.mulPose(Axis.ZP.rotationDegrees(CarryPose.BANK_DEGREES));
+        // Turn the passenger onto their back before banking across the arms.
+        // Reversing these rotations makes the body lean forwards instead.
+        pose.mulPose(Axis.YP.rotationDegrees(CarryPose.LOCAL_YAW_DEGREES));
+        pose.translate(0, -CarryPose.PIVOT_HEIGHT, 0);
         ci.cancel();
     }
     @Inject(method = "getRenderOffset(Lnet/minecraft/client/player/AbstractClientPlayer;F)Lnet/minecraft/world/phys/Vec3;", at = @At("HEAD"), cancellable = true)

@@ -129,6 +129,14 @@ public final class ClientSmoke {
             capture(mc,"04-carried-first-person.png");mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);mc.player.setYRot(180);mc.player.setXRot(9);next(12);
         } else if(phase==12&&ticks>25){
             capture(mc,"05-carried-third-person.png");
+            verifyCarryPose(mc);
+            mc.player.setYRot(90);mc.player.setXRot(7);next(22);
+        } else if(phase==22&&ticks>20){
+            capture(mc,"11-carried-side.png");mc.player.setYRot(0);next(23);
+        } else if(phase==23&&ticks>20){
+            capture(mc,"12-carried-back.png");mc.player.setYRot(270);next(24);
+        } else if(phase==24&&ticks>20){
+            capture(mc,"13-carried-other-side.png");
             key(mc,true,0xffe1);next(18);
         } else if(phase==18&&!CarryHooks.occupied(mc.player)&&!mc.player.isPassenger()&&ticks>10){
             key(mc,false,0xffe1);check(true,"Shift exits carrying through the real client");
@@ -174,6 +182,38 @@ public final class ClientSmoke {
         }
     }
     private void server(Minecraft mc,Runnable run){mc.getSingleplayerServer().execute(()->{try{run.run();}catch(Throwable e){serverFailure="COUPLE SERVER CHECK: "+e;e.printStackTrace();}});}
+    private void verifyCarryPose(Minecraft mc) {
+        var carried=mc.player;var carrier=CarryHooks.carrier(carried);
+        float oldYaw=carrier.yBodyRot,oldPrevious=carrier.yBodyRotO;
+        try {
+            var rotation=net.minecraft.client.renderer.entity.player.PlayerRenderer.class.getDeclaredMethod("setupRotations",
+                net.minecraft.client.player.AbstractClientPlayer.class,com.mojang.blaze3d.vertex.PoseStack.class,float.class,float.class,float.class,float.class);
+            var scaling=net.minecraft.client.renderer.entity.player.PlayerRenderer.class.getDeclaredMethod("scale",
+                net.minecraft.client.player.AbstractClientPlayer.class,com.mojang.blaze3d.vertex.PoseStack.class,float.class);
+            rotation.setAccessible(true);scaling.setAccessible(true);
+            for(var entry:mc.getEntityRenderDispatcher().getSkinMap().entrySet()) {
+                var renderer=(net.minecraft.client.renderer.entity.player.PlayerRenderer)entry.getValue();
+                var model=renderer.getModel();
+                for(float yaw:new float[]{0,90,180,270}) {
+                    carrier.yBodyRot=carrier.yBodyRotO=yaw;
+                    model.setupAnim(carried,0,0,0,135,-35);
+                    var pose=new com.mojang.blaze3d.vertex.PoseStack();
+                    float scale=carried.getScale();pose.scale(scale,scale,scale);
+                    rotation.invoke(renderer,carried,pose,0F,yaw,1F,scale);
+                    pose.scale(-1,-1,1);scaling.invoke(renderer,carried,pose,1F);pose.translate(0,-1.501,0);
+                    pose.pushPose();model.body.translateAndRotate(pose);
+                    var face=pose.last().pose().transformDirection(new org.joml.Vector3f(0,0,-1)).normalize();pose.popPose();
+                    check(face.y()>0.8,"face up for "+entry.getKey()+" carrier yaw "+yaw);
+                    pose.pushPose();model.head.translateAndRotate(pose);
+                    var eye=pose.last().pose().transformPosition(new org.joml.Vector3f(0,-4F/16F,-4.1F/16F));pose.popPose();
+                    var actual=CarryGeometry.anchor(carrier,1).add(eye.x,eye.y,eye.z);
+                    check(actual.distanceTo(CarryGeometry.head(carried,carrier,1))<0.0001,"camera matches rendered head for "+entry.getKey()+" yaw "+yaw);
+                    check(Math.abs(model.rightArm.y-model.rightArm.getInitialPose().y)<0.001,"native arm pivot preserved for "+entry.getKey());
+                }
+            }
+        } catch(ReflectiveOperationException e) {throw new IllegalStateException("carry pose verification failed",e);}
+        finally {carrier.yBodyRot=oldYaw;carrier.yBodyRotO=oldPrevious;}
+    }
     private void next(int p){phase=p;ticks=0;System.out.println("COUPLE_CLIENT_NEXT "+p);}
     private void check(boolean c,String name){if(!c)throw new IllegalStateException("COUPLE_CLIENT_FAIL "+name);System.out.println("COUPLE_CLIENT_PASS "+name);}
     private void capture(Minecraft mc,String name){var dir=new java.io.File("../build/client-captures");dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,mc.getMainRenderTarget(),c->System.out.println("COUPLE_CAPTURE "+name));}

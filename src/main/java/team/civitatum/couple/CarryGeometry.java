@@ -4,6 +4,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import team.civitatum.couple.core.CarryPose;
 
 /** Shared anchor, deliberately independent of the passenger's look direction. */
 public final class CarryGeometry {
@@ -25,7 +26,9 @@ public final class CarryGeometry {
 
     public static Vec3 head(Player carried, Player carrier, float partialTick) {
         float yaw = Mth.rotLerp(partialTick, carrier.yBodyRotO, carrier.yBodyRot);
-        return anchor(carrier, partialTick).add(local(yaw, 0.745 * carried.getScale(), 0.65 * carried.getScale(), 0.10 * carried.getScale()));
+        CarryPose.Point eye = CarryPose.eye();
+        double scale = carried.getScale();
+        return anchor(carrier, partialTick).add(local(yaw, eye.right() * scale, eye.up() * scale, eye.forward() * scale));
     }
 
     /** right / up / forward in the carrier's coordinate frame. */

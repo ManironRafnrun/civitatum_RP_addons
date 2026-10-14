@@ -4,6 +4,7 @@ import java.util.UUID;
 import team.civitatum.couple.core.Interaction;
 import team.civitatum.couple.core.RequestBook;
 import team.civitatum.couple.core.RadialLayout;
+import team.civitatum.couple.core.CarryPose;
 
 public final class LogicChecks {
     private static int checks;
@@ -40,6 +41,16 @@ public final class LogicChecks {
         }
         check(RadialLayout.select(0,0,40,100,3)==-1,"center cancels");
         check(RadialLayout.select(1000,0,40,100,3)==-1,"outside wheel cancels");
+        var front=CarryPose.modelDirection(0,0,-1);
+        check(front.up()>0.85,"passenger lies face up instead of on their side");
+        check(Math.abs(front.forward())<0.01,"body does not retain the carrier's forward facing");
+        var head=CarryPose.modelPoint(0,-0.25,0);
+        var hip=CarryPose.modelPoint(0,0.75,0);
+        check(head.right()-hip.right()>0.8,"passenger lies across the carrier's arms");
+        check(head.up()>hip.up(),"head is raised above the hips");
+        var eye=CarryPose.eye();
+        check(eye.up()>head.up(),"eyes face up above the head center");
+        check(Math.abs(eye.right()-head.right())<0.15&&Math.abs(eye.forward())<0.15,"camera stays at the posed head");
         System.out.println("COUPLE_LOGIC_PASS checks="+checks);
     }
     private static void check(boolean condition,String name) { if(!condition) throw new AssertionError(name);checks++; }
