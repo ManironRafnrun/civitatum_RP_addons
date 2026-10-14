@@ -98,8 +98,13 @@ public final class ClientSmoke {
             });next(3);
         } else if(phase==3&&partner!=null&&mc.level.getPlayerByUUID(partner)!=null&&ticks>80){
             check(mc.player.getBbHeight()>1.7,"normal player dimensions before carry");
-            mc.player.setYRot(0);mc.player.setXRot(0);next(4);
-        } else if(phase==4&&ticks>10){key(mc,true);next(5);}
+            aimAtPartner(mc);next(4);
+        } else if(phase==4&&ticks>10){
+            aimAtPartner(mc);
+            if(mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult h&&h.getEntity().getUUID().equals(partner)){
+                key(mc,true);next(5);
+            }else if(ticks>100)throw new IllegalStateException("COUPLE_CLIENT_FAIL target not aimed: self="+mc.player.position()+" partner="+mc.level.getPlayerByUUID(partner).position()+" hit="+mc.hitResult);
+        }
         else if(phase==5&&mc.screen instanceof RadialScreen&&ticks>12){
             cursor(mc,mc.getWindow().getScreenWidth()/2.0,mc.getWindow().getScreenHeight()/2.0-145);next(6);
         } else if(phase==6&&ticks>15){
@@ -129,6 +134,14 @@ public final class ClientSmoke {
             capture(mc,"04-carried-first-person.png");mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);mc.player.setYRot(180);mc.player.setXRot(9);next(12);
         } else if(phase==12&&ticks>25){
             capture(mc,"05-carried-third-person.png");
+            verifyCarryPose(mc);
+            mc.player.setYRot(90);mc.player.setXRot(7);next(22);
+        } else if(phase==22&&ticks>20){
+            capture(mc,"11-carried-side.png");mc.player.setYRot(0);next(23);
+        } else if(phase==23&&ticks>20){
+            capture(mc,"12-carried-back.png");mc.player.setYRot(270);next(24);
+        } else if(phase==24&&ticks>20){
+            capture(mc,"13-carried-other-side.png");
             key(mc,true,0xffe1);next(18);
         } else if(phase==18&&!CarryHooks.occupied(mc.player)&&!mc.player.isPassenger()&&ticks>10){
             key(mc,false,0xffe1);check(true,"Shift exits carrying through the real client");
@@ -141,6 +154,9 @@ public final class ClientSmoke {
         } else if(phase==13&&CarryHooks.carrying(mc.player)&&ticks>30){
             check(!mc.player.isPassenger(),"carrier retains own movement");
             check(mc.level.getPlayerByUUID(partner).getItemBySlot(EquipmentSlot.LEGS).is(Items.IRON_LEGGINGS),"passenger armor reaches the real client");capture(mc,"06-carrying-armor.png");
+            next(25);
+        } else if(phase==25&&ticks>15){
+            capture(mc,"14-carrying-armor.png");
             mc.setScreen(new RadialScreen(mc.level.getPlayerByUUID(partner)));
             mc.screen.mouseClicked(mc.screen.width/2.0+65,mc.screen.height/2.0+37,0);
             check(mc.screen==null,"click selects the current sector before another render");next(14);
@@ -170,13 +186,51 @@ public final class ClientSmoke {
             cursor(mc,480,360);key(mc,false);next(21);
         } else if(phase==21&&ticks>15){
             check(mc.screen==null,"compact radial center cancels on key release");
-            System.out.println("COUPLE_CLIENT_ALL_PASS");mc.stop();
+            phase=99;System.out.println("COUPLE_CLIENT_ALL_PASS");mc.stop();
         }
     }
     private void server(Minecraft mc,Runnable run){mc.getSingleplayerServer().execute(()->{try{run.run();}catch(Throwable e){serverFailure="COUPLE SERVER CHECK: "+e;e.printStackTrace();}});}
+    private void aimAtPartner(Minecraft mc){
+        var delta=mc.level.getPlayerByUUID(partner).getEyePosition().subtract(mc.player.getEyePosition());
+        mc.options.setCameraType(CameraType.FIRST_PERSON);
+        mc.player.setYRot((float)Math.toDegrees(Math.atan2(-delta.x,delta.z)));
+        mc.player.setXRot((float)-Math.toDegrees(Math.atan2(delta.y,Math.sqrt(delta.x*delta.x+delta.z*delta.z))));
+    }
+    private void verifyCarryPose(Minecraft mc) {
+        var carried=mc.player;var carrier=CarryHooks.carrier(carried);
+        float oldYaw=carrier.yBodyRot,oldPrevious=carrier.yBodyRotO;
+        try {
+            var rotation=net.minecraft.client.renderer.entity.player.PlayerRenderer.class.getDeclaredMethod("setupRotations",
+                net.minecraft.client.player.AbstractClientPlayer.class,com.mojang.blaze3d.vertex.PoseStack.class,float.class,float.class,float.class,float.class);
+            var scaling=net.minecraft.client.renderer.entity.player.PlayerRenderer.class.getDeclaredMethod("scale",
+                net.minecraft.client.player.AbstractClientPlayer.class,com.mojang.blaze3d.vertex.PoseStack.class,float.class);
+            rotation.setAccessible(true);scaling.setAccessible(true);
+            for(var entry:mc.getEntityRenderDispatcher().getSkinMap().entrySet()) {
+                var renderer=(net.minecraft.client.renderer.entity.player.PlayerRenderer)entry.getValue();
+                var model=renderer.getModel();
+                for(float yaw:new float[]{0,90,180,270}) {
+                    carrier.yBodyRot=carrier.yBodyRotO=yaw;
+                    model.setupAnim(carried,0,0,0,135,-35);
+                    var pose=new com.mojang.blaze3d.vertex.PoseStack();
+                    float scale=carried.getScale();pose.scale(scale,scale,scale);
+                    rotation.invoke(renderer,carried,pose,0F,yaw,1F,scale);
+                    pose.scale(-1,-1,1);scaling.invoke(renderer,carried,pose,1F);pose.translate(0,-1.501,0);
+                    pose.pushPose();model.body.translateAndRotate(pose);
+                    var face=pose.last().pose().transformDirection(new org.joml.Vector3f(0,0,-1)).normalize();pose.popPose();
+                    check(face.y()>0.8,"face up for "+entry.getKey()+" carrier yaw "+yaw);
+                    pose.pushPose();model.head.translateAndRotate(pose);
+                    var eye=pose.last().pose().transformPosition(new org.joml.Vector3f(0,-4F/16F,-4.1F/16F));pose.popPose();
+                    var actual=CarryGeometry.anchor(carrier,1).add(eye.x,eye.y,eye.z);
+                    check(actual.distanceTo(CarryGeometry.head(carried,carrier,1))<0.0001,"camera matches rendered head for "+entry.getKey()+" yaw "+yaw);
+                    check(Math.abs(model.rightArm.y-model.rightArm.getInitialPose().y)<0.001,"native arm pivot preserved for "+entry.getKey());
+                }
+            }
+        } catch(ReflectiveOperationException e) {throw new IllegalStateException("carry pose verification failed",e);}
+        finally {carrier.yBodyRot=oldYaw;carrier.yBodyRotO=oldPrevious;}
+    }
     private void next(int p){phase=p;ticks=0;System.out.println("COUPLE_CLIENT_NEXT "+p);}
     private void check(boolean c,String name){if(!c)throw new IllegalStateException("COUPLE_CLIENT_FAIL "+name);System.out.println("COUPLE_CLIENT_PASS "+name);}
-    private void capture(Minecraft mc,String name){var dir=new java.io.File("../build/client-captures");dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,mc.getMainRenderTarget(),c->System.out.println("COUPLE_CAPTURE "+name));}
+    private void capture(Minecraft mc,String name){var dir=new java.io.File("../build/client-captures");dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,mc.getMainRenderTarget(),c->System.out.println("COUPLE_CAPTURE "+name+" "+c.getString()));}
     private void cursor(Minecraft mc,double x,double y){
         GLFW.glfwSetCursorPos(mc.getWindow().getWindow(),x,y);
         try{var method=net.minecraft.client.MouseHandler.class.getDeclaredMethod("onMove",long.class,double.class,double.class);method.setAccessible(true);method.invoke(mc.mouseHandler,mc.getWindow().getWindow(),x,y);}
