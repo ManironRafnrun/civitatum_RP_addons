@@ -98,8 +98,13 @@ public final class ClientSmoke {
             });next(3);
         } else if(phase==3&&partner!=null&&mc.level.getPlayerByUUID(partner)!=null&&ticks>80){
             check(mc.player.getBbHeight()>1.7,"normal player dimensions before carry");
-            mc.player.setYRot(0);mc.player.setXRot(0);next(4);
-        } else if(phase==4&&ticks>10){key(mc,true);next(5);}
+            aimAtPartner(mc);next(4);
+        } else if(phase==4&&ticks>10){
+            aimAtPartner(mc);
+            if(mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult h&&h.getEntity().getUUID().equals(partner)){
+                key(mc,true);next(5);
+            }else if(ticks>100)throw new IllegalStateException("COUPLE_CLIENT_FAIL target not aimed: self="+mc.player.position()+" partner="+mc.level.getPlayerByUUID(partner).position()+" hit="+mc.hitResult);
+        }
         else if(phase==5&&mc.screen instanceof RadialScreen&&ticks>12){
             cursor(mc,mc.getWindow().getScreenWidth()/2.0,mc.getWindow().getScreenHeight()/2.0-145);next(6);
         } else if(phase==6&&ticks>15){
@@ -149,6 +154,9 @@ public final class ClientSmoke {
         } else if(phase==13&&CarryHooks.carrying(mc.player)&&ticks>30){
             check(!mc.player.isPassenger(),"carrier retains own movement");
             check(mc.level.getPlayerByUUID(partner).getItemBySlot(EquipmentSlot.LEGS).is(Items.IRON_LEGGINGS),"passenger armor reaches the real client");capture(mc,"06-carrying-armor.png");
+            next(25);
+        } else if(phase==25&&ticks>15){
+            capture(mc,"14-carrying-armor.png");
             mc.setScreen(new RadialScreen(mc.level.getPlayerByUUID(partner)));
             mc.screen.mouseClicked(mc.screen.width/2.0+65,mc.screen.height/2.0+37,0);
             check(mc.screen==null,"click selects the current sector before another render");next(14);
@@ -178,10 +186,16 @@ public final class ClientSmoke {
             cursor(mc,480,360);key(mc,false);next(21);
         } else if(phase==21&&ticks>15){
             check(mc.screen==null,"compact radial center cancels on key release");
-            System.out.println("COUPLE_CLIENT_ALL_PASS");mc.stop();
+            phase=99;System.out.println("COUPLE_CLIENT_ALL_PASS");mc.stop();
         }
     }
     private void server(Minecraft mc,Runnable run){mc.getSingleplayerServer().execute(()->{try{run.run();}catch(Throwable e){serverFailure="COUPLE SERVER CHECK: "+e;e.printStackTrace();}});}
+    private void aimAtPartner(Minecraft mc){
+        var delta=mc.level.getPlayerByUUID(partner).getEyePosition().subtract(mc.player.getEyePosition());
+        mc.options.setCameraType(CameraType.FIRST_PERSON);
+        mc.player.setYRot((float)Math.toDegrees(Math.atan2(-delta.x,delta.z)));
+        mc.player.setXRot((float)-Math.toDegrees(Math.atan2(delta.y,Math.sqrt(delta.x*delta.x+delta.z*delta.z))));
+    }
     private void verifyCarryPose(Minecraft mc) {
         var carried=mc.player;var carrier=CarryHooks.carrier(carried);
         float oldYaw=carrier.yBodyRot,oldPrevious=carrier.yBodyRotO;
@@ -216,7 +230,7 @@ public final class ClientSmoke {
     }
     private void next(int p){phase=p;ticks=0;System.out.println("COUPLE_CLIENT_NEXT "+p);}
     private void check(boolean c,String name){if(!c)throw new IllegalStateException("COUPLE_CLIENT_FAIL "+name);System.out.println("COUPLE_CLIENT_PASS "+name);}
-    private void capture(Minecraft mc,String name){var dir=new java.io.File("../build/client-captures");dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,mc.getMainRenderTarget(),c->System.out.println("COUPLE_CAPTURE "+name));}
+    private void capture(Minecraft mc,String name){var dir=new java.io.File("../build/client-captures");dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,mc.getMainRenderTarget(),c->System.out.println("COUPLE_CAPTURE "+name+" "+c.getString()));}
     private void cursor(Minecraft mc,double x,double y){
         GLFW.glfwSetCursorPos(mc.getWindow().getWindow(),x,y);
         try{var method=net.minecraft.client.MouseHandler.class.getDeclaredMethod("onMove",long.class,double.class,double.class);method.setAccessible(true);method.invoke(mc.mouseHandler,mc.getWindow().getWindow(),x,y);}
