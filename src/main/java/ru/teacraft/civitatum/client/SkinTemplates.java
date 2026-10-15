@@ -36,8 +36,8 @@ public final class SkinTemplates {
                 String path="textures/character/eyes/pmc_eyes/"+model;
                 var colors=new LinkedHashMap<String,Integer>();colors.put(path+"/mask_iris.png",c.eyesOriginal?-1:race.color("eyes",c.eyes));
                 colors.put(path+"/mask_upper_contour.png",hairColor(c));
-                AppearanceTextures.paint(image,path+"/original.png",path+"/neutral.png",colors,c.eyeHeight);
-                if(race.id.equals("jahar"))for(int x:new int[]{9,10,13,14})set(emission,x,13+c.eyeHeight,0xFFFFFFFF);
+                AppearanceTextures.paint(image,path+"/original.png",path+"/neutral.png",colors,-c.eyeHeight);
+                if(race.id.equals("jahar"))for(int x:new int[]{9,10,13,14})set(emission,x,13-c.eyeHeight,0xFFFFFFFF);
             }
             if(!c.naked && c.wardrobeEnabled)for(String group:AppearanceCatalog.GROUPS) {
                 var choice=c.wardrobe.get(group);var asset=choice==null?null:AppearanceCatalog.clothing(choice.asset);

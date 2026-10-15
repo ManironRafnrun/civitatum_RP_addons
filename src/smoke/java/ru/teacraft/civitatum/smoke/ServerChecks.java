@@ -131,4 +131,36 @@ public final class ServerChecks {
         h.assertValueEqual(p.getData(Civitatum.STATE).cooldownUntil(),999999L,"reset keeps cooldown");
         h.succeed();
     }
+    @GameTest(template="empty",timeoutTicks=100)
+    public static void birthsignReplacementAndDecorativeToggle(GameTestHelper h) {
+        var p=h.makeMockServerPlayerInLevel();var c=RaceCatalog.defaults("human","female");c.birthsign="lady";
+        p.setData(Civitatum.STATE,new RaceState(c,0,0));RaceService.apply(p);RaceService.apply(p);
+        h.assertTrue(p.getMaxHealth()==24,"Lady health must apply exactly once");
+        var armor=new ItemStack(Items.IRON_CHESTPLATE);p.setItemSlot(EquipmentSlot.CHEST,armor);float before=(float)p.getAttributeValue(Attributes.ARMOR);
+        RaceService.naked(p,true);h.assertTrue(p.getData(Civitatum.STATE).character().naked,"naked state");
+        h.assertTrue(p.getItemBySlot(EquipmentSlot.CHEST)==armor && p.getAttributeValue(Attributes.ARMOR)==before,"decorative toggle must preserve equipment");
+        c=p.getData(Civitatum.STATE).character().copy();c.birthsign="thief";p.setData(Civitatum.STATE,new RaceState(c,0,0));RaceService.apply(p);
+        h.assertTrue(p.getMaxHealth()==20 && p.getAttributeValue(Attributes.LUCK)==1,"old sign removed and new sign applied");
+        h.succeed();
+    }
+    private static long editToken(net.minecraft.server.level.ServerPlayer p) {
+        try {var field=RaceService.class.getDeclaredField("EDITS");field.setAccessible(true);var edits=(java.util.Map<?,?>)field.get(null);var session=edits.get(p.getUUID());var method=session.getClass().getDeclaredMethod("token");method.setAccessible(true);return (long)method.invoke(session);}
+        catch(ReflectiveOperationException e){throw new IllegalStateException(e);}
+    }
+    @GameTest(template="empty",timeoutTicks=100)
+    public static void mirrorRejectsBodyChangesAndConsumesOnlyOnValidSave(GameTestHelper h) {
+        var p=survival(h);h.assertTrue(!p.isCreative(),"survival player required for item consumption");var c=RaceCatalog.defaults("human","female");p.setData(Civitatum.STATE,new RaceState(c,0,0));
+        p.getInventory().add(new ItemStack(Civitatum.MIRROR.get()));RaceService.openCosmetic(p,Civitatum.MIRROR.get());long token=editToken(p);
+        var forged=c.copy();forged.height=1.65f;RaceService.save(p,token,forged.json());
+        h.assertTrue(p.getData(Civitatum.STATE).character().height==c.height,"body change denied");h.assertTrue(p.getInventory().contains(new ItemStack(Civitatum.MIRROR.get())),"rejected edit must not consume item");
+        var valid=c.copy();valid.hairAsset="ponytail_streak";valid.hairDecor1=3;RaceService.save(p,token,valid.json());
+        h.assertTrue(p.getData(Civitatum.STATE).character().hairDecor1==3,"cosmetic saved");h.assertTrue(!p.getInventory().contains(new ItemStack(Civitatum.MIRROR.get())),"successful edit consumes one mirror");h.succeed();
+    }
+    @GameTest(template="empty",timeoutTicks=100)
+    public static void fullLooksCanChangeSexButNotRace(GameTestHelper h) {
+        var p=h.makeMockServerPlayerInLevel();var c=RaceCatalog.defaults("human","female");p.setData(Civitatum.STATE,new RaceState(c,0,0));RaceService.open(p,false,false);long token=editToken(p);
+        var invalid=RaceCatalog.defaults("orc","male");RaceService.save(p,token,invalid.json());h.assertTrue(p.getData(Civitatum.STATE).character().race.equals("human"),"race remains locked");
+        var valid=RaceCatalog.defaults("human","male");valid.birthsign="steed";RaceService.save(p,token,valid.json());
+        h.assertTrue(p.getData(Civitatum.STATE).character().sex.equals("male") && p.getData(Civitatum.STATE).character().birthsign.equals("steed"),"full appearance save");h.succeed();
+    }
 }

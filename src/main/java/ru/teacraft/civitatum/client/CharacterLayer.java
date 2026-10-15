@@ -13,12 +13,12 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.EquipmentSlot;
 import ru.teacraft.civitatum.*;
 
-/** Original cuboid prototypes, extending the recovered PlayerAppearance layer approach. */
+/** Racial geometry and skinned body details, attached to the animated player skeleton. */
 public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,PlayerModel<AbstractClientPlayer>> {
     public static final ModelLayerLocation MODEL=new ModelLayerLocation(Civitatum.res("body_details"),"main");
     private static final net.minecraft.resources.ResourceLocation TEXTURE=Civitatum.res("textures/entity/details.png");
     private final ModelPart root;
-    private final AlgnorLegs algnorLegs=new AlgnorLegs();
+    private final AlgnorLegs leftAlgnorLeg=new AlgnorLegs(true),rightAlgnorLeg=new AlgnorLegs(false);
     private final ModelPart bust=createBustModel().bakeRoot();
     public CharacterLayer(RenderLayerParent<AbstractClientPlayer,PlayerModel<AbstractClientPlayer>> parent,ModelPart root) { super(parent);this.root=root; }
     @Override public void render(PoseStack pose,MultiBufferSource buffers,int light,AbstractClientPlayer p,
@@ -49,8 +49,8 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
             pose.popPose();
         }
         if(r.algnor()) {
-            algnorLegs.render(pose,buffer,light,getParentModel().leftLeg,r.color("skin",c.skin));
-            algnorLegs.render(pose,buffer,light,getParentModel().rightLeg,r.color("skin",c.skin));
+            leftAlgnorLeg.render(pose,buffers,light,getParentModel().leftLeg,r.color("skin",c.skin),p.getSkin().texture());
+            rightAlgnorLeg.render(pose,buffers,light,getParentModel().rightLeg,r.color("skin",c.skin),p.getSkin().texture());
         } else if(r.id.equals("hobbit")) {
             attached(pose,buffer,light,getParentModel().leftLeg,"foot",r.color("skin",c.skin));
             attached(pose,buffer,light,getParentModel().rightLeg,"foot",r.color("skin",c.skin));
@@ -154,33 +154,10 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
         root.addOrReplaceChild("tusks",cube().addBox(-2.8f,-1.8f,-4.6f,1,2.4f,1).addBox(1.8f,-1.8f,-4.6f,1,2.4f,1),PartPose.ZERO);
         box(root,"nose",-1,-4,-5.2f,2,2.5f,1.3f);
         box(root,"muzzle",-2.5f,-2.8f,-5.5f,5,2.8f,1.7f);
-        root.addOrReplaceChild("eyes",cube().addBox(-2.7f,-5,-4.025f,.7f,.7f,.025f).addBox(1.8f,-5,-4.025f,.7f,.7f,.025f),PartPose.ZERO);
         root.addOrReplaceChild("tail1",cube().addBox(-1.2f,8,1.5f,2.4f,4,2.8f),PartPose.rotation(.3f,0,0));
         root.addOrReplaceChild("tail2",cube().addBox(-.8f,8,1.5f,1.6f,7,1.8f),PartPose.rotation(.35f,0,0));
         root.addOrReplaceChild("tail3",cube().addBox(-1.5f,8,1.5f,3,3,3.5f),PartPose.rotation(.2f,0,0));
-        root.addOrReplaceChild("hoof",cube().addBox(-2.1f,0,-1.8f,4.2f,6,3.6f).addBox(-1.6f,5.5f,.4f,3.2f,4,3.3f)
-            .addBox(-2.3f,9.2f,-2.1f,4.6f,2.8f,5),PartPose.ZERO);
         box(root,"foot",-2.7f,9,-3.8f,5.4f,3.1f,6.2f);
-        box(root,"chestleft",-3.9f,1.8f,-5.5f,3.8f,4.1f,3.4f);
-        box(root,"chestright",.1f,1.8f,-5.5f,3.8f,4.1f,3.4f);
-        for(int n=1;n<=6;n++) {
-            var face=cube();
-            face.addBox(-2.7f,-7,-4.04f,.45f,4.5f,.03f).addBox(2.25f,-7,-4.04f,.45f,4.5f,.03f);
-            if(n%2==0) face.addBox(-2.7f,-6,-4.04f,5.4f,.45f,.03f);
-            if(n>=3) face.addBox(-.25f,-7.8f,-4.04f,.5f,4,.03f);
-            if(n>=5) face.addBox(-2,-3,-4.04f,4,.5f,.03f);
-            root.addOrReplaceChild("orthoHead"+n,face,PartPose.ZERO);
-            var body=cube().addBox(-3,2,-2.04f,.5f,7,.03f).addBox(2.5f,2,-2.04f,.5f,7,.03f);
-            for(int row=0;row<n;row++) body.addBox(-3,2+row*1.3f,-2.04f,6,.35f,.03f);
-            root.addOrReplaceChild("orthoBody"+n,body,PartPose.ZERO);
-        }
-        for(int n=1;n<=4;n++) {
-            var tattoo=cube().addBox(-3.5f,-7,-4.045f,.35f,5,.03f).addBox(3.15f,-7,-4.045f,.35f,5,.03f);
-            if(n>1) tattoo.addBox(-2,-7,-4.045f,4,.35f,.03f);
-            if(n>2) tattoo.addBox(-.2f,-7,-4.045f,.4f,3,.03f);
-            if(n>3) tattoo.addBox(-2,-3,-4.045f,4,.35f,.03f);
-            root.addOrReplaceChild("jaharTattoo"+n,tattoo,PartPose.ZERO);
-        }
         return LayerDefinition.create(mesh,32,32);
     }
 }

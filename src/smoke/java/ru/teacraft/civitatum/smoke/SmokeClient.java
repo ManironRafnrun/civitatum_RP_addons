@@ -32,10 +32,10 @@ public final class SmokeClient {
         }
         else if(phase==3 && game.screen instanceof CharacterScreen s && ticks>45){
             check(game.options.getCameraType()==CameraType.FIRST_PERSON,"editor forces first person");check(game.options.hideGui,"HUD hidden");capture(game,"01-type-and-world.png");
-            s.selectForTest("human","female");check(s.draft().armModel.equals("slim"),"female defaults to Slim");s.tabForTest(9);s.zoomForTest(2.6f);next(4);
+            click(s,870,211);check(s.draft().female() && s.draft().armModel.equals("slim"),"female button selects Slim");click(s,425,516);check(!s.draft().female(),"type reset restores sex");click(s,870,211);check(s.draft().female(),"sex selectable after reset");s.tabForTest(9);s.zoomForTest(2.6f);next(4);
         }
         else if(phase==4 && game.screen instanceof CharacterScreen s && ticks>35){
-            capture(game,"02-eyes-original.png");s.draft().eyeHeight=-2;s.draft().hair=3;next(5);
+            capture(game,"02-eyes-original.png");click(s,897,317);release(s,897,317);check(s.draft().eyeHeight==2,"eye slider input");s.draft().hair=3;next(5);
         }
         else if(phase==5 && game.screen instanceof CharacterScreen s && ticks>35){
             capture(game,"03-eyes-raised.png");compositing(game,s);AppearanceChecks.run();s.draft().eyeHeight=0;s.zoomForTest(1);s.draft().hairAsset="ombre_wreath";s.tabForTest(3);next(6);
@@ -47,7 +47,7 @@ public final class SmokeClient {
         else if(phase==7 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"05-hair-three-channels.png");s.tabForTest(6);set(s,"garmentGroup",4);next(8);}
         else if(phase==8 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"06-clothing.png");click(s,727,187);check(s.draft().naked,"underwear checkbox");next(9);}
         else if(phase==9 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"07-underwear.png");s.tabForTest(5);s.draft().bust=0;s.angleForTest(-1.15f);next(10);}
-        else if(phase==10 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"08-bust-zero.png");s.draft().bust=.8f;next(11);}
+        else if(phase==10 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"08-bust-zero.png");click(s,897,209);release(s,897,209);check(s.draft().bust==.8f,"bust slider input");next(11);}
         else if(phase==11 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"09-bust-full.png");s.selectForTest("forest_algnor","female");s.draft().tail=3;s.tabForTest(7);s.angleForTest(-.8f);next(12);}
         else if(phase==12 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"10-algnor-legs.png");s.selectForTest("human","female");s.tabForTest(11);s.draft().birthsign="lady";s.draft().name="Арина";s.draft().hairAsset="ponytail_streak";s.draft().hairDecor1=3;next(13);}
         else if(phase==13 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"11-birthsign.png");s.stageForTest(3);next(14);}
@@ -86,7 +86,7 @@ public final class SmokeClient {
         else if(phase==23 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"14-compact-editor.png");s.onClose();next(24);}
         else if(phase==24 && game.screen==null && ticks>35){
             check(game.options.getCameraType()==CameraType.THIRD_PERSON_BACK && game.options.hideGui==oldHide,"cancel restores view");
-            System.out.println("CCC_040_CLIENT_PASS checks="+checks+" female_adapter="+FemaleGenderBridge.available());game.stop();
+            System.out.println("CCC_040_CLIENT_PASS checks="+checks+" female_adapter="+FemaleGenderBridge.available());phase=25;game.stop();
         }
     }
     private static net.minecraft.server.level.ServerPlayer serverPlayer(Minecraft g){return g.getSingleplayerServer().getPlayerList().getPlayer(g.player.getUUID());}
@@ -94,12 +94,13 @@ public final class SmokeClient {
     private void next(int value){phase=value;ticks=0;}
     private void check(boolean good,String message){if(!good)throw new IllegalStateException("CCC check: "+message);checks++;}
     private void click(CharacterScreen s,int x,int y){float zoom=Math.min(s.width/960f,s.height/540f);s.mouseClicked((s.width-960*zoom)/2+x*zoom,(s.height-540*zoom)/2+y*zoom,0);}
+    private void release(CharacterScreen s,int x,int y){float zoom=Math.min(s.width/960f,s.height/540f);s.mouseReleased((s.width-960*zoom)/2+x*zoom,(s.height-540*zoom)/2+y*zoom,0);}
     private void set(CharacterScreen s,String name,Object v){try{var f=CharacterScreen.class.getDeclaredField(name);f.setAccessible(true);f.set(s,v);}catch(Exception e){throw new IllegalStateException(e);}}
     private void compositing(Minecraft g,CharacterScreen s){
         var original=g.player.getSkin();var c=RaceCatalog.defaults("human","female");c.hairStyle=0;c.hairAsset="";c.naked=true;c.wardrobeEnabled=false;c.eyeHeight=0;
         var skin=SkinTemplates.skin(c,original);check(skin.model()==PlayerSkin.Model.SLIM,"renderer uses Slim");
         var image=((DynamicTexture)g.getTextureManager().getTexture(skin.texture())).getPixels();int iris=image.getPixelRGBA(10,13),base=image.getPixelRGBA(10,11);
-        c.eyeHeight=-2;var shifted=SkinTemplates.skin(c,original);var other=((DynamicTexture)g.getTextureManager().getTexture(shifted.texture())).getPixels();
+        c.eyeHeight=2;var shifted=SkinTemplates.skin(c,original);var other=((DynamicTexture)g.getTextureManager().getTexture(shifted.texture())).getPixels();
         check(other.getPixelRGBA(10,11)==iris && other.getPixelRGBA(10,13)!=iris,"eye height moves eyes and clears old location");
         c.armModel="classic";check(SkinTemplates.skin(c,original).model()==PlayerSkin.Model.WIDE,"Classic switch");
         c.hairAsset="ombre_wreath";c.hairMain=2;var tinted=SkinTemplates.skin(c,original);var t=((DynamicTexture)g.getTextureManager().getTexture(tinted.texture())).getPixels();

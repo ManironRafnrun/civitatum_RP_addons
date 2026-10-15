@@ -35,7 +35,8 @@ public final class RaceCatalog {
         c.height = Math.round((r.minHeight + r.maxHeight) * 10) / 20f;
         c.ears = r.earStyles[0]; c.horns = r.hornsRequired ? r.hornStyles[0] : 0;
         if (r.hornsRequired && c.horns == 0) c.horns = r.hornStyles[r.hornStyles.length - 1];
-        c.hairStyle = r.hairAllowed ? 1 : 0;
+        c.hairStyle = 0;
+        c.hairAsset=r.hairAllowed?("female".equals(sex)?"black_long":"shaggy_hooligan"):"";
         c.armModel="female".equals(sex)?"slim":"classic";
         c.skinOriginal="human".equals(id);c.eyesOriginal=r.eyeColors.length>1;
         AppearanceCatalog.outfit(c,AppearanceCatalog.outfits(sex).getFirst().id());

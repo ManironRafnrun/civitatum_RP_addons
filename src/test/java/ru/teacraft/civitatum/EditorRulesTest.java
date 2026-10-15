@@ -34,7 +34,8 @@ class EditorRulesTest {
   assertEquals(0,IdleAnimation.BEGIN);assertEquals(15,IdleAnimation.RETURN);assertEquals(250,IdleAnimation.END);
   assertEquals(IdleAnimation.value("head","yaw",16),IdleAnimation.value("head","yaw",251),.00001);
   assertNotEquals(IdleAnimation.value("head","yaw",15),IdleAnimation.value("head","yaw",200));
-  assertNotEquals(IdleAnimation.value("leftArm","pitch",15),IdleAnimation.value("leftArm","pitch",150));
+  assertEquals(0,IdleAnimation.value("leftArm","pitch",156),.00001);
+  assertEquals(.5065025687f,IdleAnimation.value("rightLeg","yaw",150),.00001);
   for(float time:new float[]{0,15,200,250,251,100000})for(String part:List.of("head","torso","leftArm","leftLeg","rightLeg"))for(String axis:List.of("x","y","z","pitch","yaw","roll"))assertTrue(Float.isFinite(IdleAnimation.value(part,axis,time)));
  }
  @Test void allFourEarsAndThreeTailsAreValidated() {

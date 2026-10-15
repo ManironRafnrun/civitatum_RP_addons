@@ -80,7 +80,7 @@ public final class CharacterScreen extends Screen {
         String[] labels=category==0?new String[]{"Скин","Кожа","Глаза","Раса","Грудь","Рост"}:category==1?new String[]{"Волосы","Борода","Одежда","Татуировки"}:new String[]{"Знаки рождения"};
         int[] ids=category==0?new int[]{12,0,9,1,5,8}:category==1?new int[]{3,10,6,4}:new int[]{11};
         int step=650/labels.length;
-        for(int i=0;i<labels.length;i++){int id=ids[i];boolean active=tab==id || id==1 && List.of(1,2,7).contains(tab);button(280+i*step,59,step-6,26,labels[i],true,()->{tab=id;nameFocus=false;},active);}
+        for(int i=0;i<labels.length;i++){int id=ids[i];boolean active=tab==id || id==1 && List.of(1,2,7,13).contains(tab);button(280+i*step,59,step-6,26,labels[i],true,()->{tab=id;nameFocus=false;},active);}
         text(g,"Имя",323,111,MUTED);button(365,102,341,26,draft.name.isBlank()?"Введите имя персонажа":draft.name,true,()->nameFocus=true,nameFocus);
     }
     private void raceWindow(GuiGraphics g){
@@ -191,13 +191,18 @@ public final class CharacterScreen extends Screen {
     }
     private void footer(GuiGraphics g){
         panel(g,270,478,418,54);
-        button(280,485,67,18,"↶",true,()->angle-=.4f);button(353,485,67,18,"↷",true,()->angle+=.4f);
+        button(280,485,67,18,"Поворот <",true,()->angle-=.4f);button(353,485,67,18,"Поворот >",true,()->angle+=.4f);
         button(426,485,77,18,"Голова +",true,()->previewZoom=Math.min(3,previewZoom+.4f));button(509,485,77,18,"Голова −",true,()->previewZoom=Math.max(1,previewZoom-.4f));
         button(592,485,86,18,"Весь рост",true,()->previewZoom=1);
         button(280,508,92,18,"Отмена",!sending,this::onClose);button(378,508,145,18,"Сброс раздела",!sending && (mode.body() || category==1),this::resetSection);
         button(529,508,149,18,sending?"Сохранение…":"Подтвердить",!sending,()->{confirming=true;nameFocus=false;});
     }
     private void resetSection(){
+        if(tab==12){
+            var base=initial.race.equals(draft.race)?initial.copy():RaceCatalog.defaults(draft.race,initial.sex);
+            if(!draft.sex.equals(base.sex)){draft.sex=base.sex;draft.bust=base.bust;draft.outfitPreset=base.outfitPreset;draft.wardrobe=base.wardrobe;draft.wardrobeEnabled=base.wardrobeEnabled;}
+            draft.usePlayerSkin=base.usePlayerSkin;draft.armModel=base.armModel;return;
+        }
         var source=initial.race.equals(draft.race) && initial.sex.equals(draft.sex)?initial.copy():RaceCatalog.defaults(draft.race,draft.sex);
         String[] fields=switch(tab){case 0->new String[]{"skin","skinOriginal"};case 9->new String[]{"eyes","eyesOriginal","eyeHeight"};case 1->new String[]{"ears","earPitch","earYaw","earRoll","earOffset"};case 2,13->new String[]{"horns","hornColor","hornPitch","hornYaw","hornRoll","hornOffset","hornSize","hornOnForehead"};case 7->new String[]{"tail"};case 8->new String[]{"height"};case 3->new String[]{"hairAsset","hairStyle","hair","hairMain","hairDecor1","hairDecor2"};case 10->new String[]{"beard","hair"};case 4->new String[]{"tattoo","tattooColor","glow"};case 6->new String[]{"wardrobe","wardrobeEnabled","outfitPreset","naked","underwearColor"};case 5->new String[]{"bust","bustX","bustY","bustZ","cleavage","bounce","floppiness","breastPhysics","armorPhysics","showInArmor","uniboob"};case 11->new String[]{"birthsign"};default->new String[]{"usePlayerSkin","armModel"};};
         try{for(String field:fields){var f=CharacterData.class.getField(field);f.set(draft,f.get(source));}}catch(ReflectiveOperationException e){throw new IllegalStateException(e);}
