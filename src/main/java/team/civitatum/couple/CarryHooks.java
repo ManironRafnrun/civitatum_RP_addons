@@ -8,10 +8,12 @@ import team.civitatum.couple.core.PoseSettings;
 
 public final class CarryHooks {
     public static UUID carrierId(Player player) {
+        if(ClientBridge.ignorePose.test(player))return null;
         Player preview=ClientBridge.previewCarrier.apply(player);if(preview!=null)return preview.getUUID();
         return player.level().isClientSide ? ClientBridge.carrierOf.apply(player.getUUID()) : CoupleServer.carrierOf(player.getUUID());
     }
     public static UUID passengerId(Player player) {
+        if(ClientBridge.ignorePose.test(player))return null;
         Player preview=ClientBridge.previewPassenger.apply(player);if(preview!=null)return preview.getUUID();
         return player.level().isClientSide ? ClientBridge.passengerOf.apply(player.getUUID()) : CoupleServer.passengerOf(player.getUUID());
     }

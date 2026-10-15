@@ -13,6 +13,7 @@ public final class PoseEngine {
     public static Player previewFirst,previewSecond;
     public static PoseSettings previewPose;
     public static PoseFrame frame(Player p,float partial){
+        if(CccCompat.preview(p))return null;
         Player carrier=CarryHooks.carrier(p);
         var social=ClientState.social(p.getUUID());
         if(social!=null && p!=previewFirst && p!=previewSecond){

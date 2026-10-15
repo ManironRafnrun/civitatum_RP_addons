@@ -33,6 +33,7 @@ public final class CoupleClient {
         ClientBridge.passengerOf = ClientState::passengerOf;
         ClientBridge.poseOf=id->PoseEngine.previewSecond!=null && PoseEngine.previewSecond.getUUID().equals(id)?PoseEngine.previewPose:ClientState.pose(id);
         ClientBridge.previewCarrier=PoseEngine::previewCarrier;ClientBridge.previewPassenger=PoseEngine::previewPassenger;
+        ClientBridge.ignorePose=CccCompat::preview;
         ClientBridge.socialState=ClientState::social;
         ClientBridge.socialOf=id->{var s=ClientState.social(id);return s==null?null:s.state();};
         if(net.neoforged.fml.ModList.get().isLoaded("playeranimator"))AnimatorCompat.init();

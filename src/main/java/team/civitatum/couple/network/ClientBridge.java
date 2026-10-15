@@ -18,5 +18,6 @@ public final class ClientBridge {
     public static Function<UUID,CoupleNetwork.SocialState> socialOf=id->null;
     public static Function<UUID,PoseSettings> poseOf=id->PoseSettings.DEFAULT;
     public static Function<Player,Player> previewCarrier=p->null,previewPassenger=p->null;
+    public static java.util.function.Predicate<Player> ignorePose=p->false;
     private ClientBridge() {}
 }
