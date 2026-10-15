@@ -8,6 +8,7 @@ base { archivesName = 'civitatum-couple-interactions-1.21.1' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 repositories { mavenCentral(); maven { url = 'https://maven.kosmx.dev/' } }
 dependencies { compileOnly 'dev.kosmx.player-anim:player-animation-lib-forge:2.0.1+1.21.1' }
+dependencies { testImplementation 'com.google.code.gson:gson:2.10.1' }
 neoForge {
     version = '21.1.256'
     runs {

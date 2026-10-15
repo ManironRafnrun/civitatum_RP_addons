@@ -18,7 +18,9 @@ public final class PoseEngine {
         if(social!=null && p!=previewFirst && p!=previewSecond){
             var s=social.state();boolean first=s.first().equals(p.getUUID());
             var other=p.level().getPlayerByUUID(first?s.second():s.first());
-            return PoseFrame.social(Interaction.fromWire(s.action()),first,ClientState.ticks-social.started()+partial,s.duration(),p.getScale(),other==null?p.getScale():other.getScale(),s.mounted());
+            var frame=PoseFrame.social(Interaction.fromWire(s.action()),first,ClientState.ticks-social.started()+partial,s.duration(),p.getScale(),other==null?p.getScale():other.getScale(),s.mounted());
+            if(s.mounted())return PoseFrame.carry(carrier!=null,carrier!=null?CarryHooks.tuning(p):PoseSettings.DEFAULT,p.walkAnimation.position(partial),p.walkAnimation.speed(partial)).overlay(frame);
+            return frame;
         }
         if(carrier!=null || CarryHooks.carrying(p)){
             var tuning=p==previewSecond?previewPose:carrier!=null?CarryHooks.tuning(p):PoseSettings.DEFAULT;

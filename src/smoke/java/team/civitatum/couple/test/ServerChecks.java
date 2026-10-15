@@ -122,6 +122,47 @@ public final class ServerChecks {
             for(ServerPlayer p:List.of(a,b,c)) { level.getServer().getPlayerList().remove(p); p.discard(); }
         }
     }
+    @GameTest(template="empty",timeoutTicks=300)
+    public static void socialPoliciesAndCleanup(GameTestHelper h){
+        var level=h.getLevel();for(int x=0;x<9;x++)for(int z=0;z<9;z++)h.setBlock(new BlockPos(x,1,z),Blocks.STONE);
+        ServerPlayer a=h.makeMockServerPlayerInLevel(),b=h.makeMockServerPlayerInLevel(),c=h.makeMockServerPlayerInLevel();
+        a.connection=new Recorder(a);b.connection=new Recorder(b);c.connection=new Recorder(c);
+        Vec3 origin=Vec3.atBottomCenterOf(h.absolutePos(new BlockPos(4,2,4)));
+        try {
+            put(a,origin);put(b,origin.add(0,0,1.5));put(c,origin.add(2,0,0));
+            var p=new team.civitatum.couple.core.PlayerPreferences();p.policies.put(Interaction.HUG,team.civitatum.couple.core.Consent.TRUSTED);p.trusted.add(c.getUUID());
+            CoupleServer.preferences(b,new CoupleNetwork.Preferences(p.json()));
+            CoupleServer.request(a,new CoupleNetwork.Action(b.getUUID(),Interaction.HUG.ordinal()));
+            h.assertTrue(!team.civitatum.couple.SocialHooks.active(a),"non-favorite must confirm");
+            var invite=((Recorder)b.connection).lastInvite();CoupleServer.decide(c,new CoupleNetwork.Decision(invite.request(),true));
+            h.assertTrue(!team.civitatum.couple.SocialHooks.active(a),"third player cannot accept hug");
+            double speed=a.getAttributeValue(Attributes.MOVEMENT_SPEED);
+            CoupleServer.decide(b,new CoupleNetwork.Decision(invite.request(),true));
+            h.assertTrue(team.civitatum.couple.SocialHooks.active(a) && team.civitatum.couple.SocialHooks.active(b),"accepted hug reserves both players");
+            h.assertTrue(a.getAttributeValue(Attributes.MOVEMENT_SPEED)==0,"standing pair stays still");
+            CoupleServer.request(c,new CoupleNetwork.Action(a.getUUID(),Interaction.RELEASE.ordinal()));
+            h.assertTrue(team.civitatum.couple.SocialHooks.active(a),"third player cannot release hug");
+            b.setShiftKeyDown(true);team.civitatum.couple.server.SocialSessions.tick();b.setShiftKeyDown(false);
+            h.assertTrue(!team.civitatum.couple.SocialHooks.active(a) && a.getAttributeValue(Attributes.MOVEMENT_SPEED)==speed,"either partner can leave and restore speed");
+            put(a,origin);put(b,origin.add(0,0,1.5));
+            p.trusted.add(a.getUUID());p.policies.put(Interaction.REST,team.civitatum.couple.core.Consent.ALLOW);p.policies.put(Interaction.KISS,team.civitatum.couple.core.Consent.BLOCK);CoupleServer.preferences(b,new CoupleNetwork.Preferences(p.json()));
+            for(int i=0;i<61;i++)CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));
+            int before=((Recorder)b.connection).payloads.size();CoupleServer.request(a,new CoupleNetwork.Action(b.getUUID(),Interaction.HUG.ordinal()));
+            h.assertTrue(team.civitatum.couple.SocialHooks.active(a),"favorite accepted without invitation");
+            h.assertTrue(((Recorder)b.connection).payloads.subList(before,((Recorder)b.connection).payloads.size()).stream().noneMatch(v->v instanceof CoupleNetwork.Invitation),"auto consent sends no question");
+            CoupleServer.beforeTeleport(a);h.assertTrue(!team.civitatum.couple.SocialHooks.active(b),"teleport releases social session");
+            put(a,origin);put(b,origin.add(0,0,1.5));for(int i=0;i<61;i++)CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));
+            CoupleServer.request(a,new CoupleNetwork.Action(b.getUUID(),Interaction.REST.ordinal()));
+            h.assertTrue(team.civitatum.couple.SocialHooks.resting(a) && a.getBbHeight()<1.2,"rest has seated dimensions");
+            CoupleServer.end(b,null);h.assertTrue(a.getBbHeight()>1.7,"rest restores full dimensions");
+            put(a,origin);put(b,origin.add(0,0,1.5));for(int i=0;i<61;i++)CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));
+            CoupleServer.request(a,new CoupleNetwork.Action(b.getUUID(),Interaction.KISS.ordinal()));h.assertTrue(!team.civitatum.couple.SocialHooks.active(a),"kiss blocking is independent of hug/rest");
+            h.assertTrue(team.civitatum.couple.server.SocialSessions.begin(a,b,Interaction.KISS),"kiss starts through checked internal API");
+            for(int i=0;i<71;i++)team.civitatum.couple.server.SocialSessions.tick();
+            h.assertTrue(!team.civitatum.couple.SocialHooks.active(a),"kiss ends automatically");
+            System.out.println("COUPLE_SOCIAL_SERVER_PASS policies,trusted,forgery,release,shift,teleport,dimensions,kiss_timeout");h.succeed();
+        }finally{CoupleServer.end(a,null);CoupleServer.end(b,null);CoupleServer.end(c,null);for(var player:List.of(a,b,c)){level.getServer().getPlayerList().remove(player);player.discard();}}
+    }
     private static void put(ServerPlayer p,Vec3 pos) {
         p.setPos(pos);p.setOnGround(true);p.setGameMode(GameType.SURVIVAL);p.getAbilities().flying=false;
         p.setDeltaMovement(Vec3.ZERO);p.setHealth(p.getMaxHealth());p.yBodyRot=0;

@@ -5,6 +5,7 @@ import team.civitatum.couple.core.Interaction;
 import team.civitatum.couple.core.RequestBook;
 import team.civitatum.couple.core.RadialLayout;
 import team.civitatum.couple.core.CarryPose;
+import team.civitatum.couple.core.*;
 
 public final class LogicChecks {
     private static int checks;
@@ -50,7 +51,23 @@ public final class LogicChecks {
         check(head.up()>hip.up(),"head is raised above the hips");
         var eye=CarryPose.eye();
         check(eye.up()>head.up(),"eyes face up above the head center");
-        check(Math.abs(eye.right()-head.right())<0.15&&Math.abs(eye.forward())<0.15,"camera stays at the posed head");
+        check(Math.abs(eye.right()-head.right())<.25 && Math.abs(eye.forward())<.25,"camera follows the newly tilted head");
+        for(var mode:Consent.values())for(boolean trusted:new boolean[]{false,true})check(mode.automatic(trusted)==(mode==Consent.ALLOW || mode==Consent.TRUSTED && trusted),"consent decision "+mode+trusted);
+        var prefs=new PlayerPreferences();check(prefs.policy(Interaction.HUG)==Consent.ASK,"new actions require consent by default");prefs.trusted.add(a);prefs.policies.put(Interaction.HUG,Consent.TRUSTED);prefs.pose=new PoseSettings(99,999,-999,99,-99,Float.NaN);
+        var saved=PlayerPreferences.read(prefs.json());check(saved.trusted.contains(a) && !saved.trusted.contains(b),"trust survives as UUID");check(saved.policy(Interaction.HUG)==Consent.TRUSTED,"per-action policy roundtrip");check(saved.pose.head()==65 && saved.pose.arm()==110 && saved.pose.bank()==-80,"pose angles bounded");check(saved.pose.side()==.25f && saved.pose.up()==-.3f && saved.pose.forward()==0,"pose offsets bounded and finite");
+        check(PlayerPreferences.read("invalid").policy(Interaction.KISS)==Consent.ASK,"bad policy falls back to asking");
+        check(PlayerPreferences.legacy(false,true).policy(Interaction.CARRY)==Consent.BLOCK,"old opt-out migrates");
+        for(int i=0;i<6;i++){double angle=RadialLayout.centerAngle(i,6);check(RadialLayout.select(Math.cos(angle)*75,Math.sin(angle)*75,40,100,6)==i,"six-sector wheel "+i);}
+        check(CarryPose.HEAD_PITCH>0,"passenger head bends toward chest");
+        check(PoseFrame.carry(true,PoseSettings.DEFAULT,0,0).bones.get("leftArm").roll()<-.8f,"passenger left arm clears the carrier face");
+        check(PoseFrame.envelope(0,70)==0 && PoseFrame.envelope(12,70)==1 && PoseFrame.envelope(70,70)==0,"social animation blends in and out");
+        for(var action:java.util.List.of(Interaction.KISS,Interaction.HUG,Interaction.REST))for(float scale:new float[]{.65f,1,1.5f}){
+            var frame=PoseFrame.social(action,true,30,action==Interaction.REST?0:120,scale,1,false);
+            check(Float.isFinite(frame.rootY) && frame.rootY>=-.61,"height-aware root stays bounded "+action+scale);
+            check(frame.bones.values().stream().allMatch(v->Float.isFinite(v.pitch()) && Float.isFinite(v.bend())),"pose is finite "+action+scale);
+        }
+        var kiss=PoseFrame.social(Interaction.KISS,true,30,70,1,1,false);check(kiss.bones.get("rightArm").bend()<-.5f,"kiss actually bends the reaching elbow");
+        var shortKiss=PoseFrame.social(Interaction.KISS,true,30,70,.9f,1.2f,false);var tallKiss=PoseFrame.social(Interaction.KISS,false,30,70,1.2f,.9f,false);check(tallKiss.rootY<shortKiss.rootY,"taller partner lowers to the other face");
         System.out.println("COUPLE_LOGIC_PASS checks="+checks);
     }
     private static void check(boolean condition,String name) { if(!condition) throw new AssertionError(name);checks++; }

@@ -25,12 +25,14 @@ public final class SocialSessions {
     public static boolean active(UUID id){return ACTIVE.containsKey(id);}
     public static CoupleNetwork.SocialState state(UUID id){var s=ACTIVE.get(id);return s==null?null:s.packet(true);}
     public static boolean begin(ServerPlayer a,ServerPlayer b,Interaction action){
+        if(action!=Interaction.KISS && action!=Interaction.HUG && action!=Interaction.REST)return false;
+        if(CoupleServer.validate(a,b,action)!=null)return false;
         if(active(a.getUUID()) || active(b.getUUID()))return false;
         boolean mounted=CarryHooks.pair(a,b) || CarryHooks.pair(b,a);
         if(mounted && action!=Interaction.KISS)return false;
         float yaw=mounted?a.yBodyRot:(float)Math.toDegrees(Math.atan2(b.getZ()-a.getZ(),b.getX()-a.getX()))-90;
         double scale=(a.getScale()+b.getScale())*.5;
-        Vec3 first=a.position(),second=action==Interaction.REST?first.add(CarryGeometry.local(yaw,-.58*scale,0,0)):first.add(CarryGeometry.local(yaw,0,0,.66*scale));
+        Vec3 first=a.position(),second=action==Interaction.REST?first.add(CarryGeometry.local(yaw,-.64*scale,0,0)):first.add(CarryGeometry.local(yaw,0,0,.66*scale));
         if(!mounted && (!safe(b,second) || !a.onGround() || !b.onGround()))return false;
         var s=new Session(a,b,action,yaw,mounted,first,second);
         ACTIVE.put(a.getUUID(),s);ACTIVE.put(b.getUUID(),s);
@@ -54,6 +56,7 @@ public final class SocialSessions {
         for(var s:new HashSet<>(ACTIVE.values())){
             if(s.a.isRemoved() || s.b.isRemoved() || !s.a.isAlive() || !s.b.isAlive() || s.a.level()!=s.b.level()
                 || s.a.isSpectator() || s.b.isSpectator() || s.a.isSleeping() || s.b.isSleeping()
+                || s.a.isInWaterOrBubble() || s.b.isInWaterOrBubble() || s.a.isInLava() || s.b.isInLava() || s.a.isFallFlying() || s.b.isFallFlying()
                 || s.a.isShiftKeyDown() || s.b.isShiftKeyDown() || (s.duration>0 && clock-s.start>=s.duration)
                 || (!s.mounted && (s.a.isPassenger() || s.b.isPassenger() || s.a.position().distanceToSqr(s.first)>.36 || s.b.position().distanceToSqr(s.second)>.36))
                 || (s.mounted && !CarryHooks.pair(s.a,s.b) && !CarryHooks.pair(s.b,s.a))){end(s.a.getUUID());continue;}

@@ -9,6 +9,7 @@ public final class PoseFrame {
     public float weight=1,rootY,rootPitch,rootRoll;
     public PoseFrame bone(String name,float pitch,float yaw,float roll,float bend){bones.put(name,new Bone(pitch,yaw,roll,bend,0,0,0,false));return this;}
     public PoseFrame position(String name,float x,float y,float z){var b=bones.getOrDefault(name,new Bone(0,0,0,0,0,0,0,false));bones.put(name,new Bone(b.pitch,b.yaw,b.roll,b.bend,x,y,z,true));return this;}
+    public PoseFrame overlay(PoseFrame top){top.bones.forEach((name,b)->{var a=bones.get(name);if(a==null){bones.put(name,b);return;}float w=top.weight;bones.put(name,new Bone(a.pitch+(b.pitch-a.pitch)*w,a.yaw+(b.yaw-a.yaw)*w,a.roll+(b.roll-a.roll)*w,a.bend+(b.bend-a.bend)*w,a.x,a.y,a.z,a.position));});return this;}
     public static float envelope(float t,int duration){float a=Math.clamp(t/12,0,1),b=duration==0?1:Math.clamp((duration-t)/12,0,1);float f=Math.min(a,b);return f*f*(3-2*f);}
     public static PoseFrame carry(boolean passenger,PoseSettings p,float walk,float speed){
         var f=new PoseFrame().bone("torso",passenger?-.1f:0,0,0,0).bone("head",passenger?p.headRadians():0,passenger?.25f:0,passenger?-.08f:0,0);
@@ -25,11 +26,12 @@ public final class PoseFrame {
         var f=new PoseFrame();f.weight=envelope(time,duration);
         for(String bone:List.of("head","torso","leftArm","rightArm","leftLeg","rightLeg"))f.bone(bone,0,0,0,0);
         if(action==Interaction.REST){
-            f.rootY=-.45f;
-            f.bone("rightLeg",-1.05f,.12f,0,1.15f).bone("leftLeg",-1.05f,-.12f,0,1.15f);
+            f.rootY=-.42f;
             f.bone("rightArm",-.1f,0,.1f,-.65f).bone("leftArm",-.1f,0,-.1f,-.65f);
-            if(!first){f.rootRoll=.18f;f.bone("head",.22f,0,.38f,0);f.rootY+=(1.27f*other-1.50f*self)/self+.2f;}
-            else f.bone("head",.1f,-.18f,-.08f,0);
+            if(!first){f.rootRoll=-.18f;f.bone("head",.22f,0,-.38f,0);f.rootY=Math.clamp(.87f*other/self-1.42f,-.61f,-.15f);}
+            else f.bone("head",.1f,-.18f,.08f,0);
+            float knee=(float)Math.acos(Math.clamp((.703125f+f.rootY-.375f*(float)Math.cos(1.45))/.375f,-.95f,.95f))+1.45f;
+            f.bone("rightLeg",-1.45f,.12f,0,knee).bone("leftLeg",-1.45f,-.12f,0,knee);
             return f;
         }
         if(mounted){
@@ -38,9 +40,9 @@ public final class PoseFrame {
             return f;
         }
         // Taller partners bend their knees to meet at the shorter partner's face height.
-        float drop=Math.max(0,(self-other)*1.5f/self);
+        float drop=Math.clamp((self-other)*1.5f/self,0,.61f);
         f.rootY=-drop;
-        float knee=(float)(2*Math.acos(Math.clamp(1-drop/.75f,.12f,1)));
+        float knee=(float)(2*Math.acos(Math.clamp(1-drop/.703125f,.12f,1)));
         f.bone("leftLeg",-knee*.5f,0,0,knee).bone("rightLeg",-knee*.5f,0,0,knee);
         f.rootPitch=action==Interaction.KISS?-.08f:-.12f;
         if(action==Interaction.KISS){

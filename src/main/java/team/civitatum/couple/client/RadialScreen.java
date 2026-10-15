@@ -49,18 +49,18 @@ public final class RadialScreen extends Screen {
         int cx = width / 2, cy = height / 2;
         float outer = outerRadius();
         float inner = outer * 0.43F;
-        selected = RadialLayout.select(mouseX - cx, mouseY - cy, inner, outer, 3);
+        selected = RadialLayout.select(mouseX - cx, mouseY - cy, inner, outer, 6);
         g.fill(0, 0, width, height, 0x65080A0E);
         g.drawCenteredString(font, title, cx, (int)(cy - outer - 23), 0xFFEAE3DA);
         g.flush();
-        for (int i = 0; i < 3; i++) ring(g, cx, cy, inner, outer, i, 3, i == selected ? 0xF05B3945 : 0xED20232B);
+        for (int i = 0; i < 6; i++) ring(g, cx, cy, inner, outer, i, 6, i == selected ? 0xF05B3945 : 0xED20232B);
         g.flush();
-        for (int i = 0; i < 3; i++) {
-            double angle = RadialLayout.centerAngle(i, 3);
+        for (int i = 0; i < 6; i++) {
+            double angle = RadialLayout.centerAngle(i, 6);
             int x = (int)(cx + Math.cos(angle) * outer * 0.72), y = (int)(cy + Math.sin(angle) * outer * 0.72);
             int color = i == selected ? 0xFFFFD6C9 : 0xFFDAD5CC;
-            Component text = Component.translatable(i == 0 ? (release ? "action.civitatum_couple.release" : "action.civitatum_couple.carry")
-                    : i == 1 ? "action.civitatum_couple.kiss" : "ui.civitatum_couple.settings");
+            String label=switch(i){case 0->release?"action.civitatum_couple.release":"action.civitatum_couple.carry";case 1->"action.civitatum_couple.kiss";case 2->"action.civitatum_couple.hug";case 3->"action.civitatum_couple.rest";case 4->CoupleClientConfig.trusted(target)?"ui.civitatum_couple.untrust":"ui.civitatum_couple.trust";default->"ui.civitatum_couple.settings";};
+            Component text=Component.translatable(label);
             var lines = font.split(text, Math.max(70, (int)(outer * 0.92)));
             int lineY = y - lines.size() * 5;
             for (var line : lines) { g.drawString(font, line, x - font.width(line) / 2, lineY, color, false); lineY += 10; }
@@ -79,11 +79,10 @@ public final class RadialScreen extends Screen {
         if (committed) return;
         committed = true;
         minecraft.setScreen(null);
-        if (selected == 2) { minecraft.setScreen(new SettingsScreen(null)); return; }
-        if (selected == 0 || selected == 1) {
-            Interaction action = selected == 1 ? Interaction.KISS : release ? Interaction.RELEASE : Interaction.CARRY;
-            PacketDistributor.sendToServer(new CoupleNetwork.Action(target, action.ordinal()));
-        }
+        if(selected==5){minecraft.setScreen(new SettingsScreen(null,target));return;}
+        if(selected==4){CoupleClientConfig.toggleTrusted(target,targetName.getString());return;}
+        Interaction action=switch(selected){case 0->release?Interaction.RELEASE:Interaction.CARRY;case 1->Interaction.KISS;case 2->Interaction.HUG;case 3->Interaction.REST;default->null;};
+        if(action!=null)PacketDistributor.sendToServer(new CoupleNetwork.Action(target,action.ordinal()));
     }
     @Override public boolean mouseClicked(double x, double y, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -98,7 +97,7 @@ public final class RadialScreen extends Screen {
     private float outerRadius() { return Math.max(56, Math.min(106, Math.min(width / 2F - 14, height / 2F - 58))); }
     private int selectionAt(double x, double y) {
         float outer = outerRadius();
-        return RadialLayout.select(x - width / 2.0, y - height / 2.0, outer * 0.43, outer, 3);
+        return RadialLayout.select(x - width / 2.0, y - height / 2.0, outer * 0.43, outer, 6);
     }
 
     private static void ring(GuiGraphics graphics, float cx, float cy, float inner, float outer, int segment, int count, int color) {

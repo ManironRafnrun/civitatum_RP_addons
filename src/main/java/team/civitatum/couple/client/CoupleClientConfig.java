@@ -22,7 +22,7 @@ public final class CoupleClientConfig {
         SIDE=b.defineInRange("pose.sideOffset",0,-.25,.25);UP=b.defineInRange("pose.heightOffset",0,-.3,.3);FORWARD=b.defineInRange("pose.forwardOffset",0,-.25,.35);
         SPEC = b.build();
     }
-    public static UUID uuid(String entry){try{return UUID.fromString(entry.split("\\|",2)[0]);}catch(RuntimeException e){return null;}}
+    public static UUID uuid(String entry){try{int cut=entry.indexOf('|');return UUID.fromString(cut<0?entry:entry.substring(0,cut));}catch(RuntimeException e){return null;}}
     public static PoseSettings pose(){return new PoseSettings(HEAD.get().floatValue(),ARM.get().floatValue(),BANK.get().floatValue(),SIDE.get().floatValue(),UP.get().floatValue(),FORWARD.get().floatValue()).safe();}
     public static void pose(PoseSettings p){p=p.safe();HEAD.set((double)p.head());ARM.set((double)p.arm());BANK.set((double)p.bank());SIDE.set((double)p.side());UP.set((double)p.up());FORWARD.set((double)p.forward());}
     public static PlayerPreferences preferences(){
