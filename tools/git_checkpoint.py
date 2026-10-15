@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BRANCH = "codex/checkpoints/ccc"
 SOURCE_PATHS = (
     "src", "gradle", "tools", "build.gradle", "settings.gradle",
-    "gradle.properties", "gradlew", "gradlew.bat", "LICENSE.txt",
+    "gradle.properties", "gradlew", "gradlew.bat", "LICENSE.txt", "NOTICE.txt", "TEMPLATE_LICENSE.txt",
     "README.md", "README_RU.md", "VALIDATION_RU.md", "BACKUP_RU.md", "AGENTS.md",
     ".gitignore", ".gitattributes",
 )

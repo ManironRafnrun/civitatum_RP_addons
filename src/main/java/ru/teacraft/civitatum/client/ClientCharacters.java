@@ -10,8 +10,10 @@ public final class ClientCharacters {
     public static final Map<UUID,RaceState> STATES=new HashMap<>();
     public static CharacterData preview;
     public static UUID previewPlayer;
+    public static net.minecraft.world.entity.player.Player previewEntity;
+    public static boolean isPreview(net.minecraft.world.entity.Entity entity) { return preview!=null && entity==previewEntity; }
     public static RaceState state(Player p) { return STATES.getOrDefault(p.getUUID(),p.getData(Civitatum.STATE)); }
-    public static CharacterData get(Player p) { return preview!=null && p.getUUID().equals(previewPlayer) ? preview : state(p).character(); }
+    public static CharacterData get(Player p) { return isPreview(p) ? preview : state(p).character(); }
     public static void accept(RaceNetwork.Clientbound packet) {
         Minecraft game=Minecraft.getInstance();
         switch(packet.kind()) {
@@ -32,5 +34,5 @@ public final class ClientCharacters {
             case 4 -> { if(game.screen instanceof CharacterScreen screen) screen.error(packet.data()); }
         }
     }
-    public static void clear() { STATES.clear(); preview=null; previewPlayer=null; FemaleGenderBridge.clear(); SkinTemplates.clear(); }
+    public static void clear() { STATES.clear(); preview=null; previewPlayer=null; previewEntity=null; FemaleGenderBridge.clear(); SkinTemplates.clear(); }
 }

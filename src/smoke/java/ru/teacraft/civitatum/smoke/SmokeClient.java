@@ -75,7 +75,7 @@ public final class SmokeClient {
         } else if(phase==11 && ticks>60) {
             if(!ClientCharacters.get(game.player).race.equals("human")) throw new IllegalStateException("Unauthorized race change was accepted");
             System.out.println("CIVITATUM_CLIENT_UNAUTHORIZED_SAVE_REJECTED");
-            click((CharacterScreen)game.screen,710,115);phase=12;ticks=0;
+            click((CharacterScreen)game.screen,650,115);phase=12;ticks=0;
         } else if(phase==12 && game.screen instanceof CharacterScreen screen && ticks>45) {
             capture(game,"08-body-settings.png");click(screen,450,375);phase=13;ticks=0;
         } else if(phase==13 && game.screen instanceof CharacterScreen screen && ticks>45) {
@@ -98,8 +98,43 @@ public final class SmokeClient {
         } else if(phase==16 && ticks>60) {
             if(ClientCharacters.get(game.player).selected)throw new IllegalStateException("Reset didn't synchronize");
             System.out.println("CIVITATUM_CLIENT_SHARD_AND_RESET_PASS");
-            game.stop();
+            AppearanceChecks.run();
+            var editor=new CharacterScreen(0,false,RaceCatalog.defaults("human","female"));
+            editor.draft().hairAsset="ombre_wreath";AppearanceCatalog.outfit(editor.draft(),"many_layers");
+            editor.draft().bust=0;set(editor,"tab",5);set(editor,"angle",-1.15f);game.setScreen(editor);phase=100;ticks=0;
+        } else if(phase==100 && game.screen instanceof CharacterScreen screen && ticks>40) {
+            capture(game,"10-bust-zero.png");screen.draft().bust=.8f;phase=101;ticks=0;
+        } else if(phase==101 && game.screen instanceof CharacterScreen screen && ticks>40) {
+            capture(game,"11-bust-full.png");set(screen,"angle",0f);phase=102;ticks=0;
+        } else if(phase==102 && game.screen instanceof CharacterScreen screen && ticks>40) {
+            capture(game,"12-front-rigid-head.png");set(screen,"tab",3);phase=103;ticks=0;
+        } else if(phase==103 && game.screen instanceof CharacterScreen screen && ticks>40) {
+            capture(game,"13-hair-original.png");click(screen,445,235);click(screen,496,279);click(screen,547,323);
+            if(screen.draft().hairMain!=1 || screen.draft().hairDecor1!=2 || screen.draft().hairDecor2!=3)throw new IllegalStateException("Independent hair color controls failed");
+            phase=104;ticks=0;
+        } else if(phase==104 && game.screen instanceof CharacterScreen screen && ticks>40) {
+            capture(game,"14-hair-three-colors.png");set(screen,"tab",6);set(screen,"garmentGroup",4);phase=105;ticks=0;
+        } else if(phase==105 && game.screen instanceof CharacterScreen screen && ticks>40) {
+            capture(game,"15-clothing-original.png");click(screen,496,260);click(screen,547,304);
+            var coat=screen.draft().wardrobe.get("coat");if(coat.main!=2 || coat.decor1!=3)throw new IllegalStateException("Garment colors didn't update independently");
+            screen.draft().usePlayerSkin=true;phase=106;ticks=0;
+        } else if(phase==106 && game.screen instanceof CharacterScreen screen && ticks>40) {
+            capture(game,"16-own-skin-with-outfit.png");
+            var draft=screen.draft();var checked=RaceCatalog.validate(draft);if(!DataJson.GSON.toJsonTree(checked).equals(DataJson.GSON.toJsonTree(draft)))throw new IllegalStateException("New appearance validation changed legitimate data");
+            game.getSingleplayerServer().execute(()->RaceService.open(game.getSingleplayerServer().getPlayerList().getPlayer(game.player.getUUID()),true,false));phase=107;ticks=0;
+        } else if(phase==107 && game.screen instanceof CharacterScreen screen && ticks>60) {
+            screen.selectForTest("human","female");screen.draft().hairAsset="ponytail_streak";screen.draft().hairDecor1=3;
+            AppearanceCatalog.outfit(screen.draft(),"many_layers");screen.draft().wardrobe.get("coat").decor1=4;
+            PacketDistributor.sendToServer(new RaceNetwork.Serverbound(0,screen.tokenForTest(),RaceCatalog.validate(screen.draft()).json()));phase=108;ticks=0;
+        } else if(phase==108 && ticks>80) {
+            var c=ClientCharacters.get(game.player);
+            if(!c.hairAsset.equals("ponytail_streak") || c.hairDecor1!=3 || c.wardrobe.get("coat").decor1!=4)throw new IllegalStateException("Appearance network roundtrip failed");
+            System.out.println("CCC_APPEARANCE_UI_AND_NETWORK_PASS");game.stop();
         }
+    }
+    private void set(CharacterScreen screen,String field,Object value) {
+        try {var f=CharacterScreen.class.getDeclaredField(field);f.setAccessible(true);f.set(screen,value);}
+        catch(ReflectiveOperationException e){throw new IllegalStateException(e);}
     }
     private void click(CharacterScreen screen,int x,int y) {
         float zoom=Math.min(screen.width/800f,screen.height/450f);

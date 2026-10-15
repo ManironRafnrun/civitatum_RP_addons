@@ -16,6 +16,7 @@ public final class CivitatumClient {
     public static final KeyMapping ABILITY=new KeyMapping("key.civitatum.ability",InputConstants.Type.KEYSYM,GLFW.GLFW_KEY_R,"key.categories.civitatum");
     public static final KeyMapping EDITOR=new KeyMapping("key.civitatum.appearance",InputConstants.Type.KEYSYM,GLFW.GLFW_KEY_F6,"key.categories.civitatum");
     public CivitatumClient(IEventBus bus) {
+        bus.addListener((RegisterClientReloadListenersEvent e) -> e.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> SkinTemplates.clear()));
         RaceNetwork.CLIENT_RECEIVER=ClientCharacters::accept;
         bus.addListener((RegisterKeyMappingsEvent e) -> { e.register(ABILITY);e.register(EDITOR); });
         bus.addListener((EntityRenderersEvent.RegisterLayerDefinitions e) -> e.registerLayerDefinition(CharacterLayer.MODEL,CharacterLayer::createModel));

@@ -3,3 +3,6 @@ build/
 run/
 libs/*.jar
 *.log
+__pycache__/
+*.py[cod]
+*.bundle

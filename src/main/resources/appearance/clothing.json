@@ -1,0 +1,5001 @@
+{
+  "schema": "ccc-clothing-three-controls-v2",
+  "version": "2.0.0",
+  "texture_size": [
+    64,
+    64
+  ],
+  "control_labels": {
+    "main": "Цвет одежды",
+    "decor_1": "Цвет декораций 1",
+    "decor_2": "Цвет декораций 2"
+  },
+  "maximum_controls_per_item": 3,
+  "mask_mode": "binary_disjoint",
+  "default_mode": "exact_original_per_control",
+  "rendering": "start from original.png; recolor only explicitly selected masks using neutral_RGB * selected_RGB / 255; retain original alpha",
+  "preset_model": "outfits contain independently selectable clothing items; three controls are per item",
+  "loader_status": "prepared assets; this schema requires a CCC clothing loader update",
+  "entries": [
+    {
+      "id": "many_layers",
+      "name": "Many Layers",
+      "gender": "female",
+      "source_model": "slim",
+      "primary_item": "coat",
+      "source_file": "sources/female/Many-Layers-FTU-on-planetminecraft-com.png",
+      "source_sha256": "180916f3635a40f1ae893ad2a360849c396d05123bdae1095388c66fd86971f7",
+      "items": {
+        "coat": {
+          "label_ru": "Верхняя одежда",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Фиолетовая ткань",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#9195B5"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Светлая обшивка и белые вставки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#EEEEEE"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Фиолетовая ткань",
+            "decor_1": "Светлая обшивка и белые вставки"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 100,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/many_layers/slim/coat",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/many_layers/classic/coat",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            }
+          }
+        },
+        "boots": {
+          "label_ru": "Обувь",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Нижние кожаные детали и обувь",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#BCAB9F"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Нижние кожаные детали и обувь"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/many_layers/slim/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/many_layers/classic/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "trousers": {
+          "label_ru": "Брюки",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Тёмно-синяя ткань брюк",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#49545E"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Тёмно-синяя ткань брюк"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/many_layers/slim/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/many_layers/classic/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "corset": {
+          "label_ru": "Корсет",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Корсет и кожаные детали торса",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#BB9975"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Корсет и кожаные детали торса"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/many_layers/slim/corset",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/many_layers/classic/corset",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/female/many_layers/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/female/many_layers/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "aegipants",
+      "name": "Aegipants",
+      "gender": "female",
+      "source_model": "slim",
+      "primary_item": "breeches",
+      "source_file": "sources/female/Aegipants-MassiveLooks-FTU-on-planetminecraft-com.png",
+      "source_sha256": "2495ec14b899bd22f26a61f4599e4c9ebcc7da3f6ab9caf4768760912bdb9212",
+      "items": {
+        "breeches": {
+          "label_ru": "Бриджи",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Синяя ткань бриджей",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#51728C"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Синяя ткань бриджей"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/aegipants/slim/breeches",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/aegipants/classic/breeches",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "boots": {
+          "label_ru": "Обувь",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Тёмная кожа обуви",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#362D24"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Красные манжеты",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#802626"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            },
+            "decor_2": {
+              "label_ru": "Цвет декораций 2",
+              "affects_ru": "Золотистая отделка",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#CFAE6B"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Сиреневый",
+                  "mode": "tint",
+                  "rgb": "#A085CC"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Коричневый",
+                  "mode": "tint",
+                  "rgb": "#8F674A"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серебристый",
+                  "mode": "tint",
+                  "rgb": "#B5BEC7"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [],
+          "descriptions": {
+            "main": "Тёмная кожа обуви",
+            "decor_1": "Красные манжеты",
+            "decor_2": "Золотистая отделка"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 12,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/aegipants/slim/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/aegipants/classic/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            }
+          }
+        },
+        "blouse": {
+          "label_ru": "Блузка",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Светлая ткань блузки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#FCFCF7"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Красный бант на шее",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#802626"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            },
+            "decor_2": {
+              "label_ru": "Цвет декораций 2",
+              "affects_ru": "Манжеты и пуговицы",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#AB8452"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Сиреневый",
+                  "mode": "tint",
+                  "rgb": "#A085CC"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Коричневый",
+                  "mode": "tint",
+                  "rgb": "#8F674A"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серебристый",
+                  "mode": "tint",
+                  "rgb": "#B5BEC7"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [],
+          "descriptions": {
+            "main": "Светлая ткань блузки",
+            "decor_1": "Красный бант на шее",
+            "decor_2": "Манжеты и пуговицы"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/aegipants/slim/blouse",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/aegipants/classic/blouse",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            }
+          }
+        },
+        "belt": {
+          "label_ru": "Пояс",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Пояс",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#B0A090"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Пояс"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/aegipants/slim/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/aegipants/classic/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/female/aegipants/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/female/aegipants/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "verer_daelaf",
+      "name": "Verer Daelaf",
+      "gender": "female",
+      "source_model": "slim",
+      "primary_item": "dress",
+      "source_file": "sources/female/F2U-Verer-Daelaf-on-planetminecraft-com.png",
+      "source_sha256": "d79e8e50c1c32aab4a40d5f53bc823e9645366ebae6a422db97221753337cdd4",
+      "items": {
+        "dress": {
+          "label_ru": "Платье",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Основная синяя ткань платья",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#3E546E"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Красный центральный элемент",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#7E4242"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            },
+            "decor_2": {
+              "label_ru": "Цвет декораций 2",
+              "affects_ru": "Зелёный плащ",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#576A5E"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Сиреневый",
+                  "mode": "tint",
+                  "rgb": "#A085CC"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Коричневый",
+                  "mode": "tint",
+                  "rgb": "#8F674A"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серебристый",
+                  "mode": "tint",
+                  "rgb": "#B5BEC7"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [],
+          "descriptions": {
+            "main": "Основная синяя ткань платья",
+            "decor_1": "Красный центральный элемент",
+            "decor_2": "Зелёный плащ"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 204,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/verer_daelaf/slim/dress",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/verer_daelaf/classic/dress",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/female/verer_daelaf/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/female/verer_daelaf/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "mistress_arrives",
+      "name": "Mistress Arrives",
+      "gender": "female",
+      "source_model": "slim",
+      "primary_item": "dress",
+      "source_file": "sources/female/FTU-Mistress-Arrives-on-planetminecraft-com.png",
+      "source_sha256": "38e2822ad89190c5aed299ab0d172aea070bf95bdef656813b653be6b28cfb69",
+      "items": {
+        "dress": {
+          "label_ru": "Платье",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Бордовая ткань платья",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#792E42"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Бордовая ткань платья"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/mistress_arrives/slim/dress",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/mistress_arrives/classic/dress",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "corset": {
+          "label_ru": "Корсет",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Вся кожа корсета, включая тени",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#765739"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Вся кожа корсета, включая тени"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/mistress_arrives/slim/corset",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/mistress_arrives/classic/corset",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/female/mistress_arrives/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/female/mistress_arrives/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "ladylike",
+      "name": "Ladylike",
+      "gender": "female",
+      "source_model": "slim",
+      "primary_item": "skirt",
+      "source_file": "sources/female/Ladylike-MassiveLooks-FTU-on-planetminecraft-com (1).png",
+      "source_sha256": "cf319f46483f43f0ba6b9f3b2d3cd3cae906437a226fef29f8526414e2c458fe",
+      "items": {
+        "skirt": {
+          "label_ru": "Юбка",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Тёмно-зелёная ткань",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#323931"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Светлая передняя вставка",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#8A885F"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Тёмно-зелёная ткань",
+            "decor_1": "Светлая передняя вставка"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/ladylike/slim/skirt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/ladylike/classic/skirt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            }
+          }
+        },
+        "blouse": {
+          "label_ru": "Блузка",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Светлая ткань блузки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#D3C6BE"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Светлая ткань блузки"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/ladylike/slim/blouse",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/ladylike/classic/blouse",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "corset": {
+          "label_ru": "Корсет",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Тёмная кожа корсета",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#6E5445"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Светлая окантовка корсета",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#B59D79"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Тёмная кожа корсета",
+            "decor_1": "Светлая окантовка корсета"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/ladylike/slim/corset",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/ladylike/classic/corset",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/female/ladylike/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/female/ladylike/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "sunset",
+      "name": "Sunset",
+      "gender": "female",
+      "source_model": "slim",
+      "primary_item": "dress",
+      "source_file": "sources/female/Massivelooks-Sunset-on-planetminecraft-com.png",
+      "source_sha256": "9cd7a11d39d75413387cc659778bf4f7c828b1e3a43ee38cd5fd2ee222db0391",
+      "items": {
+        "dress": {
+          "label_ru": "Платье",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Красная ткань платья",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#9B3D3D"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Рубиновый",
+                  "mode": "tint",
+                  "rgb": "#C51E3A"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Королевский синий",
+                  "mode": "tint",
+                  "rgb": "#244FCA"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Изумрудный",
+                  "mode": "tint",
+                  "rgb": "#17865A"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Фиолетовый",
+                  "mode": "tint",
+                  "rgb": "#7936B2"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Охра",
+                  "mode": "tint",
+                  "rgb": "#C08A25"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Золотистые узоры и пояс",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#C18F5D"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Красная ткань платья",
+            "decor_1": "Золотистые узоры и пояс"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/sunset/slim/dress",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/sunset/classic/dress",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/female/sunset/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/female/sunset/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "pumpkin_field",
+      "name": "Pumpkin Field",
+      "gender": "female",
+      "source_model": "slim",
+      "primary_item": "skirt",
+      "source_file": "sources/female/Massivelooks-Pumpkin-Field-on-planetminecraft-com.png",
+      "source_sha256": "502f56028dc0a4a7cc6e9edb4350fe2e2dff17f9ccb2cd112b1e32126c601324",
+      "items": {
+        "skirt": {
+          "label_ru": "Юбка",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Оливковая ткань юбки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#837550"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Песочный",
+                  "mode": "tint",
+                  "rgb": "#B5AA87"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Шалфейный",
+                  "mode": "tint",
+                  "rgb": "#899479"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Землистый",
+                  "mode": "tint",
+                  "rgb": "#88705A"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Грифельный",
+                  "mode": "tint",
+                  "rgb": "#79828A"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Терракотовый",
+                  "mode": "tint",
+                  "rgb": "#A1765D"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Тыквы и стебли",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#BF5432"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            },
+            "decor_2": {
+              "label_ru": "Цвет декораций 2",
+              "affects_ru": "Коричневый нижний край",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#5C3D35"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Сиреневый",
+                  "mode": "tint",
+                  "rgb": "#A085CC"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Коричневый",
+                  "mode": "tint",
+                  "rgb": "#8F674A"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серебристый",
+                  "mode": "tint",
+                  "rgb": "#B5BEC7"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [],
+          "descriptions": {
+            "main": "Оливковая ткань юбки",
+            "decor_1": "Тыквы и стебли",
+            "decor_2": "Коричневый нижний край"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/pumpkin_field/slim/skirt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/pumpkin_field/classic/skirt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            }
+          }
+        },
+        "blouse": {
+          "label_ru": "Блузка",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Светлая ткань блузки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#CFC8B4"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Медальон",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#CA7A4A"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            },
+            "decor_2": {
+              "label_ru": "Цвет декораций 2",
+              "affects_ru": "Обрамление медальона",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#98672F"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Сиреневый",
+                  "mode": "tint",
+                  "rgb": "#A085CC"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Коричневый",
+                  "mode": "tint",
+                  "rgb": "#8F674A"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серебристый",
+                  "mode": "tint",
+                  "rgb": "#B5BEC7"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [],
+          "descriptions": {
+            "main": "Светлая ткань блузки",
+            "decor_1": "Медальон",
+            "decor_2": "Обрамление медальона"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/pumpkin_field/slim/blouse",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/pumpkin_field/classic/blouse",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            }
+          }
+        },
+        "belt": {
+          "label_ru": "Пояс",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Кожа пояса",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#9E6B5A"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Пряжка / центральная вставка",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#C98051"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Кожа пояса",
+            "decor_1": "Пряжка / центральная вставка"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/pumpkin_field/slim/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/female/pumpkin_field/classic/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/female/pumpkin_field/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/female/pumpkin_field/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "ruby_sash",
+      "name": "Ruby Sash",
+      "gender": "male",
+      "source_model": "classic",
+      "primary_item": "vest",
+      "source_file": "sources/male/Massivelooks-Ruby-Sash-on-planetminecraft-com.png",
+      "source_sha256": "b6eb17e26b877228e7c96ec8457f19c1c00b56db84d20a2226e89d4b5457507b",
+      "items": {
+        "vest": {
+          "label_ru": "Жилет",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Ткань жилета",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#4F3D31"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Ткань жилета"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/slim/vest",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/classic/vest",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "boots": {
+          "label_ru": "Обувь",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Обувь",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#5C3F2B"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Обувь"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/slim/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/classic/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "shirt": {
+          "label_ru": "Рубаха",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Светлая ткань рубахи",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#BBA899"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Манжеты",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#3D291E"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Светлая ткань рубахи",
+            "decor_1": "Манжеты"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/slim/shirt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/classic/shirt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            }
+          }
+        },
+        "trousers": {
+          "label_ru": "Брюки",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Брюки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#292929"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Брюки"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/slim/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/classic/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "sash": {
+          "label_ru": "Кушак",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Ткань кушака",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#7B2530"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Ткань кушака"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/slim/sash",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/classic/sash",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/male/ruby_sash/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "northern_warmth",
+      "name": "Northern Warmth",
+      "gender": "male",
+      "source_model": "classic",
+      "primary_item": "coat",
+      "source_file": "sources/male/Massivelooks-Northern-Warmth-on-planetminecraft-com.png",
+      "source_sha256": "47f5192d3458444f2a7b2eabf671e413ac042113bd0dcce6132061b3ab8990eb",
+      "items": {
+        "coat": {
+          "label_ru": "Верхняя одежда",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Основная ткань кафтана",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#413B3B"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Красные вставки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#623029"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            },
+            "decor_2": {
+              "label_ru": "Цвет декораций 2",
+              "affects_ru": "Кайма и обшивка",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#877454"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Сиреневый",
+                  "mode": "tint",
+                  "rgb": "#A085CC"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Коричневый",
+                  "mode": "tint",
+                  "rgb": "#8F674A"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серебристый",
+                  "mode": "tint",
+                  "rgb": "#B5BEC7"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [],
+          "descriptions": {
+            "main": "Основная ткань кафтана",
+            "decor_1": "Красные вставки",
+            "decor_2": "Кайма и обшивка"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 44,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/northern_warmth/slim/coat",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/northern_warmth/classic/coat",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            }
+          }
+        },
+        "boots": {
+          "label_ru": "Обувь",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Обувь",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#593A29"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Обувь"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/northern_warmth/slim/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/northern_warmth/classic/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/male/northern_warmth/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/male/northern_warmth/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "kingdom_commoner",
+      "name": "Kingdom Commoner",
+      "gender": "male",
+      "source_model": "classic",
+      "primary_item": "tunic",
+      "source_file": "sources/male/Massivelooks-Kingdom-Commoner-on-planetminecraft-com.png",
+      "source_sha256": "600c860c56f35df5a75bb5cba06fc7bba26377ef103474f7be03d6668c6d0cd8",
+      "items": {
+        "tunic": {
+          "label_ru": "Туника",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Охристая ткань туники",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#AD6C1C"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Кокетка и плечи",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#693A16"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Охристая ткань туники",
+            "decor_1": "Кокетка и плечи"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/slim/tunic",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/classic/tunic",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            }
+          }
+        },
+        "boots": {
+          "label_ru": "Обувь",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Обувь",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#322517"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Обувь"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/slim/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/classic/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "gloves": {
+          "label_ru": "Наручи / перчатки",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Наручи / перчатки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#332318"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Наручи / перчатки"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/slim/gloves",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/classic/gloves",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "trousers": {
+          "label_ru": "Брюки",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Брюки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#523E26"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Брюки"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/slim/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/classic/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "belt": {
+          "label_ru": "Пояс",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Пояс",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#7F4D2A"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Пояс"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/slim/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/classic/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/male/kingdom_commoner/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "gambeson",
+      "name": "Gambeson",
+      "gender": "male",
+      "source_model": "classic",
+      "primary_item": "gambeson",
+      "source_file": "sources/male/MassiveLooks-Gambeson-on-planetminecraft-com (1).png",
+      "source_sha256": "cda0cfa787c512e0f899b94592ad87f2da6abb69cc2254f64a639cb9c1d2b018",
+      "items": {
+        "gambeson": {
+          "label_ru": "Гамбезон",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Основные стёганые панели",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#333333"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Второй, фиолетовый цвет гамбезона",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#5C3C69"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Основные стёганые панели",
+            "decor_1": "Второй, фиолетовый цвет гамбезона"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 55,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/slim/gambeson",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/classic/gambeson",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            }
+          }
+        },
+        "boots": {
+          "label_ru": "Обувь",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Кожа обуви",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#4F3D37"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Светлая отделка носков",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#B0B0B0"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Кожа обуви",
+            "decor_1": "Светлая отделка носков"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/slim/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/classic/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png"
+              }
+            }
+          }
+        },
+        "gloves": {
+          "label_ru": "Наручи / перчатки",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Наручи / перчатки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#4F3D37"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Наручи / перчатки"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/slim/gloves",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/classic/gloves",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "trousers": {
+          "label_ru": "Брюки",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Брюки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#3D3D3D"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Брюки"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/slim/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/classic/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "belt": {
+          "label_ru": "Пояс",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Пояс",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#332B23"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Пояс"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/slim/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/gambeson/classic/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/male/gambeson/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/male/gambeson/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "tunic_grey",
+      "name": "Tunic Grey",
+      "gender": "male",
+      "source_model": "classic",
+      "primary_item": "tunic",
+      "source_file": "sources/male/Medieval-Kingdoms-Tunic-Grey-on-planetminecraft-com.png",
+      "source_sha256": "cc39abcac60bd3a3555c46917183388cab952577ddb3b27954be98a6e6541223",
+      "items": {
+        "tunic": {
+          "label_ru": "Туника",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Серая ткань туники",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#929292"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Шнуровка ворота",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#40322C"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            },
+            "decor_2": {
+              "label_ru": "Цвет декораций 2",
+              "affects_ru": "Боковая кожаная деталь",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#665147"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Сиреневый",
+                  "mode": "tint",
+                  "rgb": "#A085CC"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Коричневый",
+                  "mode": "tint",
+                  "rgb": "#8F674A"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серебристый",
+                  "mode": "tint",
+                  "rgb": "#B5BEC7"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [],
+          "descriptions": {
+            "main": "Серая ткань туники",
+            "decor_1": "Шнуровка ворота",
+            "decor_2": "Боковая кожаная деталь"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/slim/tunic",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/classic/tunic",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            }
+          }
+        },
+        "boots": {
+          "label_ru": "Обувь",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Обувь",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#54423B"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Обувь"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/slim/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/classic/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "trousers": {
+          "label_ru": "Брюки",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Брюки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#42200F"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Брюки"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/slim/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/classic/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "belt": {
+          "label_ru": "Пояс",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Пояс",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#665147"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Пояс"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/slim/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/classic/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/male/tunic_grey/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    },
+    {
+      "id": "striped_shirt",
+      "name": "Striped Shirt",
+      "gender": "male",
+      "source_model": "slim",
+      "primary_item": "shirt",
+      "source_file": "sources/male/Massivelooks-FTU-Striped-Shirt-on-planetminecraft-com.png",
+      "source_sha256": "e052acaa7357351d8d6369297eac42bf25b6c13735754f862875b1ebf496d763",
+      "items": {
+        "trousers": {
+          "label_ru": "Брюки",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Брюки",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#4C3E3E"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Брюки"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/slim/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/classic/trousers",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "boots": {
+          "label_ru": "Обувь",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Обувь",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#4D3423"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Обувь"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/slim/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/classic/boots",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        },
+        "shirt": {
+          "label_ru": "Рубаха",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Красные полосы",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#973535"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#578FB8"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#687E60"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Бордовый",
+                  "mode": "tint",
+                  "rgb": "#A45B6C"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Льняной",
+                  "mode": "tint",
+                  "rgb": "#D9C7A5"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Угольный",
+                  "mode": "tint",
+                  "rgb": "#535B66"
+                }
+              ]
+            },
+            "decor_1": {
+              "label_ru": "Цвет декораций 1",
+              "affects_ru": "Светлые полосы",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#946351"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Розовый",
+                  "mode": "tint",
+                  "rgb": "#C36D8C"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Синий",
+                  "mode": "tint",
+                  "rgb": "#7296BD"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Золотистый",
+                  "mode": "tint",
+                  "rgb": "#BD9A58"
+                }
+              ]
+            },
+            "decor_2": {
+              "label_ru": "Цвет декораций 2",
+              "affects_ru": "Ворот и ремешки рукавов",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#382319"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Сиреневый",
+                  "mode": "tint",
+                  "rgb": "#A085CC"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Светлый льняной",
+                  "mode": "tint",
+                  "rgb": "#E0D5B9"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Зелёный",
+                  "mode": "tint",
+                  "rgb": "#7A9D70"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Коричневый",
+                  "mode": "tint",
+                  "rgb": "#8F674A"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серебристый",
+                  "mode": "tint",
+                  "rgb": "#B5BEC7"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [],
+          "descriptions": {
+            "main": "Красные полосы",
+            "decor_1": "Светлые полосы",
+            "decor_2": "Ворот и ремешки рукавов"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/slim/shirt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/classic/shirt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png",
+                "decor_1": "mask_decor_1.png",
+                "decor_2": "mask_decor_2.png"
+              }
+            }
+          }
+        },
+        "belt": {
+          "label_ru": "Пояс",
+          "controls": {
+            "main": {
+              "label_ru": "Цвет одежды",
+              "affects_ru": "Пояс",
+              "default": "original",
+              "palette": [
+                {
+                  "id": "original",
+                  "label_ru": "Исходный",
+                  "mode": "original",
+                  "rgb": "#382319"
+                },
+                {
+                  "id": "color_1",
+                  "label_ru": "Тёмно-коричневый",
+                  "mode": "tint",
+                  "rgb": "#4B3327"
+                },
+                {
+                  "id": "color_2",
+                  "label_ru": "Чёрный",
+                  "mode": "tint",
+                  "rgb": "#353437"
+                },
+                {
+                  "id": "color_3",
+                  "label_ru": "Коньячный",
+                  "mode": "tint",
+                  "rgb": "#99623F"
+                },
+                {
+                  "id": "color_4",
+                  "label_ru": "Светлая кожа",
+                  "mode": "tint",
+                  "rgb": "#B18F65"
+                },
+                {
+                  "id": "color_5",
+                  "label_ru": "Серый",
+                  "mode": "tint",
+                  "rgb": "#78736B"
+                }
+              ]
+            }
+          },
+          "disabled_controls": [
+            "decor_1",
+            "decor_2"
+          ],
+          "descriptions": {
+            "main": "Пояс"
+          },
+          "visible_fragment": true,
+          "fixed_pixels": 0,
+          "models": {
+            "slim": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/slim/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            },
+            "classic": {
+              "directory": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/classic/belt",
+              "textures": {
+                "original": "original.png",
+                "neutral": "neutral.png",
+                "fixed": "fixed.png",
+                "base_surface": "base_surface.png",
+                "outer_surface": "outer_surface.png"
+              },
+              "masks": {
+                "main": "mask_main.png"
+              }
+            }
+          }
+        }
+      },
+      "outfit_original": {
+        "slim": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/slim/outfit_original.png",
+        "classic": "assets/civitatum/textures/character/clothing_v2/male/striped_shirt/classic/outfit_original.png"
+      },
+      "hidden_cloth_reconstructed": false
+    }
+  ]
+}
