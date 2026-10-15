@@ -36,6 +36,9 @@ public final class RaceCatalog {
         c.ears = r.earStyles[0]; c.horns = r.hornsRequired ? r.hornStyles[0] : 0;
         if (r.hornsRequired && c.horns == 0) c.horns = r.hornStyles[r.hornStyles.length - 1];
         c.hairStyle = r.hairAllowed ? 1 : 0;
+        c.armModel="female".equals(sex)?"slim":"classic";
+        c.skinOriginal="human".equals(id);c.eyesOriginal=r.eyeColors.length>1;
+        AppearanceCatalog.outfit(c,AppearanceCatalog.outfits(sex).getFirst().id());
         if (r.algnor() && c.female()) c.horns = 0;
         return validate(c);
     }
@@ -58,8 +61,8 @@ public final class RaceCatalog {
             if (c.horns == 0 && !mayNone) c.horns = r.hornStyles[0];
             else if (c.horns != 0 && !contains(r.hornStyles, c.horns)) c.horns = r.hornStyles[0];
         }
-        c.tail = r.tailAllowed ? clamp(c.tail, 0, 1) : 0;
-        c.beard = r.beardAllowed ? clamp(c.beard, 0, 3) : 0;
+        c.tail = r.tailAllowed ? clamp(c.tail, 0, 3) : 0;
+        c.beard = r.beardAllowed ? clamp(c.beard, 0, 5) : 0;
         c.hairStyle = r.hairAllowed ? clamp(c.hairStyle, 0, 4) : 0;
         c.tattoo = clamp(c.tattoo, 0, r.tattoos);
         if (!"orthosian".equals(r.id) && !"jahar".equals(r.id)) c.glow = false;
@@ -71,6 +74,11 @@ public final class RaceCatalog {
         c.bustX = finite(c.bustX, -1, 1, 0); c.bustY = finite(c.bustY, -1, 1, 0);
         c.bustZ = finite(c.bustZ, -1, 0, 0); c.cleavage = finite(c.cleavage, 0, .1f, 0);
         c.bounce = finite(c.bounce, 0, .5f, .333f); c.floppiness = finite(c.floppiness, .25f, 1, .75f);
+        if(!List.of("auto","classic","slim").contains(c.armModel))c.armModel="auto";
+        c.eyeHeight=clamp(c.eyeHeight,-2,2);c.underwearColor=clamp(c.underwearColor,0,6);
+        if(r.eyeColors.length==1)c.eyesOriginal=false;
+        if(!"human".equals(c.race))c.skinOriginal=false;
+        if(BirthsignCatalog.get(c.birthsign)==null)c.birthsign="none";
         if (!c.female() || "forged".equals(c.race)) c.bust = 0;
         AppearanceCatalog.validate(c,r.hairAllowed);
         return c;

@@ -10,7 +10,7 @@ import net.minecraft.core.Holder;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public final class RaceService {
-    private record Edit(long token, boolean choose, boolean item, long expires) {}
+    private record Edit(long token, EditorMode mode, net.minecraft.world.item.Item item, long expires) {}
     private static final Map<UUID, Edit> EDITS = new HashMap<>();
     private static final SecureRandom RANDOM = new SecureRandom();
     public static long time(ServerPlayer p) { return p.server.overworld().getGameTime(); }
@@ -18,11 +18,20 @@ public final class RaceService {
         var c = p.getData(Civitatum.STATE).character();
         return c.selected ? RaceCatalog.get(c.race) : null;
     }
-    public static void open(ServerPlayer p, boolean choose, boolean item) {
-        if (!choose && race(p) == null) { p.displayClientMessage(Component.literal("Сначала выберите расу: /civitatum races choose"), false); return; }
-        Edit session = new Edit(RANDOM.nextLong(), choose, item, time(p) + 20 * 1800);
-        EDITS.put(p.getUUID(), session);
-        RaceNetwork.send(p, new RaceNetwork.Clientbound(choose ? 1 : 2, p.getUUID(), session.token, p.getData(Civitatum.STATE).json()));
+    public static void open(ServerPlayer p,boolean choose,boolean item) {
+        open(p,choose?EditorMode.CREATE:item?EditorMode.COSMETIC:EditorMode.FULL,item?Civitatum.SHARD.get():null);
+    }
+    private static void open(ServerPlayer p,EditorMode mode,net.minecraft.world.item.Item item) {
+        if(!mode.race() && race(p)==null) {p.displayClientMessage(Component.literal("Сначала выберите расу: /civitatum race choose"),false);return;}
+        Edit session=new Edit(RANDOM.nextLong(),mode,item,time(p)+20*1800);
+        EDITS.put(p.getUUID(),session);
+        int kind=mode==EditorMode.CREATE?1:mode==EditorMode.FULL?2:5;
+        RaceNetwork.send(p,new RaceNetwork.Clientbound(kind,p.getUUID(),session.token,p.getData(Civitatum.STATE).json()));
+    }
+    public static void naked(ServerPlayer p,boolean value) {
+        var state=p.getData(Civitatum.STATE);if(!state.character().selected)return;
+        var c=state.character().copy();c.naked=value;p.setData(Civitatum.STATE,new RaceState(c,state.curseDeaths(),state.cooldownUntil()));RaceNetwork.sync(p);
+        p.displayClientMessage(Component.literal(value?"Декоративная одежда скрыта":"Декоративная одежда показана"),true);
     }
     public static void cancel(ServerPlayer p, long token) {
         Edit edit = EDITS.get(p.getUUID());
@@ -33,13 +42,17 @@ public final class RaceService {
         EDITS.remove(p.getUUID());RaceAbilities.clearTransient(p);MetalEating.logout(p);
         p.setData(Civitatum.STATE,new RaceState(new CharacterData(),previous.curseDeaths(),previous.cooldownUntil()));
         apply(p);p.refreshDisplayName();RaceNetwork.sync(p);
-        p.sendSystemMessage(Component.literal("Раса сброшена. Новый выбор: /civitatum races choose"));
+        p.sendSystemMessage(Component.literal("Раса сброшена. Новый выбор: /civitatum race choose"));
     }
     public static void openWithShard(ServerPlayer p) {
-        if(!p.isCreative() && !p.getInventory().contains(new net.minecraft.world.item.ItemStack(Civitatum.SHARD.get()))) {
-            p.displayClientMessage(Component.literal("Для изменения внешности нужен Осколок Демитары"),true);return;
+        var item=p.getInventory().contains(new net.minecraft.world.item.ItemStack(Civitatum.MIRROR.get()))?Civitatum.MIRROR.get():Civitatum.SHARD.get();
+        openCosmetic(p,item);
+    }
+    public static void openCosmetic(ServerPlayer p,net.minecraft.world.item.Item item) {
+        if(!p.isCreative() && !p.getInventory().contains(new net.minecraft.world.item.ItemStack(item))) {
+            p.displayClientMessage(Component.literal("Для изменения внешности нужно Зеркало преображения или Осколок Демитары"),true);return;
         }
-        open(p,false,true);
+        open(p,EditorMode.COSMETIC,item);
     }
     public static void save(ServerPlayer p, long token, String json) {
         Edit edit = EDITS.get(p.getUUID());
@@ -50,17 +63,16 @@ public final class RaceService {
             CharacterData c = RaceCatalog.validate(Civitatum.GSON.fromJson(json, CharacterData.class));
             c.selected = true;
             RaceState previous = p.getData(Civitatum.STATE);
-            if (!edit.choose && (!previous.character().race.equals(c.race) || !previous.character().sex.equals(c.sex)))
-                throw new IllegalArgumentException("В этом редакторе нельзя менять расу или пол");
-            boolean changed = !previous.character().json().equals(c.json());
-            if (edit.item && changed && !p.isCreative()) {
+            AppearanceRules.check(previous.character(),c,edit.mode);
+            boolean changed = !DataJson.GSON.toJsonTree(previous.character()).equals(DataJson.GSON.toJsonTree(c));
+            if (edit.item!=null && changed && !p.isCreative()) {
                 int slot = -1;
                 for (int i = 0; i < p.getInventory().getContainerSize(); i++)
-                    if (p.getInventory().getItem(i).is(Civitatum.SHARD.get())) { slot = i; break; }
+                    if (p.getInventory().getItem(i).is(edit.item)) { slot = i; break; }
                 if (slot < 0) throw new IllegalArgumentException("Для изменения нужен Осколок Демитары");
                 p.getInventory().getItem(slot).shrink(1);
             }
-            if (edit.choose) RaceAbilities.clearTransient(p);
+            if (edit.mode==EditorMode.CREATE) RaceAbilities.clearTransient(p);
             p.setData(Civitatum.STATE, new RaceState(c, previous.curseDeaths(), previous.cooldownUntil()));
             EDITS.remove(p.getUUID());
             apply(p); enforceBoots(p); p.refreshDisplayName(); RaceNetwork.sync(p);
@@ -90,6 +102,8 @@ public final class RaceService {
         modifier(p, Attributes.SCALE, "scale", scale - 1, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         modifier(p, Attributes.BLOCK_INTERACTION_RANGE, "block_reach", scale - 1, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         modifier(p, Attributes.ENTITY_INTERACTION_RANGE, "entity_reach", scale - 1, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        modifier(p,Attributes.MAX_HEALTH,"birthsign_health",r!=null && state.character().birthsign.equals("lady")?4:0,AttributeModifier.Operation.ADD_VALUE);
+        modifier(p,Attributes.LUCK,"birthsign_luck",r!=null && state.character().birthsign.equals("thief")?1:0,AttributeModifier.Operation.ADD_VALUE);
         updateSpeed(p);
         if (p.getHealth() > p.getMaxHealth()) p.setHealth(p.getMaxHealth());
         p.refreshDimensions();
@@ -108,6 +122,7 @@ public final class RaceService {
             default -> 0;
         };
         modifier(p, Attributes.MOVEMENT_SPEED, "speed", speed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        modifier(p,Attributes.MOVEMENT_SPEED,"birthsign_speed",r!=null && p.getData(Civitatum.STATE).character().birthsign.equals("steed")?.10:0,AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
     }
     private static boolean isForest(ServerPlayer p) {
         String key = p.level().getBiome(p.blockPosition()).unwrapKey().map(k -> k.location().toString()).orElse("");

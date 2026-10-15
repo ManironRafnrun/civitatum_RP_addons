@@ -38,9 +38,12 @@ public final class RaceAbilities {
         return target instanceof Enemy || (target instanceof Mob mob && mob.getTarget() == p);
     }
     public static int experience(Player p, int value) {
-        if (!"human".equals(p.getData(Civitatum.STATE).character().race) || !p.getData(Civitatum.STATE).character().selected || value <= 0) return value;
+        var c=p.getData(Civitatum.STATE).character();
+        if(!c.selected || value<=0)return value;
+        int bonus=(c.race.equals("human")?1:0)+(c.birthsign.equals("mage")?1:0);
+        if(bonus==0)return value;
         Runtime rt = runtime(p);
-        rt.xpTenths += value;
+        rt.xpTenths += value*bonus;
         int extra = rt.xpTenths / 10;
         rt.xpTenths %= 10;
         return value + extra;

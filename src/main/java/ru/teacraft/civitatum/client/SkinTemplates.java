@@ -5,85 +5,83 @@ import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.resources.ResourceLocation;
 import ru.teacraft.civitatum.*;
 
-/** Race template or original player skin, composited with the authored clothing and hair UVs. */
+/** One explicit compositing order shared by the editor and world rendering. */
 public final class SkinTemplates {
-    private static final Map<String,net.minecraft.resources.ResourceLocation> CACHE=new LinkedHashMap<>();
+    public static final int[] UNDERWEAR_COLORS={0,0xE0D5B9,0x44434A,0xA45B6C,0x578FB8,0x687E60,0x9B7753};
+    private record Entry(ResourceLocation skin,ResourceLocation glow) {}
+    private static final Map<String,Entry> CACHE=new LinkedHashMap<>();
+    private static final Map<ResourceLocation,ResourceLocation> GLOW=new HashMap<>();
     private static long nextId;
+    public static String model(CharacterData c) {return c.armModel.equals("auto")?(c.female()?"slim":"classic"):c.armModel;}
     public static PlayerSkin skin(CharacterData c,PlayerSkin original) {
-        if(!c.selected || (c.usePlayerSkin && c.hairAsset.isEmpty() && (!c.wardrobeEnabled || c.wardrobe.isEmpty()))) return original;
-        var race=RaceCatalog.get(c.race);
-        if(race==null) return original;
-        String key=c.race+"_"+c.sex+"_"+c.skin+"_"+c.hair+"_"+c.eyes+"_"+c.hairStyle+"_"+original.model().id()+"_"+c.usePlayerSkin+"_"+original.texture()+"_"+c.hairAsset+"_"+c.hairMain+"_"+c.hairDecor1+"_"+c.hairDecor2+"_"+c.wardrobeEnabled+"_"+DataJson.GSON.toJson(c.wardrobe);
-        var location=CACHE.get(key);
-        if(location==null) {
-            NativeImage image=c.usePlayerSkin?AppearanceTextures.ownSkin(original.texture()):new NativeImage(64,64,false);
+        if(!c.selected)return original;var race=RaceCatalog.get(c.race);if(race==null)return original;
+        String model=model(c);
+        String key=c.race+"/"+c.sex+"/"+model+"/"+c.skin+"/"+c.eyes+"/"+c.skinOriginal+"/"+c.eyesOriginal+"/"+c.eyeHeight+"/"+c.hair+"/"+c.hairStyle+"/"+c.hairAsset+"/"+c.hairMain+"/"+c.hairDecor1+"/"+c.hairDecor2+"/"+c.usePlayerSkin+"/"+original.texture()+"/"+c.naked+"/"+c.underwearColor+"/"+c.wardrobeEnabled+"/"+DataJson.GSON.toJson(c.wardrobe)+"/"+c.tattoo+"/"+c.tattooColor+"/"+c.glow;
+        Entry entry=CACHE.get(key);
+        if(entry==null) {
+            NativeImage image=c.usePlayerSkin?AppearanceTextures.ownSkin(original.texture()):new NativeImage(64,64,true);
             if(image==null)return original;
+            NativeImage emission=new NativeImage(image.getWidth(),image.getHeight(),true);
+            if(c.usePlayerSkin)AppearanceTextures.remapArms(image,original.model()==PlayerSkin.Model.SLIM?3:4,model.equals("slim")?3:4);
+            else AppearanceTextures.paint(image,"textures/character/skin/base_07/"+model+"/original.png","textures/character/skin/base_07/"+model+"/neutral.png",
+                Map.of("textures/character/skin/base_07/"+model+"/mask_skin.png",c.skinOriginal?-1:race.color("skin",c.skin)),0);
+            // 1 skin -> 2 race markings -> 3 underwear -> 4 eyes -> 5 clothes -> 6 hair.
+            tattoos(image,emission,c,race);
+            String underwear="textures/character/underwear/underwear_"+(c.female()?"fem":"male")+".png";
+            AppearanceTextures.underwear(image,underwear,UNDERWEAR_COLORS[c.underwearColor]);AppearanceTextures.occlude(emission,underwear);
             if(!c.usePlayerSkin) {
-                int skin=race.color("skin",c.skin), hair=race.color("hair",c.hair), eyes=race.color("eyes",c.eyes);
-                // Base head, body, limbs. Clothing occupies the vanilla body/leg regions.
-                fill(image,0,0,64,64,0);
-                fill(image,0,0,32,16,argb(skin));
-                fill(image,0,16,56,16,argb(skin));
-                fill(image,16,48,32,16,argb(skin));
-                if(!c.wardrobeEnabled) {
-                    fill(image,16,16,24,16,argb(0x6C7075));
-                    fill(image,0,16,16,16,argb(0x484F5C));
-                    fill(image,16,48,16,16,argb(0x484F5C));
-                } else {
-                    // Technical base underwear until the separate authored underwear archive is supplied.
-                    fill(image,16,28,24,4,argb(0xD6C7AB));
-                    fill(image,0,16,16,6,argb(0xD6C7AB));fill(image,16,48,16,6,argb(0xD6C7AB));
-                    if(c.female())fill(image,16,22,24,3,argb(0xD6C7AB));
-                }
-                // Tunic front collar; hands are uncovered.
-                fill(image,21,20,6,2,argb(skin));
-                if(c.hairAsset.isEmpty() && c.hairStyle!=0 && race.hairAllowed) {
-                    fill(image,0,0,32,8,argb(hair)); fill(image,0,8,8,4,argb(hair));
-                    fill(image,16,8,16,4,argb(hair));
-                    fill(image,8,8,8,c.hairStyle==2 ? 3 : 1,argb(hair));
-                }
-                fill(image,9,11,2,1,argb(0xEFEDE6)); fill(image,13,11,2,1,argb(0xEFEDE6));
-                fill(image,10,11,1,1,argb(eyes)); fill(image,13,11,1,1,argb(eyes));
-                fill(image,11,14,2,1,argb(shade(skin,.7f)));
-                if(race.id.equals("forged")) {
-                    fill(image,20,20,8,12,argb(skin));
-                    for(int y=20;y<32;y+=4) fill(image,20,y,8,1,argb(shade(skin,.55f)));
-                    fill(image,23,24,2,2,argb(eyes));
-                }
-                if(race.id.equals("hobbit") || race.algnor()) {
-                    fill(image,0,26,16,6,argb(skin)); fill(image,16,58,16,6,argb(skin));
-                }
+                String path="textures/character/eyes/pmc_eyes/"+model;
+                var colors=new LinkedHashMap<String,Integer>();colors.put(path+"/mask_iris.png",c.eyesOriginal?-1:race.color("eyes",c.eyes));
+                colors.put(path+"/mask_upper_contour.png",hairColor(c));
+                AppearanceTextures.paint(image,path+"/original.png",path+"/neutral.png",colors,c.eyeHeight);
+                if(race.id.equals("jahar"))for(int x:new int[]{9,10,13,14})set(emission,x,13+c.eyeHeight,0xFFFFFFFF);
             }
-            if(c.wardrobeEnabled)for(String group:AppearanceCatalog.GROUPS) {
+            if(!c.naked && c.wardrobeEnabled)for(String group:AppearanceCatalog.GROUPS) {
                 var choice=c.wardrobe.get(group);var asset=choice==null?null:AppearanceCatalog.clothing(choice.asset);
-                if(asset!=null && asset.permits(c.sex))AppearanceTextures.apply(image,asset,original.model().id(),choice.main,choice.decor1,choice.decor2);
+                if(asset!=null && asset.permits(c.sex)) {
+                    AppearanceTextures.apply(image,asset,model,choice.main,choice.decor1,choice.decor2);
+                    var v=asset.models().get(model);AppearanceTextures.occlude(emission,v.directory()+"/original.png");
+                }
             }
-            var hairAsset=AppearanceCatalog.hair(c.hairAsset);
-            if(hairAsset!=null && race.hairAllowed)AppearanceTextures.apply(image,hairAsset,original.model().id(),c.hairMain,c.hairDecor1,c.hairDecor2);
-            var texture=new DynamicTexture(image);
-            texture.setFilter(false,false);
-            location=Civitatum.res("generated/skin/"+Integer.toUnsignedString(key.hashCode(),16)+"_"+nextId++);
-            Minecraft.getInstance().getTextureManager().register(location,texture);
-            CACHE.put(key,location);
-            if(CACHE.size()>256) {
-                var first=CACHE.entrySet().iterator();
-                var removed=first.next(); first.remove();
-                Minecraft.getInstance().getTextureManager().release(removed.getValue());
+            var hair=AppearanceCatalog.hair(c.hairAsset);
+            if(hair!=null && race.hairAllowed) {
+                AppearanceTextures.apply(image,hair,model,c.hairMain,c.hairDecor1,c.hairDecor2);
+                AppearanceTextures.occlude(emission,hair.models().get(model).directory()+"/original.png");
+            } else if(!c.usePlayerSkin && c.hairStyle>0 && race.hairAllowed) {
+                int color=rgba(hairColor(c));fill(image,0,0,32,8,color);fill(image,0,8,8,4,color);fill(image,16,8,16,4,color);
+                fill(image,8,8,8,c.hairStyle==2?3:1,color);
             }
+            String id=Long.toString(nextId++);
+            var location=register("generated/skin/"+id,image);
+            ResourceLocation glow=null;
+            if(race.id.equals("jahar") || (race.id.equals("orthosian") && c.glow && c.tattoo>0))glow=register("generated/glow/"+id,emission);else emission.close();
+            entry=new Entry(location,glow);CACHE.put(key,entry);if(glow!=null)GLOW.put(location,glow);
+            if(CACHE.size()>128){var it=CACHE.entrySet().iterator();var first=it.next();it.remove();release(first.getValue());}
         }
-        return new PlayerSkin(location,original.textureUrl(),original.capeTexture(),original.elytraTexture(),original.model(),original.secure());
+        return new PlayerSkin(entry.skin,original.textureUrl(),original.capeTexture(),original.elytraTexture(),model.equals("slim")?PlayerSkin.Model.SLIM:PlayerSkin.Model.WIDE,original.secure());
     }
-    private static void fill(NativeImage image,int x,int y,int width,int height,int color) {
-        for(int yy=y;yy<y+height;yy++) for(int xx=x;xx<x+width;xx++) image.setPixelRGBA(xx,yy,color);
+    public static int hairColor(CharacterData c) {
+        var a=AppearanceCatalog.hair(c.hairAsset);
+        if(a!=null){var colors=a.controls().get("main").colors();return colors.get(AppearanceCatalog.color(a,"main",c.hairMain)).rgb();}
+        return RaceCatalog.get(c.race).color("hair",c.hair);
     }
-    private static int argb(int rgb) { return 0xFF000000 | (rgb & 255)<<16 | rgb&0xFF00 | (rgb>>16)&255; }
-    private static int shade(int rgb,float multiplier) {
-        return ((int)((rgb>>16&255)*multiplier)<<16)|((int)((rgb>>8&255)*multiplier)<<8)|(int)((rgb&255)*multiplier);
+    private static void tattoos(NativeImage image,NativeImage emission,CharacterData c,RaceDefinition r) {
+        if(c.tattoo<=0 || (!r.id.equals("jahar") && !r.id.equals("orthosian")))return;
+        int color=rgba(r.color("tattoo",c.tattooColor));
+        for(int y=9;y<=14;y++)for(int x:new int[]{8,15})mark(image,emission,x,y,color,c.glow && r.id.equals("orthosian"));
+        if(c.tattoo%2==0)for(int x=8;x<=15;x++)mark(image,emission,x,10,color,c.glow && r.id.equals("orthosian"));
+        if(c.tattoo>=3)for(int y=8;y<=11;y++)mark(image,emission,11,y,color,c.glow && r.id.equals("orthosian"));
+        if(r.id.equals("orthosian"))for(int row=0;row<c.tattoo;row++)for(int x=20;x<28;x++)mark(image,emission,x,21+row,color,c.glow);
     }
-    public static void clear() {
-        for(var location:CACHE.values()) Minecraft.getInstance().getTextureManager().release(location);
-        CACHE.clear();AppearanceTextures.clear();
-    }
+    private static void mark(NativeImage image,NativeImage emission,int x,int y,int color,boolean glow){set(image,x,y,color);if(glow)set(emission,x,y,color);}
+    private static void set(NativeImage image,int x,int y,int color){int s=image.getWidth()/64;for(int dy=0;dy<s;dy++)for(int dx=0;dx<s;dx++)image.setPixelRGBA(x*s+dx,y*s+dy,color);}
+    private static void fill(NativeImage image,int x,int y,int w,int h,int color){for(int yy=y;yy<y+h;yy++)for(int xx=x;xx<x+w;xx++)set(image,xx,yy,color);}
+    private static int rgba(int rgb){return 0xFF000000|(rgb&255)<<16|rgb&0xFF00|(rgb>>16)&255;}
+    private static ResourceLocation register(String path,NativeImage image){var id=Civitatum.res(path);var texture=new DynamicTexture(image);texture.setFilter(false,false);Minecraft.getInstance().getTextureManager().register(id,texture);return id;}
+    public static ResourceLocation glow(ResourceLocation skin){return GLOW.get(skin);}
+    private static void release(Entry e){var m=Minecraft.getInstance().getTextureManager();m.release(e.skin);GLOW.remove(e.skin);if(e.glow!=null)m.release(e.glow);}
+    public static void clear(){CACHE.values().forEach(SkinTemplates::release);CACHE.clear();GLOW.clear();AppearanceTextures.clear();}
 }

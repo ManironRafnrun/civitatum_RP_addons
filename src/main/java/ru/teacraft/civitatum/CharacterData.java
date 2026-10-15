@@ -11,6 +11,9 @@ public final class CharacterData {
     public String hairAsset = "", outfitPreset = "";
     public int hairMain, hairDecor1, hairDecor2;
     public boolean wardrobeEnabled;
+    public boolean naked, skinOriginal, eyesOriginal;
+    public String armModel = "auto", birthsign = "none";
+    public int eyeHeight, underwearColor;
     public java.util.Map<String,Garment> wardrobe = new java.util.LinkedHashMap<>();
     public static final class Garment {
         public String asset = "";

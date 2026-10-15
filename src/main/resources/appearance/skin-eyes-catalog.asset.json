@@ -1,0 +1,245 @@
+{
+  "schema": "ccc-skin-eyes-preparation-v1",
+  "version": "1.0.0",
+  "texture_size": [
+    64,
+    64
+  ],
+  "source_model": "slim",
+  "surface": "base",
+  "sources": {
+    "skin": {
+      "file": "sources/Slim-Arm-Base-Skin-7-on-planetminecraft-com.png",
+      "sha256": "908350f26afd68385b49ed04ba425168a30654219a5001e10cb2ff7173eca10b"
+    },
+    "eyes": {
+      "file": "sources/pmcskin3d-steve.png",
+      "sha256": "0055fbaa3944cefd79bd6a192f3c3040bc443867b2f97b40c158beb355776856"
+    }
+  },
+  "models": {
+    "slim": {
+      "skin_directory": "assets/civitatum/textures/character/skin/base_07/slim",
+      "eyes_directory": "assets/civitatum/textures/character/eyes/pmc_eyes/slim",
+      "combined_directory": "assets/civitatum/textures/character/appearance/base_07_pmc_eyes/slim",
+      "masks": {
+        "skin": "mask_skin.png",
+        "iris": "mask_iris.png",
+        "upper_contour": "mask_upper_contour.png"
+      },
+      "fixed": "fixed.png"
+    },
+    "classic": {
+      "skin_directory": "assets/civitatum/textures/character/skin/base_07/classic",
+      "eyes_directory": "assets/civitatum/textures/character/eyes/pmc_eyes/classic",
+      "combined_directory": "assets/civitatum/textures/character/appearance/base_07_pmc_eyes/classic",
+      "masks": {
+        "skin": "mask_skin.png",
+        "iris": "mask_iris.png",
+        "upper_contour": "mask_upper_contour.png"
+      },
+      "fixed": "fixed.png"
+    }
+  },
+  "controls": {
+    "skin": {
+      "label_ru": "Цвет кожи",
+      "default": "original",
+      "palette": [
+        {
+          "id": "original",
+          "label_ru": "Исходный",
+          "mode": "original",
+          "rgb": "#E9D9C8"
+        },
+        {
+          "id": "color_1",
+          "label_ru": "Очень светлый",
+          "mode": "tint",
+          "rgb": "#E9D9C8"
+        },
+        {
+          "id": "color_2",
+          "label_ru": "Светлый",
+          "mode": "tint",
+          "rgb": "#DFC3A7"
+        },
+        {
+          "id": "color_3",
+          "label_ru": "Тёплый",
+          "mode": "tint",
+          "rgb": "#C99E7B"
+        },
+        {
+          "id": "color_4",
+          "label_ru": "Смуглый",
+          "mode": "tint",
+          "rgb": "#B78763"
+        },
+        {
+          "id": "color_5",
+          "label_ru": "Коричневый",
+          "mode": "tint",
+          "rgb": "#8B5A3C"
+        },
+        {
+          "id": "color_6",
+          "label_ru": "Тёмный",
+          "mode": "tint",
+          "rgb": "#563725"
+        }
+      ],
+      "suggested_binding": "skin_color"
+    },
+    "iris": {
+      "label_ru": "Цвет глаз",
+      "default": "original",
+      "palette": [
+        {
+          "id": "original",
+          "label_ru": "Исходный",
+          "mode": "original",
+          "rgb": "#3AA9B6"
+        },
+        {
+          "id": "color_1",
+          "label_ru": "Голубой",
+          "mode": "tint",
+          "rgb": "#599CCB"
+        },
+        {
+          "id": "color_2",
+          "label_ru": "Зелёный",
+          "mode": "tint",
+          "rgb": "#6F9252"
+        },
+        {
+          "id": "color_3",
+          "label_ru": "Карий",
+          "mode": "tint",
+          "rgb": "#81522E"
+        },
+        {
+          "id": "color_4",
+          "label_ru": "Серый",
+          "mode": "tint",
+          "rgb": "#8D969C"
+        },
+        {
+          "id": "color_5",
+          "label_ru": "Ореховый",
+          "mode": "tint",
+          "rgb": "#9A8749"
+        },
+        {
+          "id": "color_6",
+          "label_ru": "Тёмно-карий",
+          "mode": "tint",
+          "rgb": "#443127"
+        }
+      ],
+      "suggested_binding": "eye_color"
+    },
+    "upper_contour": {
+      "label_ru": "Цвет верхнего контура глаз",
+      "default": "original",
+      "palette": [
+        {
+          "id": "original",
+          "label_ru": "Исходный",
+          "mode": "original",
+          "rgb": "#7C4713"
+        },
+        {
+          "id": "color_1",
+          "label_ru": "Чёрный",
+          "mode": "tint",
+          "rgb": "#353237"
+        },
+        {
+          "id": "color_2",
+          "label_ru": "Каштановый",
+          "mode": "tint",
+          "rgb": "#78513B"
+        },
+        {
+          "id": "color_3",
+          "label_ru": "Красно-каштановый",
+          "mode": "tint",
+          "rgb": "#9E5144"
+        },
+        {
+          "id": "color_4",
+          "label_ru": "Рыжий",
+          "mode": "tint",
+          "rgb": "#C17A42"
+        },
+        {
+          "id": "color_5",
+          "label_ru": "Блонд",
+          "mode": "tint",
+          "rgb": "#B7995B"
+        },
+        {
+          "id": "color_6",
+          "label_ru": "Серебристый",
+          "mode": "tint",
+          "rgb": "#A6AAAE"
+        }
+      ],
+      "suggested_binding": "hair_color"
+    }
+  },
+  "mask_mode": "binary_disjoint_in_combined_texture",
+  "default_mode": "exact_original_per_control",
+  "rendering": "start from combined original.png; replace RGB only in selected masks using neutral_RGB * selected_RGB / 255; keep original alpha",
+  "standalone_layer_order": [
+    "skin",
+    "eyes"
+  ],
+  "standalone_mask_note": "The complete standalone skin mask includes the face underneath eyes. Use the combined masks for a single combined texture; they exclude eye, contour, and sclera pixels.",
+  "removed_skin_template_pixels": 42,
+  "sclera_color": "#F8F8F8",
+  "face_regions": {
+    "iris": [
+      [
+        10,
+        13
+      ],
+      [
+        13,
+        13
+      ]
+    ],
+    "upper_contour": [
+      [
+        9,
+        12
+      ],
+      [
+        10,
+        12
+      ],
+      [
+        13,
+        12
+      ],
+      [
+        14,
+        12
+      ]
+    ],
+    "sclera": [
+      [
+        9,
+        13
+      ],
+      [
+        14,
+        13
+      ]
+    ]
+  },
+  "upper_contour_note": "Brown upper eye line; exact anatomy not inferred. May be linked to hair color in the editor.",
+  "loader_status": "prepared assets; integration and in-game verification not performed"
+}

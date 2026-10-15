@@ -23,11 +23,14 @@ import net.minecraft.world.item.ArmorItem;
 @EventBusSubscriber(modid = Civitatum.ID)
 public final class ServerEvents {
     @SubscribeEvent public static void commands(RegisterCommandsEvent e) {
-        var races = Commands.literal("races").then(Commands.literal("choose")
+        var choose = Commands.literal("choose")
             .executes(c -> { RaceService.open(c.getSource().getPlayerOrException(), true, false); return 1; })
             .then(Commands.argument("player", EntityArgument.player()).requires(s -> s.hasPermission(2))
-                .executes(c -> { RaceService.open(EntityArgument.getPlayer(c,"player"), true, false); return 1; })));
-        var race = Commands.literal("race");
+                .executes(c -> { RaceService.open(EntityArgument.getPlayer(c,"player"), true, false); return 1; }));
+        var race = Commands.literal("race").then(choose);
+        race.then(Commands.literal("naked").then(Commands.argument("value",com.mojang.brigadier.arguments.BoolArgumentType.bool()).executes(c->{
+            RaceService.naked(c.getSource().getPlayerOrException(),com.mojang.brigadier.arguments.BoolArgumentType.getBool(c,"value"));return 1;
+        })));
         race.then(Commands.literal("looks").executes(c -> { RaceService.open(c.getSource().getPlayerOrException(),false,false); return 1; })
             .then(Commands.argument("player",EntityArgument.player()).requires(s -> s.hasPermission(2))
                 .executes(c -> { RaceService.open(EntityArgument.getPlayer(c,"player"),false,false); return 1; })));
@@ -37,7 +40,7 @@ public final class ServerEvents {
         var config=Commands.literal("configreload").requires(s -> s.hasPermission(2)).executes(c -> {
             ModConfig.load();for(var p:c.getSource().getServer().getPlayerList().getPlayers()) {RaceService.apply(p);RaceNetwork.sync(p);}return 1;
         });
-        e.getDispatcher().register(Commands.literal("civitatum").then(races).then(race).then(config));
+        e.getDispatcher().register(Commands.literal("civitatum").then(race).then(config));
     }
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer p)) return;
@@ -45,7 +48,7 @@ public final class ServerEvents {
         for (ServerPlayer other : p.server.getPlayerList().getPlayers())
             if (other != p) RaceNetwork.send(p,new RaceNetwork.Clientbound(0,other.getUUID(),0,other.getData(Civitatum.STATE).json()));
         if (!p.getData(Civitatum.STATE).character().selected)
-            p.sendSystemMessage(Component.literal("Наконец-то вы прибыли. Создайте персонажа: /civitatum races choose"));
+            p.sendSystemMessage(Component.literal("Наконец-то вы прибыли. Создайте персонажа: /civitatum race choose"));
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent e) { if(e.getEntity() instanceof ServerPlayer p) RaceService.logout(p); }
     @SubscribeEvent public static void respawn(PlayerEvent.PlayerRespawnEvent e) { if(e.getEntity() instanceof ServerPlayer p) { RaceService.apply(p); RaceNetwork.sync(p); } }
@@ -67,6 +70,8 @@ public final class ServerEvents {
     @SubscribeEvent public static void tick(PlayerTickEvent.Post e) {
         if(!(e.getEntity() instanceof ServerPlayer p)) return;
         RaceAbilities.tick(p); MetalEating.tick(p);
+        var character=p.getData(Civitatum.STATE).character();
+        if(character.selected && character.birthsign.equals("lord") && p.tickCount%160==0 && p.getFoodData().getFoodLevel()>=6 && p.isAlive())p.heal(1);
         if(p.tickCount % 5 == 0) RaceService.updateSpeed(p);
         RaceService.enforceBoots(p);
     }
@@ -77,9 +82,9 @@ public final class ServerEvents {
             e.setNewSize(EntityDimensions.scalable(e.getNewSize().width(),1.8f).withEyeHeight(1.62f));
     }
     @SubscribeEvent public static void interact(PlayerInteractEvent.RightClickItem e) {
-        if(e.getItemStack().is(Civitatum.SHARD.get())) {
+        if(e.getItemStack().is(Civitatum.SHARD.get()) || e.getItemStack().is(Civitatum.MIRROR.get())) {
             e.setCanceled(true); e.setCancellationResult(InteractionResult.SUCCESS);
-            if(e.getEntity() instanceof ServerPlayer p) RaceService.open(p,false,true);
+            if(e.getEntity() instanceof ServerPlayer p) RaceService.openCosmetic(p,e.getItemStack().getItem());
         } else if(e.getEntity() instanceof ServerPlayer p && MetalEating.start(p,e.getHand())) {
             e.setCanceled(true); e.setCancellationResult(InteractionResult.CONSUME);
         } else if(RaceService.forbidsBoots(e.getEntity()) && e.getItemStack().getItem() instanceof ArmorItem a && a.getEquipmentSlot() == EquipmentSlot.FEET) {
@@ -117,6 +122,9 @@ public final class ServerEvents {
         if(e.getEntity() instanceof ServerPlayer p) {
             var r=RaceService.race(p);
             if(r!=null) {
+                String sign=p.getData(Civitatum.STATE).character().birthsign;
+                if(source.is(DamageTypeTags.IS_FIRE) && sign.equals("lord"))factor*=1.25f;
+                if(source.is(DamageTypeTags.IS_FALL) && sign.equals("thief"))factor*=.9f;
                 if(source.is(DamageTypeTags.IS_FALL) && java.util.List.of("astral_elf","goblin","hobbit","forest_algnor","city_algnor").contains(r.id)) factor*=.8f;
                 boolean fire=source.is(DamageTypeTags.IS_FIRE);
                 if(fire) factor*=switch(r.id) { case "fire_dragonborn" -> .75f; case "frost_dragonborn","jahar" -> 1.25f; case "end_dragonborn" -> 1.15f; default -> 1; };
@@ -130,6 +138,7 @@ public final class ServerEvents {
             var r=RaceService.race(attacker);
             if(r!=null) {
                 boolean melee=source.is(DamageTypes.PLAYER_ATTACK);
+                if(melee && attacker.getData(Civitatum.STATE).character().birthsign.equals("warrior"))factor*=1.1f;
                 if(melee && r.id.equals("orc")) factor*=1.1f;
                 if(melee && r.id.equals("firbolg")) factor*=.9f;
                 if(r.id.equals("orc") && (source.getDirectEntity() instanceof net.minecraft.world.entity.projectile.AbstractArrow)) factor*=.9f;

@@ -33,6 +33,7 @@ public final class CompatPatches {
                         RaceDefinition r=RaceService.race(p);
                         if(r==null) return;
                         double factor=r.id.equals("dwarf") ? .70 : r.id.equals("astral_elf") ? 1.15 : r.elf() ? 1.10 : 1;
+                        if(p.getData(Civitatum.STATE).character().birthsign.equals("mage"))factor*=1.15;
                         if(factor!=1) {
                             double regen=((Number)e.getClass().getMethod("getRegen").invoke(e)).doubleValue();
                             e.getClass().getMethod("setRegen",double.class).invoke(e,regen*factor);

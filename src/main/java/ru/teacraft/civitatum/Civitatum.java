@@ -21,6 +21,7 @@ public final class Civitatum {
         () -> AttachmentType.builder(() -> RaceState.EMPTY).serialize(RaceState.CODEC).copyOnDeath().build());
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ID);
     public static final DeferredItem<Item> SHARD = ITEMS.registerSimpleItem("demitara_shard", new Item.Properties().stacksTo(64));
+    public static final DeferredItem<Item> MIRROR = ITEMS.registerSimpleItem("appearance_mirror", new Item.Properties().stacksTo(16));
     public Civitatum(IEventBus bus) {
         ATTACHMENTS.register(bus); ITEMS.register(bus);
         bus.addListener(RaceNetwork::register);

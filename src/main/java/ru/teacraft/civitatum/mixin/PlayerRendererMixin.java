@@ -15,6 +15,13 @@ public abstract class PlayerRendererMixin {
             net.minecraft.client.renderer.MultiBufferSource buffers,int light,float partial,CallbackInfo ci) {
         if(ClientCharacters.isPreview(p))ci.cancel();
     }
+    @Inject(method="setModelProperties",at=@At("TAIL"))
+    private void civitatum$legs(AbstractClientPlayer p,CallbackInfo ci) {
+        var c=ClientCharacters.get(p);var r=ru.teacraft.civitatum.RaceCatalog.get(c.race);
+        if(c.selected && r!=null && r.algnor()) {
+            var model=((PlayerRenderer)(Object)this).getModel();model.leftLeg.visible=false;model.rightLeg.visible=false;model.leftPants.visible=false;model.rightPants.visible=false;
+        }
+    }
     @Inject(method="scale(Lnet/minecraft/client/player/AbstractClientPlayer;Lcom/mojang/blaze3d/vertex/PoseStack;F)V",at=@At("TAIL"))
     private void civitatum$pose(AbstractClientPlayer p,PoseStack pose,float partial,CallbackInfo ci) {
         var c=ClientCharacters.get(p);

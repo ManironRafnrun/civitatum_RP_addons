@@ -18,6 +18,7 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
     public static final ModelLayerLocation MODEL=new ModelLayerLocation(Civitatum.res("body_details"),"main");
     private static final net.minecraft.resources.ResourceLocation TEXTURE=Civitatum.res("textures/entity/details.png");
     private final ModelPart root;
+    private final AlgnorLegs algnorLegs=new AlgnorLegs();
     private final ModelPart bust=createBustModel().bakeRoot();
     public CharacterLayer(RenderLayerParent<AbstractClientPlayer,PlayerModel<AbstractClientPlayer>> parent,ModelPart root) { super(parent);this.root=root; }
     @Override public void render(PoseStack pose,MultiBufferSource buffers,int light,AbstractClientPlayer p,
@@ -31,35 +32,31 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
         boolean helmet=!p.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
         if(!helmet) {
             pair(pose,buffer,light,getParentModel().head,"ears"+c.ears,c.ears!=0,r.color("skin",c.skin),1,c.earPitch,c.earYaw,c.earRoll,c.earOffset,false);
-            if(c.beard!=0) attached(pose,buffer,light,getParentModel().head,"beard"+c.beard,r.color("hair",c.hair));
-            if(c.hairAsset.isEmpty() && c.hairStyle!=0 && r.hairAllowed) attached(pose,buffer,light,getParentModel().head,"hair"+c.hairStyle,r.color("hair",c.hair));
+            if(c.beard!=0) attached(pose,buffer,light,getParentModel().head,"beard"+c.beard,SkinTemplates.hairColor(c));
+            if(c.hairAsset.isEmpty() && c.hairStyle!=0 && r.hairAllowed) attached(pose,buffer,light,getParentModel().head,"hair"+c.hairStyle,SkinTemplates.hairColor(c));
             if(r.id.equals("orc")) attached(pose,buffer,light,getParentModel().head,"tusks",0xEADBB7);
             if(r.id.equals("firbolg")) attached(pose,buffer,light,getParentModel().head,"nose",r.color("skin",c.skin));
             if(r.dragon()) attached(pose,buffer,light,getParentModel().head,"muzzle",r.color("skin",c.skin));
-            attached(pose,buffer,r.id.equals("jahar") ? 0xF000F0 : light,getParentModel().head,"eyes",r.color("eyes",c.eyes));
-            if(c.tattoo!=0 && r.id.equals("jahar")) attached(pose,buffer,light,getParentModel().head,"jaharTattoo"+c.tattoo,r.color("tattoo",c.tattooColor));
+
         }
         if(c.horns!=0) pair(pose,buffer,light,getParentModel().head,"horns"+c.horns,true,r.color("horn",c.hornColor),c.hornSize,
             c.hornPitch,c.hornYaw,c.hornRoll,c.hornOffset,c.hornOnForehead);
         if(c.tail!=0) {
             pose.pushPose();getParentModel().body.translateAndRotate(pose);
-            var tail=root.getChild("tail");
+            var tail=root.getChild("tail"+c.tail);
             tail.yRot=(float)Math.sin(age*.09f)*.2f;
             tail.render(pose,buffer,light,OverlayTexture.NO_OVERLAY,0xFF000000|r.color("skin",c.skin));
             pose.popPose();
         }
         if(r.algnor()) {
-            attached(pose,buffer,light,getParentModel().leftLeg,"hoof",r.color("skin",c.skin));
-            attached(pose,buffer,light,getParentModel().rightLeg,"hoof",r.color("skin",c.skin));
+            algnorLegs.render(pose,buffer,light,getParentModel().leftLeg,r.color("skin",c.skin));
+            algnorLegs.render(pose,buffer,light,getParentModel().rightLeg,r.color("skin",c.skin));
         } else if(r.id.equals("hobbit")) {
             attached(pose,buffer,light,getParentModel().leftLeg,"foot",r.color("skin",c.skin));
             attached(pose,buffer,light,getParentModel().rightLeg,"foot",r.color("skin",c.skin));
         }
-        if(c.tattoo!=0 && r.id.equals("orthosian")) {
-            attached(pose,buffer,c.glow ? 0xF000F0 : light,getParentModel().head,"orthoHead"+c.tattoo,r.color("tattoo",c.tattooColor));
-            if(p.getItemBySlot(EquipmentSlot.CHEST).isEmpty())
-                attached(pose,buffer,c.glow ? 0xF000F0 : light,getParentModel().body,"orthoBody"+c.tattoo,r.color("tattoo",c.tattooColor));
-        }
+        var glow=SkinTemplates.glow(p.getSkin().texture());
+        if(glow!=null)getParentModel().renderToBuffer(pose,buffers.getBuffer(RenderType.eyes(glow)),0xF000F0,OverlayTexture.NO_OVERLAY);
         if(c.female() && c.bust>0 && !r.id.equals("forged") && (!FemaleGenderBridge.available() || ClientCharacters.isPreview(p))
             && (p.getItemBySlot(EquipmentSlot.CHEST).isEmpty() || c.showInArmor)) {
             pose.pushPose();getParentModel().body.translateAndRotate(pose);
@@ -148,6 +145,8 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
         box(root,"beard1",-3,-.4f,-4.2f,6,2,1);
         root.addOrReplaceChild("beard2",cube().addBox(-3.5f,0,-4.2f,7,3,1.4f).addBox(-2,3,-3.8f,4,3,1),PartPose.ZERO);
         box(root,"beard3",-3,-1.5f,-4.15f,6,1,1);
+        root.addOrReplaceChild("beard4",cube().addBox(-2.5f,0,-4.2f,5,3,1).addBox(-1,3,-4,2,4,1),PartPose.ZERO);
+        root.addOrReplaceChild("beard5",cube().addBox(-3.7f,-2,-4.2f,1.3f,4.5f,1).addBox(2.4f,-2,-4.2f,1.3f,4.5f,1).addBox(-2.5f,1,-4.2f,5,2,1),PartPose.ZERO);
         box(root,"hair1",-4.2f,-8.3f,-4.2f,8.4f,1.5f,8.4f);
         root.addOrReplaceChild("hair2",cube().addBox(-4.2f,-8.3f,-4.2f,8.4f,1.6f,8.4f).addBox(-4.2f,-6.7f,2.7f,8.4f,7,1.6f),PartPose.ZERO);
         root.addOrReplaceChild("hair3",cube().addBox(-4.2f,-8.3f,-4.2f,8.4f,1.4f,8.4f).addBox(-1.3f,-5.5f,4,2.6f,7,2),PartPose.ZERO);
@@ -156,7 +155,9 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
         box(root,"nose",-1,-4,-5.2f,2,2.5f,1.3f);
         box(root,"muzzle",-2.5f,-2.8f,-5.5f,5,2.8f,1.7f);
         root.addOrReplaceChild("eyes",cube().addBox(-2.7f,-5,-4.025f,.7f,.7f,.025f).addBox(1.8f,-5,-4.025f,.7f,.7f,.025f),PartPose.ZERO);
-        root.addOrReplaceChild("tail",cube().addBox(-1.2f,8,1.5f,2.4f,4,2.8f),PartPose.rotation(.3f,0,0));
+        root.addOrReplaceChild("tail1",cube().addBox(-1.2f,8,1.5f,2.4f,4,2.8f),PartPose.rotation(.3f,0,0));
+        root.addOrReplaceChild("tail2",cube().addBox(-.8f,8,1.5f,1.6f,7,1.8f),PartPose.rotation(.35f,0,0));
+        root.addOrReplaceChild("tail3",cube().addBox(-1.5f,8,1.5f,3,3,3.5f),PartPose.rotation(.2f,0,0));
         root.addOrReplaceChild("hoof",cube().addBox(-2.1f,0,-1.8f,4.2f,6,3.6f).addBox(-1.6f,5.5f,.4f,3.2f,4,3.3f)
             .addBox(-2.3f,9.2f,-2.1f,4.6f,2.8f,5),PartPose.ZERO);
         box(root,"foot",-2.7f,9,-3.8f,5.4f,3.1f,6.2f);
