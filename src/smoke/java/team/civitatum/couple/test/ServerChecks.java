@@ -67,6 +67,7 @@ public final class ServerChecks {
         for(int x=0;x<9;x++) for(int z=0;z<9;z++) h.setBlock(new BlockPos(x,1,z),Blocks.STONE);
         ServerPlayer a=h.makeMockServerPlayerInLevel(), b=h.makeMockServerPlayerInLevel(), c=h.makeMockServerPlayerInLevel();
         a.connection=new Recorder(a); b.connection=new Recorder(b); c.connection=new Recorder(c);
+        var oldMode=team.civitatum.couple.CoupleConfig.CARRY_OBSTACLE_MODE.get();
         try {
             Vec3 origin=Vec3.atBottomCenterOf(h.absolutePos(new BlockPos(4,2,4)));
             put(a,origin);put(b,origin.add(1,0,0));put(c,origin.add(0,0,1));
@@ -111,6 +112,7 @@ public final class ServerChecks {
             h.setBlock(new BlockPos(5,3,4),Blocks.AIR);
             put(a,origin);put(b,origin.add(1,0,0));
             h.assertTrue(CoupleServer.beginCarry(a,b),"carry starts for lateral collision test");a.positionRider(b);
+            team.civitatum.couple.CoupleConfig.CARRY_OBSTACLE_MODE.set(team.civitatum.couple.CoupleConfig.ObstacleMode.STRICT);
             h.setBlock(new BlockPos(5,3,4),Blocks.STONE);
             CoupleServer.tick(new ServerTickEvent.Post(() -> true, a.server));
             h.assertTrue(!CarryHooks.occupied(a)&&!b.isPassenger(),"sideways body cannot remain inside a wall");
@@ -118,9 +120,43 @@ public final class ServerChecks {
             System.out.println("COUPLE_SERVER_PASS consent,forgery,release,anchor,dimensions,speed,sneak,teleport,nesting,distance,wall,lateral_collision");
             h.succeed();
         } finally {
+            team.civitatum.couple.CoupleConfig.CARRY_OBSTACLE_MODE.set(oldMode);
             CoupleServer.end(a,null);CoupleServer.end(b,null);CoupleServer.end(c,null);
             for(ServerPlayer p:List.of(a,b,c)) { level.getServer().getPlayerList().remove(p); p.discard(); }
         }
+    }
+    @GameTest(template="empty",timeoutTicks=200)
+    public static void carryObstacleModes(GameTestHelper h){
+        var level=h.getLevel();for(int x=0;x<9;x++)for(int z=0;z<9;z++)h.setBlock(new BlockPos(x,1,z),Blocks.STONE);
+        ServerPlayer a=h.makeMockServerPlayerInLevel(),b=h.makeMockServerPlayerInLevel();a.connection=new Recorder(a);b.connection=new Recorder(b);
+        var old=team.civitatum.couple.CoupleConfig.CARRY_OBSTACLE_MODE.get();
+        var origin=Vec3.atBottomCenterOf(h.absolutePos(new BlockPos(4,2,4)));
+        try{
+            team.civitatum.couple.CoupleConfig.CARRY_OBSTACLE_MODE.set(team.civitatum.couple.CoupleConfig.ObstacleMode.RELAXED);
+            put(a,origin);put(b,origin.add(1,0,0));h.assertTrue(CoupleServer.beginCarry(a,b),"relaxed carry starts");a.positionRider(b);
+            h.setBlock(new BlockPos(4,2,5),Blocks.STONE);
+            h.assertTrue(!level.noCollision(b,b.getBoundingBox()),"test step really intersects passenger hitbox");
+            for(int i=0;i<30;i++)CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));
+            h.assertTrue(b.getVehicle()==a,"approaching one-block step does not drop passenger");
+            a.setPos(origin.add(0,.55,.4));CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));
+            a.setPos(origin.add(0,1,1));CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));
+            h.assertTrue(b.getVehicle()==a,"jump onto step preserves carry");
+            CoupleServer.end(a,null);put(a,origin);put(b,origin.add(1,0,0));
+            h.setBlock(new BlockPos(4,2,5),Blocks.AIR);
+            h.assertTrue(CoupleServer.beginCarry(a,b),"wall test starts");h.setBlock(new BlockPos(4,3,5),Blocks.STONE);
+            CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));h.assertTrue(b.getVehicle()==a,"brief wall contact is tolerated");
+            h.setBlock(new BlockPos(4,3,5),Blocks.AIR);CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));
+            h.setBlock(new BlockPos(4,3,5),Blocks.STONE);
+            for(int i=0;i<team.civitatum.couple.CoupleConfig.CARRY_OBSTACLE_GRACE.get()-1;i++)CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));
+            h.assertTrue(b.getVehicle()==a,"clear tick resets obstruction timer");
+            CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));h.assertTrue(!b.isPassenger(),"sustained upper-body obstruction releases in relaxed mode");
+            h.setBlock(new BlockPos(4,3,5),Blocks.AIR);put(a,origin);put(b,origin.add(1,0,0));
+            team.civitatum.couple.CoupleConfig.CARRY_OBSTACLE_MODE.set(team.civitatum.couple.CoupleConfig.ObstacleMode.OFF);
+            h.assertTrue(CoupleServer.beginCarry(a,b),"off mode starts");h.setBlock(new BlockPos(4,3,5),Blocks.STONE);
+            for(int i=0;i<30;i++)CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));h.assertTrue(b.getVehicle()==a,"OFF disables obstacle release");
+            b.stopRiding();CoupleServer.tick(new ServerTickEvent.Post(()->true,a.server));h.assertTrue(!CarryHooks.occupied(a),"OFF still permits normal release");
+            System.out.println("COUPLE_OBSTACLES_PASS step,jump,grace,reset,wall,off,release");h.succeed();
+        }finally{team.civitatum.couple.CoupleConfig.CARRY_OBSTACLE_MODE.set(old);CoupleServer.end(a,null);CoupleServer.end(b,null);for(var p:List.of(a,b)){level.getServer().getPlayerList().remove(p);p.discard();}}
     }
     @GameTest(template="empty",timeoutTicks=300)
     public static void socialPoliciesAndCleanup(GameTestHelper h){

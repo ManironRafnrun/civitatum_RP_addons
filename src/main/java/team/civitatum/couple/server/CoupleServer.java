@@ -57,6 +57,7 @@ public final class CoupleServer {
         Vec3 lastSafe;
         Vec3 previousCarrier;
         boolean closing;
+        int obstructedTicks;
         Pair(ServerPlayer carrier, ServerPlayer passenger) {
             this.carrier = carrier; this.passenger = passenger;
             previousCarrier = carrier.position();
@@ -267,8 +268,31 @@ public final class CoupleServer {
                 Vec3 safe = findDismount(a, b);
                 if (safe != null) pair.lastSafe = safe;
             }
-            if (!a.level().noCollision(b, b.getBoundingBox().deflate(0.02))) end(a, "obstructed");
+            if (obstructed(pair)) end(a, "obstructed");
         }
+    }
+
+    private static boolean obstructed(Pair pair) {
+        var mode = CoupleConfig.CARRY_OBSTACLE_MODE.get();
+        if (mode == CoupleConfig.ObstacleMode.OFF) { pair.obstructedTicks = 0; return false; }
+        var passenger = pair.passenger;
+        var box = passenger.getBoundingBox().deflate(0.02);
+        if (mode == CoupleConfig.ObstacleMode.STRICT) {
+            pair.obstructedTicks = 0;
+            return !passenger.level().noCollision(passenger, box);
+        }
+        double inset = CoupleConfig.CARRY_OBSTACLE_TOLERANCE.get() * passenger.getScale();
+        double xInset = Math.min(inset, (box.maxX - box.minX) * 0.4);
+        double zInset = Math.min(inset, (box.maxZ - box.minZ) * 0.4);
+        // Feet, hands and a one-block step may touch while the carrier approaches or jumps.
+        // Only sustained obstruction of the upper central body triggers a relaxed release.
+        double floor = pair.carrier.getY() + Math.max(1.05, 1.05 * pair.carrier.getScale());
+        double bottom = Math.max(box.minY + Math.min(inset, 0.15 * passenger.getScale()), floor);
+        if (bottom >= box.maxY) { pair.obstructedTicks = 0; return false; }
+        var probe = new net.minecraft.world.phys.AABB(box.minX + xInset, bottom, box.minZ + zInset,
+                box.maxX - xInset, box.maxY, box.maxZ - zInset);
+        if (passenger.level().noCollision(passenger, probe)) { pair.obstructedTicks = 0; return false; }
+        return ++pair.obstructedTicks >= CoupleConfig.CARRY_OBSTACLE_GRACE.get();
     }
 
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {

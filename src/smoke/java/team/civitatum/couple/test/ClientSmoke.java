@@ -35,7 +35,13 @@ import team.civitatum.couple.server.*;
 @Mod(value="couple_test",dist=Dist.CLIENT)
 public final class ClientSmoke {
     private int phase,ticks,checks,effects;private volatile UUID partner;private volatile String failure;private boolean hooked;private Vec3 origin;private RemotePlayer observer;
-    public ClientSmoke(){NeoForge.EVENT_BUS.addListener(this::tick);}
+    private final Set<UUID> renderedBends=new HashSet<>();
+    public ClientSmoke(){NeoForge.EVENT_BUS.addListener(this::tick);NeoForge.EVENT_BUS.addListener(this::rendered);}
+    private void rendered(net.neoforged.neoforge.client.event.RenderLivingEvent.Post<?,?> e){
+        if(e.getEntity() instanceof net.minecraft.client.player.AbstractClientPlayer p && PoseEngine.frame(p,0)!=null && net.neoforged.fml.ModList.get().isLoaded("bendylib")){
+            if(hasBend(e.getRenderer().getModel()))renderedBends.add(p.getUUID());
+        }
+    }
     private void check(boolean ok,String what){if(!ok)throw new IllegalStateException("CCI check: "+what);checks++;}
     private void next(int p){phase=p;ticks=0;}
     private void tick(ClientTickEvent.Post e){
@@ -69,7 +75,7 @@ public final class ClientSmoke {
         else if(phase==10 && !CarryHooks.occupied(mc.player) && ticks>15){
             server(mc,()->{reset(mc);var p=new PlayerPreferences();for(var action:List.of(Interaction.KISS,Interaction.HUG,Interaction.REST))p.policies.put(action,Consent.ALLOW);CoupleServer.preferences(b(mc),new CoupleNetwork.Preferences(p.json()));});next(11);
         }
-        else if(phase==11 && ticks>15){PacketDistributor.sendToServer(new CoupleNetwork.Action(partner,Interaction.KISS.ordinal()));next(12);}
+        else if(phase==11 && ticks>65){camera(mc,-1);PacketDistributor.sendToServer(new CoupleNetwork.Action(partner,Interaction.KISS.ordinal()));next(12);}
         else if(phase==12 && SocialHooks.active(mc.player) && ticks>29){
             check(ClientState.social(mc.player.getUUID()).state().action()==Interaction.KISS.ordinal(),"kiss state synchronizes");check(PoseEngine.frame(mc.player,0).bones.get("rightArm").bend()<-.5f,"initiator reaches cheek with bent arm");capture(mc,"06-kiss-cheek.png");bends(mc,mc.player);next(13);
         }
@@ -106,8 +112,10 @@ public final class ClientSmoke {
         Class.forName("ru.teacraft.civitatum.RaceService").getMethod("apply",ServerPlayer.class).invoke(null,p);Class.forName("ru.teacraft.civitatum.RaceNetwork").getMethod("sync",ServerPlayer.class).invoke(null,p);
     }catch(Exception ex){throw new IllegalStateException(ex);}}
     private void reset(Minecraft mc){var a=a(mc);var b=b(mc);CoupleServer.end(a,null);CoupleServer.end(b,null);a.teleportTo(origin.x,origin.y,origin.z);b.teleportTo(origin.x,origin.y,origin.z+1.5);for(var p:List.of(a,b)){p.setOnGround(true);p.setGameMode(GameType.SURVIVAL);p.getAbilities().flying=false;p.setDeltaMovement(Vec3.ZERO);p.setShiftKeyDown(false);p.yBodyRot=p.yBodyRotO=0;p.setYRot(0);}}
-    private void camera(Minecraft mc){observer=new RemotePlayer(mc.level,new GameProfile(UUID.randomUUID(),"CCI_Camera"));observer.setPos(origin.add(3.2,.1,3.4));var center=origin.add(0,1.05,.5);var direction=center.subtract(observer.getEyePosition());float yaw=(float)Math.toDegrees(Math.atan2(direction.z,direction.x))-90;float pitch=(float)-Math.toDegrees(Math.atan2(direction.y,Math.sqrt(direction.x*direction.x+direction.z*direction.z)));observer.setYRot(yaw);observer.yRotO=yaw;observer.setXRot(pitch);observer.xRotO=pitch;observer.yBodyRot=observer.yBodyRotO=yaw;mc.setCameraEntity(observer);mc.options.setCameraType(CameraType.FIRST_PERSON);mc.options.hideGui=true;}
-    private void bends(Minecraft mc,net.minecraft.world.entity.player.Player p){if(!net.neoforged.fml.ModList.get().isLoaded("bendylib"))return;try{var model=((net.minecraft.client.renderer.entity.player.PlayerRenderer)mc.getEntityRenderDispatcher().getRenderer((net.minecraft.client.player.AbstractClientPlayer)p)).getModel();var api=Class.forName("io.github.kosmx.bendylib.ModelPartAccessor");var cube=api.getMethod("getCuboid",net.minecraft.client.model.geom.ModelPart.class,int.class).invoke(null,model.rightArm,0);var active=Class.forName("io.github.kosmx.bendylib.MutableCuboid").getMethod("getActiveMutator").invoke(cube);check(active!=null,"real bendy-lib mutator is active on elbow");}catch(Exception ex){throw new IllegalStateException(ex);}}
+    private void camera(Minecraft mc){camera(mc,1);}
+    private void camera(Minecraft mc,int side){observer=new RemotePlayer(mc.level,new GameProfile(UUID.randomUUID(),"CCI_Camera"));observer.setPos(origin.add(3.2*side,.1,3.4));var center=origin.add(0,1.05,.5);var direction=center.subtract(observer.getEyePosition());float yaw=(float)Math.toDegrees(Math.atan2(direction.z,direction.x))-90;float pitch=(float)-Math.toDegrees(Math.atan2(direction.y,Math.sqrt(direction.x*direction.x+direction.z*direction.z)));observer.setYRot(yaw);observer.yRotO=yaw;observer.setXRot(pitch);observer.xRotO=pitch;observer.yBodyRot=observer.yBodyRotO=yaw;observer.yHeadRot=observer.yHeadRotO=yaw;observer.setOldPosAndRot();mc.setCameraEntity(observer);mc.options.setCameraType(CameraType.FIRST_PERSON);mc.options.hideGui=true;}
+    private boolean hasBend(net.minecraft.client.model.EntityModel<?> model){try{if(!(model instanceof net.minecraft.client.model.PlayerModel<?> playerModel))return false;var api=Class.forName("io.github.kosmx.bendylib.ModelPartAccessor");var cube=api.getMethod("getCuboid",net.minecraft.client.model.geom.ModelPart.class,int.class).invoke(null,playerModel.rightArm,0);return Class.forName("io.github.kosmx.bendylib.MutableCuboid").getMethod("getActiveMutator").invoke(cube)!=null;}catch(Exception ex){throw new IllegalStateException(ex);}}
+    private void bends(Minecraft mc,net.minecraft.world.entity.player.Player p){if(net.neoforged.fml.ModList.get().isLoaded("bendylib"))check(renderedBends.contains(p.getUUID()),"real rendered elbow uses bendy-lib mutator");}
     private void capture(Minecraft mc,String file){var dir=new java.io.File("../build/cci020-captures"+(net.neoforged.fml.ModList.get().isLoaded("emotecraft")?"-emotecraft":""));dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,file,mc.getMainRenderTarget(),m->System.out.println("CCI_CAPTURE "+m.getString()));}
     public interface Xlib extends Library {
         Xlib INSTANCE=Native.load("X11",Xlib.class);
