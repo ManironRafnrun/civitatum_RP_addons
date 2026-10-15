@@ -60,9 +60,10 @@ public final class SettingsScreen extends Screen {
     @Override public void removed(){flush();PoseEngine.clearPreview();}
     @Override public void onClose(){flush();minecraft.setScreen(parent);}
     @Override public boolean isPauseScreen(){return false;}
+    @Override public void renderBackground(GuiGraphics g,int x,int y,float partial){}
     public void pageForTest(int value){page=value;rebuildWidgets();}
     @Override public void render(GuiGraphics g,int x,int y,float partial){
-        g.pose().pushPose();g.pose().translate(0,0,400);g.fill(0,0,width,height,0xE016181F);
+        g.pose().pushPose();g.pose().translate(0,0,400);g.fill(0,0,width,height,0xFF16181F);
         g.drawCenteredString(font,title,width/2,14,0xFFF1E5D7);
         if(page==2)preview(g,partial);
         super.render(g,x,y,partial);

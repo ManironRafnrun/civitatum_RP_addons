@@ -21,8 +21,11 @@ import team.civitatum.couple.client.PoseEngine;
 
 @Mixin(PlayerRenderer.class)
 public abstract class PlayerRendererMixin {
+    @Inject(method="renderNameTag(Lnet/minecraft/client/player/AbstractClientPlayer;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IF)V",at=@At("HEAD"),cancellable=true)
+    private void couple$previewName(AbstractClientPlayer player,net.minecraft.network.chat.Component name,PoseStack pose,net.minecraft.client.renderer.MultiBufferSource buffers,int light,float partial,CallbackInfo ci){if(player==PoseEngine.previewFirst || player==PoseEngine.previewSecond)ci.cancel();}
     @Inject(method = "setupRotations(Lnet/minecraft/client/player/AbstractClientPlayer;Lcom/mojang/blaze3d/vertex/PoseStack;FFFF)V", at = @At("HEAD"), cancellable = true)
     private void couple$rotation(AbstractClientPlayer player, PoseStack pose, float bob, float yaw, float partial, float scale, CallbackInfo ci) {
+        if(PoseEngine.animator)team.civitatum.couple.client.AnimatorCompat.prepare(player,partial);
         Player carrier = CarryHooks.carrier(player);
         if(carrier==null){
             var s=SocialHooks.state(player);var frame=PoseEngine.frame(player,partial);

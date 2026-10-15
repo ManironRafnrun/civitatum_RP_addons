@@ -4,6 +4,7 @@ import dev.kosmx.playerAnim.api.TransformType;
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.core.util.Vec3f;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationFactory;
+import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationAccess;
 import net.minecraft.client.player.AbstractClientPlayer;
 import team.civitatum.couple.CoupleInteractions;
 import team.civitatum.couple.core.PoseFrame;
@@ -14,6 +15,8 @@ public final class AnimatorCompat {
         PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(CoupleInteractions.id("interactions"),10000,Animation::new);
         PoseEngine.animator=true;CoupleInteractions.LOGGER.info("CCI uses PlayerAnimator; bending enabled: {}",net.neoforged.fml.ModList.get().isLoaded("bendylib"));
     }
+    /** Our custom root transform can cancel vanilla setupRotations before the library's RETURN hook. */
+    public static void prepare(AbstractClientPlayer player,float partial){var layer=PlayerAnimationAccess.getPlayerAssociatedData(player).get(CoupleInteractions.id("interactions"));if(layer!=null)layer.setupAnim(partial);}
     private static final class Animation implements IAnimation {
         private final AbstractClientPlayer player;private PoseFrame frame;
         Animation(AbstractClientPlayer p){player=p;}
