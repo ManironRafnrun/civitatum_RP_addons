@@ -16,6 +16,9 @@ import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import org.lwjgl.glfw.GLFW;
 import team.civitatum.couple.CarryHooks;
+import team.civitatum.couple.SocialHooks;
+import team.civitatum.couple.network.CoupleNetwork;
+import net.neoforged.neoforge.network.PacketDistributor;
 import team.civitatum.couple.core.Interaction;
 
 public final class ClientEvents {
@@ -33,6 +36,7 @@ public final class ClientEvents {
             if (mc.screen != null || !mc.player.isAlive() || mc.player.isSpectator()) continue;
             UUID partner = CarryHooks.carrierId(mc.player);
             if (partner == null) partner = CarryHooks.passengerId(mc.player);
+            if(partner==null){var social=ClientState.social(mc.player.getUUID());if(social!=null)partner=social.state().first().equals(mc.player.getUUID())?social.state().second():social.state().first();}
             Player target = partner == null ? null : mc.level.getPlayerByUUID(partner);
             if (target == null && mc.hitResult instanceof EntityHitResult hit && hit.getEntity() instanceof Player p) target = p;
             if (target != null && target != mc.player && mc.player.distanceToSqr(target) <= 16) {
@@ -45,7 +49,9 @@ public final class ClientEvents {
             }
         }
         if (CarryHooks.carrying(mc.player)) mc.player.setSprinting(false);
+        if(SocialHooks.active(mc.player) && mc.player.isShiftKeyDown())PacketDistributor.sendToServer(new CoupleNetwork.Action(mc.player.getUUID(),Interaction.RELEASE.ordinal()));
     }
+    @SubscribeEvent public static void movement(net.neoforged.neoforge.client.event.MovementInputUpdateEvent event){if(SocialHooks.active(event.getEntity())){var input=event.getInput();input.forwardImpulse=0;input.leftImpulse=0;input.jumping=false;}}
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { ClientState.clear(); lastPlayer = null; }
     @SubscribeEvent public static void hand(RenderHandEvent event) {
         var player = Minecraft.getInstance().player;

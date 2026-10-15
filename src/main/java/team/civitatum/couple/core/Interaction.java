@@ -1,7 +1,7 @@
 package team.civitatum.couple.core;
 
 public enum Interaction {
-    CARRY, KISS, RELEASE;
+    CARRY, KISS, RELEASE, HUG, REST;
 
     public static Interaction fromWire(int value) {
         return value >= 0 && value < values().length ? values()[value] : null;

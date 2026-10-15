@@ -22,5 +22,9 @@ public abstract class CameraMixin {
         if (!(entity instanceof Player player)) return;
         Player carrier = CarryHooks.carrier(player);
         if (carrier != null) setPosition(CarryGeometry.head(player, carrier, partial));
+        else if(team.civitatum.couple.SocialHooks.active(player)){
+            var frame=team.civitatum.couple.client.PoseEngine.frame(player,partial);
+            if(frame!=null)setPosition(player.getPosition(partial).add(0,(1.62+frame.rootY*frame.weight)*player.getScale(),0));
+        }
     }
 }

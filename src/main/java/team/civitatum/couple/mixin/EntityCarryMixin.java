@@ -15,6 +15,10 @@ import team.civitatum.couple.server.CoupleServer;
 
 @Mixin(Entity.class)
 public abstract class EntityCarryMixin {
+    @Inject(method="push(Lnet/minecraft/world/entity/Entity;)V",at=@At("HEAD"),cancellable=true)
+    private void couple$noPartnerPush(Entity other,CallbackInfo ci){
+        if((Object)this instanceof Player a && other instanceof Player b){var s=team.civitatum.couple.SocialHooks.state(a);if(s!=null && (s.first().equals(b.getUUID()) || s.second().equals(b.getUUID())))ci.cancel();}
+    }
     @Inject(method = "positionRider(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity$MoveFunction;)V", at = @At("HEAD"), cancellable = true)
     private void couple$position(Entity passenger, Entity.MoveFunction move, CallbackInfo ci) {
         if ((Object) this instanceof Player carrier && passenger instanceof Player carried && CarryHooks.pair(carrier, carried)) {

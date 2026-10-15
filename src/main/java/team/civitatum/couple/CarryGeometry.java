@@ -14,21 +14,28 @@ public final class CarryGeometry {
     public static final double HEIGHT = 0.86;
 
     public static Vec3 anchor(Player carrier, float partialTick) {
+        Player passenger=team.civitatum.couple.network.ClientBridge.previewPassenger.apply(carrier);
+        if(passenger==null){var id=CarryHooks.passengerId(carrier);if(id!=null)passenger=carrier.level().getPlayerByUUID(id);}
+        return anchor(carrier,passenger,partialTick);
+    }
+    public static Vec3 anchor(Player carrier,Player passenger,float partialTick){
         float yaw = Mth.rotLerp(partialTick, carrier.yBodyRotO, carrier.yBodyRot);
         Vec3 base = carrier.getPosition(partialTick);
         double scale = carrier.getScale();
-        return base.add(local(yaw, 0, HEIGHT * scale, FORWARD * scale));
+        double other=passenger==null?scale:passenger.getScale();
+        var tune=passenger==null?team.civitatum.couple.core.PoseSettings.DEFAULT:CarryHooks.tuning(passenger);
+        return base.add(local(yaw,tune.side()*scale,(1.10*scale-.24*other)+tune.up()*scale,(FORWARD+tune.forward())*scale+.07*Math.max(0,other-scale)));
     }
 
     public static Vec3 anchorNow(Player carrier) {
-        return carrier.position().add(local(carrier.yBodyRot, 0, HEIGHT * carrier.getScale(), FORWARD * carrier.getScale()));
+        return anchor(carrier,1);
     }
 
     public static Vec3 head(Player carried, Player carrier, float partialTick) {
         float yaw = Mth.rotLerp(partialTick, carrier.yBodyRotO, carrier.yBodyRot);
-        CarryPose.Point eye = CarryPose.eye();
+        CarryPose.Point eye = CarryPose.eye(CarryHooks.tuning(carried));
         double scale = carried.getScale();
-        return anchor(carrier, partialTick).add(local(yaw, eye.right() * scale, eye.up() * scale, eye.forward() * scale));
+        return anchor(carrier,carried,partialTick).add(local(yaw, eye.right() * scale, eye.up() * scale, eye.forward() * scale));
     }
 
     /** right / up / forward in the carrier's coordinate frame. */

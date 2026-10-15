@@ -13,10 +13,21 @@ import team.civitatum.couple.CarryGeometry;
 import team.civitatum.couple.CarryHooks;
 import team.civitatum.couple.CoupleInteractions;
 import team.civitatum.couple.network.CoupleNetwork;
+import team.civitatum.couple.core.PoseSettings;
 
 public final class ClientState {
     private static final Map<UUID, UUID> carrierByPassenger = new HashMap<>();
     private static final Map<UUID, UUID> passengerByCarrier = new HashMap<>();
+    private static final Map<UUID,PoseSettings> poses=new HashMap<>();
+    private static final Map<UUID,Social> socials=new HashMap<>();
+    public record Social(CoupleNetwork.SocialState state,long started){}
+    public static Social social(UUID id){return socials.get(id);}
+    public static PoseSettings pose(UUID id){return poses.getOrDefault(id,PoseSettings.DEFAULT);}
+    public static void social(CoupleNetwork.SocialState p){
+        if(p.active()){var v=new Social(p,ticks-Math.max(0,p.elapsed()));socials.put(p.first(),v);socials.put(p.second(),v);}
+        else {socials.computeIfPresent(p.first(),(id,v)->v.state.second().equals(p.second())?null:v);socials.computeIfPresent(p.second(),(id,v)->v.state.first().equals(p.first())?null:v);}
+        refresh(p.first());refresh(p.second());
+    }
     public static CoupleNetwork.Invitation invitation;
     public static long invitationEnd;
     public static long ticks;
@@ -29,9 +40,11 @@ public final class ClientState {
             removeMember(state.passenger());
             carrierByPassenger.put(state.passenger(), state.carrier());
             passengerByCarrier.put(state.carrier(), state.passenger());
+            poses.put(state.passenger(),PoseSettings.read(state.pose()));
         } else {
             carrierByPassenger.remove(state.passenger(), state.carrier());
             passengerByCarrier.remove(state.carrier(), state.passenger());
+            poses.remove(state.passenger());
         }
         refresh(state.passenger());
     }
@@ -60,11 +73,11 @@ public final class ClientState {
     }
     public static void sendPreferences() {
         if (Minecraft.getInstance().getConnection() != null) {
-            PacketDistributor.sendToServer(new CoupleNetwork.Preferences(CoupleClientConfig.CARRY_REQUESTS.get(), CoupleClientConfig.KISS_REQUESTS.get()));
+            PacketDistributor.sendToServer(new CoupleNetwork.Preferences(CoupleClientConfig.preferences().json()));
         }
     }
     public static void clear() {
-        carrierByPassenger.clear(); passengerByCarrier.clear(); invitation = null; ticks = 0;
+        carrierByPassenger.clear(); passengerByCarrier.clear();poses.clear();socials.clear(); invitation = null; ticks = 0;
     }
     public static void kiss(CoupleNetwork.KissEffect effect) {
         var mc = Minecraft.getInstance();

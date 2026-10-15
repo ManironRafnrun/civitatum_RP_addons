@@ -31,6 +31,11 @@ public final class CoupleClient {
         ClientBridge.kissEffect = ClientState::kiss;
         ClientBridge.carrierOf = ClientState::carrierOf;
         ClientBridge.passengerOf = ClientState::passengerOf;
+        ClientBridge.poseOf=id->PoseEngine.previewSecond!=null && PoseEngine.previewSecond.getUUID().equals(id)?PoseEngine.previewPose:ClientState.pose(id);
+        ClientBridge.previewCarrier=PoseEngine::previewCarrier;ClientBridge.previewPassenger=PoseEngine::previewPassenger;
+        ClientBridge.socialState=ClientState::social;
+        ClientBridge.socialOf=id->{var s=ClientState.social(id);return s==null?null:s.state();};
+        if(net.neoforged.fml.ModList.get().isLoaded("playeranimator"))AnimatorCompat.init();
         NeoForge.EVENT_BUS.register(ClientEvents.class);
     }
     private static void keys(RegisterKeyMappingsEvent event) { event.register(MENU); event.register(ACCEPT); event.register(DECLINE); }

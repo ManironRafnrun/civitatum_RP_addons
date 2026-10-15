@@ -15,17 +15,30 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import team.civitatum.couple.CarryGeometry;
 import team.civitatum.couple.CarryHooks;
 import team.civitatum.couple.core.CarryPose;
+import team.civitatum.couple.SocialHooks;
+import team.civitatum.couple.core.Interaction;
+import team.civitatum.couple.client.PoseEngine;
 
 @Mixin(PlayerRenderer.class)
 public abstract class PlayerRendererMixin {
     @Inject(method = "setupRotations(Lnet/minecraft/client/player/AbstractClientPlayer;Lcom/mojang/blaze3d/vertex/PoseStack;FFFF)V", at = @At("HEAD"), cancellable = true)
     private void couple$rotation(AbstractClientPlayer player, PoseStack pose, float bob, float yaw, float partial, float scale, CallbackInfo ci) {
         Player carrier = CarryHooks.carrier(player);
-        if (carrier == null) return;
+        if(carrier==null){
+            var s=SocialHooks.state(player);var frame=PoseEngine.frame(player,partial);
+            if(s!=null && !s.mounted() && frame!=null){
+                boolean first=s.first().equals(player.getUUID());
+                float facing=s.yaw()+(first || s.action()==Interaction.REST.ordinal()?0:180);
+                pose.mulPose(Axis.YP.rotationDegrees(180-facing));
+                pose.translate(0,frame.rootY*frame.weight,0);
+                pose.mulPose(Axis.XP.rotation(frame.rootPitch*frame.weight));pose.mulPose(Axis.ZP.rotation(frame.rootRoll*frame.weight));ci.cancel();
+            }
+            return;
+        }
         float bodyYaw = Mth.rotLerp(partial, carrier.yBodyRotO, carrier.yBodyRot);
         pose.mulPose(Axis.YP.rotationDegrees(180.0F - bodyYaw));
         pose.translate(0, CarryPose.LIFT, 0);
-        pose.mulPose(Axis.ZP.rotationDegrees(CarryPose.BANK_DEGREES));
+        pose.mulPose(Axis.ZP.rotationDegrees(PoseEngine.tuning(player).bank()));
         // Turn the passenger onto their back before banking across the arms.
         // Reversing these rotations makes the body lean forwards instead.
         pose.mulPose(Axis.YP.rotationDegrees(CarryPose.LOCAL_YAW_DEGREES));

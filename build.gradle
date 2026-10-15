@@ -2,11 +2,12 @@ plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.148'
 }
-version = '0.1.0-alpha.3'
+version = '0.2.0-alpha.1'
 group = 'team.civitatum.couple'
 base { archivesName = 'civitatum-couple-interactions-1.21.1' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-repositories { mavenCentral() }
+repositories { mavenCentral(); maven { url = 'https://maven.kosmx.dev/' } }
+dependencies { compileOnly 'dev.kosmx.player-anim:player-animation-lib-forge:2.0.1+1.21.1' }
 neoForge {
     version = '21.1.256'
     runs {
@@ -34,3 +35,5 @@ if (project.hasProperty('smoke')) {
 }
 if (project.hasProperty('ciJar')) { dependencies { runtimeOnly files(project.property('ciJar')) } }
 if (project.hasProperty('curiosJar')) { dependencies { runtimeOnly files(project.property('curiosJar')) } }
+if (project.hasProperty('emotecraftJar')) { dependencies { runtimeOnly files(project.property('emotecraftJar')) } }
+if (project.hasProperty('cccJar')) { dependencies { runtimeOnly files(project.property('cccJar')) } }

@@ -16,6 +16,6 @@ public abstract class PlayerDimensionsMixin {
     private void couple$dimensions(Pose pose, CallbackInfoReturnable<EntityDimensions> cir) {
         Player self = (Player) (Object) this;
         // Player's Entity constructor invokes dimensions before level is assigned.
-        if (self.level() != null && CarryHooks.carried(self)) cir.setReturnValue(CarryGeometry.DIMENSIONS);
+        if(self.level()!=null){if(CarryHooks.carried(self))cir.setReturnValue(CarryGeometry.DIMENSIONS);else if(team.civitatum.couple.SocialHooks.resting(self))cir.setReturnValue(EntityDimensions.scalable(.6f,1.05f).withEyeHeight(.85f));}
     }
 }
