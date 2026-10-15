@@ -54,7 +54,8 @@ public final class RaceCatalog {
         c.skin = paletteIndex(c.skin, r.skinColors); c.hair = paletteIndex(c.hair, r.hairColors);
         c.eyes = paletteIndex(c.eyes, r.eyeColors); c.hornColor = paletteIndex(c.hornColor, r.hornColors);
         c.tattooColor = paletteIndex(c.tattooColor, r.tattooColors);
-        c.ears = contains(r.earStyles, c.ears) ? c.ears : r.earStyles[0];
+        boolean ears=r.pointedEars || java.util.Arrays.stream(r.earStyles).anyMatch(n->n>0);
+        c.ears = ears ? clamp(c.ears,r.pointedEars?1:0,4) : 0;
         if (!r.hornsAllowed) c.horns = 0;
         else {
             boolean mayNone = !r.hornsRequired || (r.algnor() && c.female());

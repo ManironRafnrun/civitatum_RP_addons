@@ -27,9 +27,15 @@ public final class IdleAnimation {
         } catch(Exception e){throw new IllegalStateException("Cannot load supplied idle animation",e);}
     }
     public static float loopTime(float elapsed) {if(!Float.isFinite(elapsed))return BEGIN;float t=Math.max(BEGIN,elapsed);return t<=END?t:RETURN+(t-END)%(END-RETURN);}
+    public static float rest(String part,String axis) {
+        if(axis.equals("x"))return switch(part){case "leftLeg"->1.9f;case "rightLeg"->-1.9f;case "leftArm"->5;case "rightArm"->-5;default->0;};
+        if(axis.equals("y"))return part.endsWith("Leg")?12:part.endsWith("Arm")?2:0;
+        return 0;
+    }
+    public static float offset(String part,String axis,float elapsed){return value(part,axis,elapsed)-rest(part,axis);}
     public static float value(String part,String axis,float elapsed) {
-        var keys=TRACKS.get(part+"/"+axis);if(keys==null || keys.isEmpty())return 0;
-        float t=loopTime(elapsed);Key previous=new Key(BEGIN,0);
+        var keys=TRACKS.get(part+"/"+axis);if(keys==null || keys.isEmpty())return rest(part,axis);
+        float t=loopTime(elapsed);Key previous=new Key(BEGIN,rest(part,axis));
         for(var key:keys) {
             if(key.tick>=t) {
                 if(key.tick==previous.tick)return key.value;

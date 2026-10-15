@@ -69,7 +69,7 @@ public final class RaceService {
                 int slot = -1;
                 for (int i = 0; i < p.getInventory().getContainerSize(); i++)
                     if (p.getInventory().getItem(i).is(edit.item)) { slot = i; break; }
-                if (slot < 0) throw new IllegalArgumentException("Для изменения нужен Осколок Демитары");
+                if (slot < 0) throw new IllegalArgumentException("Предмет для изменения внешности больше не находится в инвентаре");
                 p.getInventory().getItem(slot).shrink(1);
             }
             if (edit.mode==EditorMode.CREATE) RaceAbilities.clearTransient(p);

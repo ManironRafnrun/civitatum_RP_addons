@@ -2,453 +2,296 @@ package ru.teacraft.civitatum.client;
 
 import java.util.*;
 import java.util.function.*;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 import ru.teacraft.civitatum.*;
 
-/** Responsive virtual canvas: every interaction is converted through the same layout transform. */
+/** Floating windows over the live world. Coordinates, hit tests and drags share one virtual canvas. */
 public final class CharacterScreen extends Screen {
-    public static final String ARRIVAL="Наконец-то вы прибыли, но в наших записях не указано, откуда";
-    public static final String CONFIRM="Теперь, перед тем как поставить печать на эти бумаги, подтвердите правильность информации";
-    private static final int W=800,H=450,INK=0xFF312822,GOLD=0xFFB38A45;
-    private record Control(int x,int y,int w,int h,String text,String tip,boolean enabled,Runnable action) {
-        boolean inside(double mx,double my) { return mx>=x && mx<x+w && my>=y && my<y+h; }
+    private static final int W=960,H=540,INK=0xFFE9D7B6,MUTED=0xFFB5A58A,GOLD=0xFFC6A267;
+    private record Control(int x,int y,int w,int h,String text,String tip,boolean enabled,boolean selected,Runnable action) {
+        boolean inside(double mx,double my){return mx>=x && mx<x+w && my>=y && my<y+h;}
     }
+    private record Slider(int x,int y,int w,float min,float max,float step,Consumer<Float> setter) {}
     private final long token;
-    private final boolean choose;
+    private final EditorMode mode;
+    private final CharacterData initial;
     private final List<Control> controls=new ArrayList<>();
+    private final List<Slider> sliders=new ArrayList<>();
     private CharacterData draft;
-    private String root="human", child="", sex="male", error="";
-    private int stage, tab, focus=-1, portraitScroll, garmentGroup;
-    private boolean beardPage;
-    private boolean nameFocus, sending, portraitDragging, breastAdvanced;
-    private float zoom=1, panX, panY, angle=-.8f;
+    private int category,tab=12,garmentGroup,portraitScroll,focus=-1;
+    private String error="";
+    private boolean nameFocus,sending,portraitDragging,breastAdvanced,confirming;
+    private float zoom=1,panX,panY,angle=-.35f,previewZoom=1,startTick;
     private double mouseX,mouseY;
+    private Slider dragging;
     private net.minecraft.client.player.RemotePlayer previewModel;
-    public CharacterScreen(long token,boolean choose,CharacterData saved) {
-        super(Component.literal("Право на Возвращение"));
-        this.token=token;this.choose=choose;this.draft=saved.copy();this.sex=saved.sex;
-        var r=RaceCatalog.get(saved.race);
-        if(r!=null) { root=r.parent==null?r.id:r.parent;child=r.parent==null?"":r.id; }
-        stage=choose?0:2;
+    private CameraType oldCamera;
+    private boolean oldHideGui,capturedView;
+    public CharacterScreen(long token,boolean choose,CharacterData saved){this(token,choose?EditorMode.CREATE:EditorMode.FULL,saved);}
+    public CharacterScreen(long token,EditorMode mode,CharacterData saved) {
+        super(Component.literal("Civitatum — редактор персонажа"));this.token=token;this.mode=mode;
+        draft=saved.selected?saved.copy():RaceCatalog.defaults("human","male");initial=draft.copy();
+        if(mode==EditorMode.COSMETIC){category=1;tab=3;}
     }
-    public void error(String message) { error=message;sending=false; }
-    public CharacterData draft() { return draft; }
-    public void selectForTest(String race,String gender) {
-        var r=RaceCatalog.get(race);
-        root=r.parent==null?r.id:r.parent;child=r.parent==null?"":race;sex=gender;
-        draft=RaceCatalog.defaults(race,gender);stage=2;
+    @Override protected void init(){
+        if(!capturedView){oldCamera=minecraft.options.getCameraType();oldHideGui=minecraft.options.hideGui;capturedView=true;startTick=minecraft.player==null?0:minecraft.player.tickCount;}
+        minecraft.options.setCameraType(CameraType.FIRST_PERSON);minecraft.options.hideGui=true;
     }
-    public void stageForTest(int value) { stage=value; }
-    public long tokenForTest() { return token; }
-    private void geometry() { zoom=Math.min(width/(float)W,height/(float)H);panX=(width-W*zoom)/2;panY=(height-H*zoom)/2; }
-    @Override public boolean isPauseScreen() { return false; }
+    @Override public void removed(){if(capturedView){minecraft.options.setCameraType(oldCamera);minecraft.options.hideGui=oldHideGui;capturedView=false;}clearPreview();}
+    @Override public boolean isPauseScreen(){return false;}
+    public CharacterData draft(){return draft;}
+    public EditorMode mode(){return mode;}
+    public long tokenForTest(){return token;}
+    public void error(String message){error=message;sending=false;confirming=false;}
+    public void selectForTest(String race,String gender){draft=RaceCatalog.defaults(race,gender);}
+    public void stageForTest(int stage){confirming=stage==3;}
+    public void tabForTest(int value){tab=value;category=value==11?2:List.of(3,4,6,10).contains(value)?1:0;}
+    public void angleForTest(float value){angle=value;}
+    public void zoomForTest(float value){previewZoom=Math.clamp(value,1,3);}
+    private void geometry(){zoom=Math.min(width/(float)W,height/(float)H);panX=(width-W*zoom)/2;panY=(height-H*zoom)/2;}
     @Override public void render(GuiGraphics g,int mx,int my,float partial) {
-        geometry();mouseX=(mx-panX)/zoom;mouseY=(my-panY)/zoom;
-        controls.clear();
-        g.fill(0,0,width,height,0xE615191D);
+        geometry();mouseX=(mx-panX)/zoom;mouseY=(my-panY)/zoom;controls.clear();sliders.clear();
         g.pose().pushPose();g.pose().translate(panX,panY,0);g.pose().scale(zoom,zoom,1);
-        parchment(g,18,12,764,426);
-        text(g,"ПРАВО НА ВОЗВРАЩЕНИЕ  /  КАНЦЕЛЯРИЯ",400,25,0xFF746040,true);
-        centeredWrapped(g,stage==3?CONFIRM:ARRIVAL,35,44,730,INK);
-        String[] steps={"Происхождение","Подраса","Внешность","Подтверждение"};
-        for(int i=0;i<4;i++) {
-            int color=i==stage?GOLD:0xFFB8A88E;
-            g.fill(42+i*186,77,210+i*186,79,color);
-            text(g,(i+1)+". "+steps[i],126+i*186,83,i==stage?INK:0xFF827561,true);
-        }
-        switch(stage) {
-            case 0 -> racePage(g);
-            case 1 -> subracePage(g);
-            case 2 -> appearancePage(g,partial);
-            case 3 -> confirmationPage(g,partial);
-        }
-        if(!error.isBlank()) centeredWrapped(g,error,38,393,724,0xFF9B352C);
-        if(stage==0 || stage==1) {
-            button(42,413,110,18,"Закрыть",true,this::onClose);
-            if(stage==1) button(162,413,110,18,"Назад",true,()->stage=0);
-            button(624,411,134,22,"Продолжить",true,this::next);
-        } else if(stage==2) {
-            button(42,411,110,22,choose?"Назад":"Отмена",true,()->{ if(choose)stage=RaceCatalog.get(root).family()?1:0;else onClose(); });
-            button(624,411,134,22,"Проверить бумаги",true,()->{draft=RaceCatalog.validate(draft);stage=3;nameFocus=false;});
-        } else {
-            button(42,411,110,22,"Исправить",!sending,()->stage=2);
-            button(600,409,158,25,sending?"Сохраняем…":"Поставить печать",!sending,()->{
-                sending=true;PacketDistributor.sendToServer(new RaceNetwork.Serverbound(0,token,RaceCatalog.validate(draft).json()));
-            });
-        }
-        for(int i=0;i<controls.size();i++) draw(g,controls.get(i),i);
-        if(nameFocus) {
-            g.fill(476+Math.min(252,font.width(draft.name)),142,477+Math.min(252,font.width(draft.name)),151,0xFFF5F1E8);
-        }
-        Control hovered=null;
-        for(var c:controls) if(c.inside(mouseX,mouseY) && !c.tip.isBlank()) hovered=c;
-        if(hovered!=null) {
-            var lines=font.split(Component.literal(hovered.tip),220);
-            int tx=Math.min((int)mouseX+8,W-232),ty=Math.min((int)mouseY+12,H-lines.size()*11-12);
-            g.pose().pushPose();g.pose().translate(0,0,500);
-            g.fill(tx-4,ty-4,tx+224,ty+lines.size()*11+4,0xF02A2520);
-            int yy=ty;for(var line:lines){g.drawString(font,line,tx,yy,0xFFE8DDC7,false);yy+=11;}g.pose().popPose();
+        preview(g,258,136,438,336,partial);
+        raceWindow(g);navigation(g);settingsWindow(g);footer(g);
+        if(confirming)confirmation(g);
+        for(int i=0;i<controls.size();i++)draw(g,controls.get(i),i);
+        if(!error.isBlank()){panel(g,270,440,416,32);wrapped(g,error,280,448,395,0xFFFFBAA6,2);}
+        if(nameFocus && (System.currentTimeMillis()/500)%2==0){int x=376+Math.min(310,font.width(draft.name));g.fill(x,111,x+1,120,INK);}
+        Control hovered=null;for(var c:controls)if(c.inside(mouseX,mouseY) && !c.tip.isBlank())hovered=c;
+        if(hovered!=null){
+            var lines=font.split(Component.literal(hovered.tip),210);int tx=Math.clamp((int)mouseX+9,5,W-227),ty=Math.clamp((int)mouseY+14,5,H-lines.size()*11-8);
+            g.pose().pushPose();g.pose().translate(0,0,600);panel(g,tx-4,ty-4,220,lines.size()*11+8);int y=ty;
+            for(var line:lines){g.drawString(font,line,tx,y,INK,false);y+=11;}g.pose().popPose();
         }
         g.pose().popPose();
     }
-    private void racePage(GuiGraphics g) {
-        var races=RaceCatalog.roots();
-        panel(g,42,107,213,292);
-        for(int i=0;i<races.size();i++) {
-            var r=races.get(i);
-            button(50,114+i*23,197,21,r.name,true,()->{root=r.id;var subs=RaceCatalog.children(root);child=subs.isEmpty()?"":subs.getFirst().id;portraitScroll=0;},root.equals(r.id));
-        }
-        var r=RaceCatalog.get(root);
-        portrait(g,r,274,111,154);
-        text(g,r.name,441,111,INK,false);
-        wrapped(g,r.description,441,133,304,0xFF5B4B3A,11,12);
-        button(278,283,92,23,"Мужской",true,()->sex="male",sex.equals("male"));
-        button(376,283,92,23,"Женский",true,()->sex="female",sex.equals("female"));
-        text(g,"Пол не меняет способности",277,312,0xFF786951,false);
-        traits(g,r,278,334,467,54);
+    private void navigation(GuiGraphics g){
+        panel(g,270,18,670,77);
+        String[] names={"Тип","Внешность","Созвездие"};
+        for(int i=0;i<3;i++){int n=i;button(280+i*219,26,211,24,names[i],mode.body() || i==1,()->{category=n;tab=n==0?12:n==1?3:11;nameFocus=false;},category==i);}
+        String[] labels=category==0?new String[]{"Скин","Кожа","Глаза","Раса","Грудь","Рост"}:category==1?new String[]{"Волосы","Борода","Одежда","Татуировки"}:new String[]{"Знаки рождения"};
+        int[] ids=category==0?new int[]{12,0,9,1,5,8}:category==1?new int[]{3,10,6,4}:new int[]{11};
+        int step=650/labels.length;
+        for(int i=0;i<labels.length;i++){int id=ids[i];boolean active=tab==id || id==1 && List.of(1,2,7).contains(tab);button(280+i*step,59,step-6,26,labels[i],true,()->{tab=id;nameFocus=false;},active);}
+        text(g,"Имя",323,111,MUTED);button(365,102,341,26,draft.name.isBlank()?"Введите имя персонажа":draft.name,true,()->nameFocus=true,nameFocus);
     }
-    private void subracePage(GuiGraphics g) {
-        var children=RaceCatalog.children(root);
-        if(children.isEmpty()){stage=2;return;}
-        if(children.stream().noneMatch(r->r.id.equals(child))) child=children.getFirst().id;
-        panel(g,42,107,235,292);
-        text(g,RaceCatalog.get(root).name+" • наследие",54,119,INK,false);
-        for(int i=0;i<children.size();i++) {
-            var r=children.get(i);
-            button(51,141+i*43,217,36,r.name,true,()->child=r.id,child.equals(r.id));
-        }
-        var r=RaceCatalog.get(child);
-        portrait(g,r,297,113,136);
-        text(g,r.name,452,113,INK,false);
-        wrapped(g,r.description,452,134,289,0xFF5B4B3A,11,11);
-        traits(g,r,296,269,450,122);
+    private void raceWindow(GuiGraphics g){
+        panel(g,18,108,232,424);var r=RaceCatalog.get(draft.race);
+        g.fill(83,17,185,119,0xDD35291C);g.fill(86,20,182,116,GOLD);
+        g.blit(Civitatum.res("textures/gui/portraits/"+r.id+".png"),88,22,92,92,0,0,1254,1254,1254,1254);
+        centered(g,r.name,134,125,INK);
+        var roots=RaceCatalog.roots();String root=r.parent==null?r.id:r.parent;
+        for(int i=0;i<roots.size();i++){var race=roots.get(i);button(29+(i%2)*110,146+(i/2)*23,104,20,race.name,mode.race(),()->selectRace(race.family()?RaceCatalog.children(race.id).getFirst().id:race.id),race.id.equals(root));}
+        g.fill(29,285,239,437,0x80201710);
+        String content=r.description+"\n\n+ "+r.positive+"\n− "+r.negative;
+        if(!r.active.isBlank())content+="\n\n"+r.active+"\nЦена: "+(r.magic && net.neoforged.fml.ModList.get().isLoaded("ars_nouveau")?"мана Ars Nouveau":r.food+" питания")+"; откат: "+r.cooldown+" сек.";
+        var lines=font.split(Component.literal(content),192);int visible=13;portraitScroll=Math.clamp(portraitScroll,0,Math.max(0,lines.size()-visible));
+        for(int i=0;i<visible && i+portraitScroll<lines.size();i++)g.drawString(font,lines.get(i+portraitScroll),37,293+i*10,INK,false);
+        if(lines.size()>visible)centered(g,"Колесо: описание и способности",134,426,MUTED);
+        var children=RaceCatalog.children(root);text(g,children.isEmpty()?"Подрасы отсутствуют":"Подраса",30,447,MUTED);
+        for(int i=0;i<children.size();i++){var race=children.get(i);button(29+(i%2)*110,463+(i/2)*25,104,22,race.name,mode.race(),()->selectRace(race.id),race.id.equals(r.id));}
     }
-    private void next() {
-        if(stage==0 && RaceCatalog.get(root).family()) { stage=1;return; }
-        String id=stage==1?child:root;
-        if(draft.selected && draft.race.equals(id)) {
-            draft.sex=sex;draft=RaceCatalog.validate(draft);
-        } else {
-            boolean ownSkin=draft.usePlayerSkin;
-            draft=RaceCatalog.defaults(id,sex);draft.usePlayerSkin=ownSkin;
-        }
-        stage=2;error="";
+    private void selectRace(String id){String name=draft.name;draft=RaceCatalog.defaults(id,draft.sex);draft.name=name;portraitScroll=0;}
+    private void changeSex(String sex){
+        draft.sex=sex;draft.armModel=sex.equals("female")?"slim":"classic";draft.bust=sex.equals("female")?.6f:0;
+        AppearanceCatalog.outfit(draft,AppearanceCatalog.outfits(sex).getFirst().id());draft=RaceCatalog.validate(draft);
     }
-    private void appearancePage(GuiGraphics g,float partial) {
-        var r=RaceCatalog.get(draft.race);
-        text(g,r.name+"  •  "+(draft.female()?"Женский":"Мужской"),42,108,INK,false);
-        preview(g,42,130,232,259,partial);
-        button(49,366,37,18,"<",true,()->angle-=.65f);
-        button(230,366,37,18,">",true,()->angle+=.65f);
-        String[] tabs={"Основа","Уши","Рога","Волосы","Отметины","Фигура","Одежда"};
-        for(int i=0;i<tabs.length;i++) {int n=i;button(290+i*66,105,63,23,tabs[i],true,()->{tab=n;nameFocus=false;},tab==i);}
-        panel(g,288,134,470,255);
-        switch(tab) {
-            case 0 -> {
-                text(g,"Имя персонажа",302,142,INK,false);
-                button(468,138,273,20,draft.name.isBlank()?"Введите имя (необязательно)":draft.name,true,()->{nameFocus=true;},nameFocus);
-                text(g,"Скин",302,170,INK,false);
-                button(435,163,143,23,"Мой скин",true,()->draft.usePlayerSkin=true,draft.usePlayerSkin);
-                button(584,163,157,23,"Шаблон",true,()->draft.usePlayerSkin=false,!draft.usePlayerSkin);
-                if(draft.usePlayerSkin) text(g,"Цвет кожи задаётся вашим скином",302,196,0xFF786951,false);
-                colors(g,"Кожа / чешуя","skin",218,draft.skin,!draft.usePlayerSkin,n->draft.skin=n);
-                colors(g,"Глаза","eyes",264,draft.eyes,true,n->draft.eyes=n);
-                number(g,"Рост, блоки",317,draft.height,.05f,r.minHeight,r.maxHeight,n->draft.height=n,true);
-                text(g,"Меняет модель, хитбокс, камеру и досягаемость",302,352,0xFF786951,false);
-                text(g,"Причёски и костюм настраиваются по отдельности",302,370,0xFF786951,false);
+    private void settingsWindow(GuiGraphics g){
+        panel(g,704,136,238,396);var r=RaceCatalog.get(draft.race);
+        String title=switch(tab){case 0->"Кожа";case 1,2,7,13->"Расовые элементы";case 3->"Волосы";case 4->"Татуировки";case 5->"Грудь";case 6->"Одежда";case 8->"Рост";case 9->"Глаза";case 10->"Борода";case 11->"Созвездие";default->"Тип персонажа";};
+        centered(g,title,823,148,GOLD);g.fill(716,163,930,164,0x887F6846);
+        if(List.of(1,2,7).contains(tab)){
+            int[] ids={1,2,7};String[] names={"Уши","Рога","Хвост"};for(int i=0;i<3;i++){int id=ids[i];button(714+i*73,174,68,23,names[i],true,()->tab=id,tab==id);}
+        }
+        switch(tab){
+            case 12->{
+                text(g,"Пол",716,180,MUTED);button(716,198,103,25,"Мужской",mode.body(),()->changeSex("male"),!draft.female());button(824,198,103,25,"Женский",mode.body(),()->changeSex("female"),draft.female());
+                text(g,"Источник скина",716,241,MUTED);button(716,260,103,25,"Имеющийся",mode.body(),()->draft.usePlayerSkin=true,draft.usePlayerSkin);button(824,260,103,25,"Новый",mode.body(),()->draft.usePlayerSkin=false,!draft.usePlayerSkin);
+                text(g,"Модель рук",716,305,MUTED);button(716,324,103,25,"Classic",mode.body(),()->draft.armModel="classic",SkinTemplates.model(draft).equals("classic"));button(824,324,103,25,"Slim",mode.body(),()->draft.armModel="slim",SkinTemplates.model(draft).equals("slim"));
+                wrapped(g,"Имеющийся скин сохраняет собственные цвета. Новый использует подготовленную основу кожи и глаз.",716,374,208,MUTED,7);
             }
-            case 1 -> {
-                cycle(g,"Форма ушей",147,draft.ears,r.earStyles,n->draft.ears=n,true);
-                text(g,r.pointedEars?"Острые уши обязательны":"Варианты ограничены происхождением",302,181,0xFF786951,false);
-                number(g,"Наклон",213,draft.earPitch,5,-60,60,n->draft.earPitch=n,draft.ears!=0);
-                number(g,"Разворот",247,draft.earYaw,5,-60,60,n->draft.earYaw=n,draft.ears!=0);
-                number(g,"Крен",281,draft.earRoll,5,-60,60,n->draft.earRoll=n,draft.ears!=0);
-                number(g,"Высота крепления",315,draft.earOffset,.25f,-2,2,n->draft.earOffset=n,draft.ears!=0);
-                text(g,"Оба уха изменяются зеркально",302,354,0xFF786951,false);
+            case 0->{
+                palette(g,"Цвет кожи / чешуи",184,r.skinColors,draft.skin,mode.body() && !draft.usePlayerSkin,n->{draft.skin=n;draft.skinOriginal=false;},!draft.skinOriginal);
+                button(716,246,211,24,"Исходная текстура",mode.body() && !draft.usePlayerSkin && r.id.equals("human"),()->draft.skinOriginal=true,draft.skinOriginal);
+                wrapped(g,draft.usePlayerSkin?"Цвет кожи задаётся имеющимся скином.":"Светотень исходной текстуры сохраняется при перекраске.",716,295,208,MUTED,6);
             }
-            case 2 -> {
-                int[] styles=r.hornStyles;
-                if(!r.hornsRequired || (r.algnor() && draft.female())) {styles=prepend(styles,0);}
-                cycle(g,"Форма рогов",147,draft.horns,styles,n->draft.horns=n,r.hornsAllowed);
-                colors(g,"Цвет рогов","horn",187,draft.hornColor,r.hornsAllowed,n->draft.hornColor=n);
-                number(g,"Наклон",230,draft.hornPitch,5,-60,60,n->draft.hornPitch=n,r.hornsAllowed);
-                number(g,"Разворот",261,draft.hornYaw,5,-60,60,n->draft.hornYaw=n,r.hornsAllowed);
-                number(g,"Крен",292,draft.hornRoll,5,-60,60,n->draft.hornRoll=n,r.hornsAllowed);
-                number(g,"Размер",323,draft.hornSize,.05f,.65f,1.35f,n->draft.hornSize=n,r.hornsAllowed);
-                button(302,358,203,21,draft.hornOnForehead?"Крепление: лоб":"Крепление: макушка",r.hornsAllowed,()->draft.hornOnForehead=!draft.hornOnForehead);
-                number(g,"Высота",360,draft.hornOffset,.2f,-.2f,2,n->draft.hornOffset=n,r.hornsAllowed,510);
+            case 9->{
+                palette(g,"Цвет глаз",184,r.eyeColors,draft.eyes,mode.body() && !draft.usePlayerSkin,n->{draft.eyes=n;draft.eyesOriginal=false;},!draft.eyesOriginal);
+                button(716,246,211,23,"Исходный цвет",mode.body() && !draft.usePlayerSkin && r.eyeColors.length>1,()->draft.eyesOriginal=true,draft.eyesOriginal);
+                number(g,"Высота глаз",292,draft.eyeHeight,1,-2,2,n->draft.eyeHeight=Math.round(n),mode.body() && !draft.usePlayerSkin);
+                wrapped(g,"Верхний контур связан с основным цветом волос. Настройки глаз применяются к новому скину.",716,362,208,MUTED,6);
             }
-            case 3 -> hairPage(g,r);
-            case 4 -> {
-                int[] tattoos=new int[r.tattoos+1];for(int i=0;i<tattoos.length;i++)tattoos[i]=i;
-                cycle(g,"Татуировка",147,draft.tattoo,tattoos,n->draft.tattoo=n,r.tattoos>0);
-                colors(g,"Цвет узора","tattoo",190,draft.tattooColor,r.tattoos>0,n->draft.tattooColor=n);
-                button(302,245,217,23,"Свечение: "+(draft.glow?"да":"нет"),r.id.equals("orthosian"),()->draft.glow=!draft.glow);
-                text(g,r.id.equals("jahar")?"Белые глаза светятся всегда":"Свечение не освещает мир вокруг",302,285,0xFF786951,false);
+            case 1->{
+                int[] options=r.pointedEars?new int[]{1,2,3,4}:new int[]{0,1,2,3,4};
+                cycle(g,"Форма ушей",212,draft.ears,options,n->draft.ears=n,mode.body() && (r.pointedEars || Arrays.stream(r.earStyles).anyMatch(n->n>0)));
+                number(g,"Наклон",268,draft.earPitch,5,-60,60,n->draft.earPitch=n,mode.body() && draft.ears>0);
+                number(g,"Разворот",316,draft.earYaw,5,-60,60,n->draft.earYaw=n,mode.body() && draft.ears>0);
+                number(g,"Крен",364,draft.earRoll,5,-60,60,n->draft.earRoll=n,mode.body() && draft.ears>0);
+                number(g,"Высота крепления",412,draft.earOffset,.25f,-2,2,n->draft.earOffset=n,mode.body() && draft.ears>0);
             }
-            case 6 -> clothingPage(g);
-            case 5 -> {
-                button(302,144,180,22,"Хвост: "+(draft.tail==0?"нет":"олений"),r.tailAllowed,()->draft.tail=1-draft.tail);
-                boolean chest=draft.female() && !r.id.equals("forged");
-                if(breastAdvanced) {
-                    number(g,"Подвижность",186,draft.bounce,.025f,0,.5f,n->draft.bounce=n,chest);
-                    number(g,"Мягкость",222,draft.floppiness,.05f,.25f,1,n->draft.floppiness=n,chest);
-                    button(302,267,306,24,"Физика под бронёй: "+yes(draft.armorPhysics),chest,()->draft.armorPhysics=!draft.armorPhysics);
-                    button(302,324,306,24,"Основные настройки груди",true,()->breastAdvanced=false);
-                    text(g,FemaleGenderBridge.available()?"Рендер: Female Gender Mod 3.2.2":"Рендер: встроенная простая модель",302,371,0xFF786951,false);
-                    break;
-                }
-                number(g,"Размер груди",186,draft.bust,.05f,0,.8f,n->draft.bust=n,chest);
-                number(g,"Смещение X",216,draft.bustX,.1f,-1,1,n->draft.bustX=n,chest);
-                number(g,"Смещение Y",246,draft.bustY,.1f,-1,1,n->draft.bustY=n,chest);
-                number(g,"Смещение Z",276,draft.bustZ,.1f,-1,0,n->draft.bustZ=n,chest);
-                number(g,"Расстояние",306,draft.cleavage,.01f,0,.1f,n->draft.cleavage=n,chest);
-                button(302,341,144,20,"Физика: "+yes(draft.breastPhysics),chest,()->draft.breastPhysics=!draft.breastPhysics);
-                button(451,341,142,20,"Под бронёй: "+yes(draft.showInArmor),chest,()->draft.showInArmor=!draft.showInArmor);
-                button(598,341,143,20,"Форма: "+(draft.uniboob?"единая":"парная"),chest,()->draft.uniboob=!draft.uniboob);
-                button(302,366,306,18,"Дополнительные настройки груди",chest,()->breastAdvanced=true);
+            case 2->{
+                int[] styles=(!r.hornsRequired || r.algnor() && draft.female())?prepend(r.hornStyles,0):r.hornStyles;
+                cycle(g,"Вид рогов",211,draft.horns,styles,n->draft.horns=n,mode.body() && r.hornsAllowed);
+                palette(g,"Цвет рогов",261,r.hornColors,draft.hornColor,mode.body() && r.hornsAllowed,n->draft.hornColor=n,true);
+                number(g,"Наклон",319,draft.hornPitch,5,-60,60,n->draft.hornPitch=n,mode.body() && r.hornsAllowed);
+                number(g,"Разворот",366,draft.hornYaw,5,-60,60,n->draft.hornYaw=n,mode.body() && r.hornsAllowed);
+                number(g,"Размер",413,draft.hornSize,.05f,.65f,1.35f,n->draft.hornSize=n,mode.body() && r.hornsAllowed);
+                button(716,472,211,22,"Крепление: "+(draft.hornOnForehead?"лоб":"макушка"),mode.body() && r.hornsAllowed,()->draft.hornOnForehead=!draft.hornOnForehead);
+                button(716,499,211,20,"Дополнительно: крен / высота",mode.body() && r.hornsAllowed,()->tab=13);
+            }
+            case 13->{number(g,"Крен рогов",190,draft.hornRoll,5,-60,60,n->draft.hornRoll=n,mode.body() && r.hornsAllowed);number(g,"Высота крепления",245,draft.hornOffset,.2f,-.2f,2,n->draft.hornOffset=n,mode.body() && r.hornsAllowed);button(716,310,211,24,"Назад к рогам",true,()->tab=2);}
+            case 7->{cycle(g,"Вид хвоста",215,draft.tail,new int[]{0,1,2,3},n->draft.tail=n,mode.body() && r.tailAllowed);wrapped(g,r.tailAllowed?"Три варианта оленьего хвоста: короткий, удлинённый и пушистый.":"Для этой расы хвост недоступен.",716,280,208,MUTED,7);}
+            case 8->{number(g,"Рост, блоки",195,draft.height,.05f,r.minHeight,r.maxHeight,n->draft.height=n,mode.body());wrapped(g,"Рост влияет на модель, камеру, размеры тела и досягаемость. Диапазон определяется расой.",716,270,208,MUTED,7);}
+            case 3->hair(g,r);
+            case 10->{cycle(g,"Вид бороды",188,draft.beard,new int[]{0,1,2,3,4,5},n->draft.beard=n,r.beardAllowed);palette(g,"Цвет бороды / волос",249,r.hairColors,draft.hair,r.beardAllowed,n->draft.hair=n,true);wrapped(g,"При выбранной причёске из каталога борода и контур глаз используют её основной цвет.",716,330,208,MUTED,7);}
+            case 4->{int[] options=new int[r.tattoos+1];for(int i=0;i<options.length;i++)options[i]=i;cycle(g,"Вид отметок",188,draft.tattoo,options,n->draft.tattoo=n,r.tattoos>0);palette(g,"Цвет отметок",249,r.tattooColors,draft.tattooColor,r.tattoos>0,n->draft.tattooColor=n,true);button(716,312,211,25,"Свечение: "+yes(draft.glow),r.id.equals("orthosian"),()->draft.glow=!draft.glow);wrapped(g,"Отметки находятся под нижним бельём и одеждой. Особенности зависят от расы.",716,365,208,MUTED,7);}
+            case 5->bust(g,r);
+            case 6->clothing(g);
+            case 11->{
+                var signs=BirthsignCatalog.all();for(int i=0;i<signs.size();i++){var sign=signs.get(i);button(716,178+i*26,211,23,sign.name(),mode.body(),()->draft.birthsign=sign.id(),draft.birthsign.equals(sign.id()));}
+                var sign=BirthsignCatalog.get(draft.birthsign);g.fill(714,370,932,518,0x80201710);wrapped(g,sign.description()+"\n\n"+sign.effect(),722,381,200,INK,12);
             }
         }
     }
-    private void hairPage(GuiGraphics g,RaceDefinition r) {
-        button(302,145,210,23,beardPage?"← Причёски":"Настройки бороды",true,()->beardPage=!beardPage);
-        if(beardPage) {
-            cycle(g,"Борода",194,draft.beard,new int[]{0,1,2,3},n->draft.beard=n,r.beardAllowed);
-            colors(g,"Цвет бороды","hair",239,draft.hair,r.beardAllowed,n->draft.hair=n);
-            cycle(g,"Старая причёска",290,draft.hairStyle,new int[]{0,1,2,3,4},n->{draft.hairStyle=n;draft.hairAsset="";},r.hairAllowed);
-            text(g,"Цвет старых причёсок совпадает с цветом бороды",302,340,0xFF786951,false);
-            return;
-        }
+    private void hair(GuiGraphics g,RaceDefinition r){
         var list=AppearanceCatalog.hair();var asset=AppearanceCatalog.hair(draft.hairAsset);
-        text(g,"Причёска",302,186,INK,false);
-        chooser(435,179,306,asset==null?(draft.hairStyle==0?"Нет":"Старая причёска"):asset.name(),r.hairAllowed,delta->{
-            int i=-1;for(int n=0;n<list.size();n++)if(list.get(n).id().equals(draft.hairAsset))i=n;
-            int next=Math.floorMod(i+1+delta,list.size()+1)-1;
-            draft.hairAsset=next<0?"":list.get(next).id();draft.hairStyle=0;
-            draft.hairMain=draft.hairDecor1=draft.hairDecor2=0;
+        text(g,"Причёска",716,180,MUTED);chooser(716,198,211,asset==null?"Нет / старая":asset.name(),r.hairAllowed,delta->{
+            int i=-1;for(int n=0;n<list.size();n++)if(list.get(n).id().equals(draft.hairAsset))i=n;int next=Math.floorMod(i+1+delta,list.size()+1)-1;
+            draft.hairAsset=next<0?"":list.get(next).id();draft.hairStyle=0;draft.hairMain=draft.hairDecor1=draft.hairDecor2=0;
         });
-        if(asset!=null) assetColors(g,asset,225,new int[]{draft.hairMain,draft.hairDecor1,draft.hairDecor2},(i,n)->{
-            if(i==0)draft.hairMain=n;else if(i==1)draft.hairDecor1=n;else draft.hairDecor2=n;
-        },r.hairAllowed);
-        if(!r.hairAllowed)text(g,"У этой расы волосы недоступны",302,367,0xFF786951,false);
+        if(asset!=null)assetColors(g,asset,245,new int[]{draft.hairMain,draft.hairDecor1,draft.hairDecor2},(i,n)->{if(i==0)draft.hairMain=n;else if(i==1)draft.hairDecor1=n;else draft.hairDecor2=n;});
+        else {cycle(g,"Старая причёска",255,draft.hairStyle,new int[]{0,1,2,3,4},n->draft.hairStyle=n,r.hairAllowed);palette(g,"Цвет волос",315,r.hairColors,draft.hair,r.hairAllowed,n->draft.hair=n,true);}
     }
-    private void clothingPage(GuiGraphics g) {
-        var outfits=AppearanceCatalog.outfits(draft.sex);
-        var outfit=outfits.stream().filter(o->o.id().equals(draft.outfitPreset)).findFirst().orElse(null);
-        text(g,"Комплект",302,150,INK,false);
-        chooser(435,141,306,outfit==null?(draft.wardrobeEnabled?"Свой комплект":"Базовая одежда"):outfit.name(),true,delta->{
-            int i=outfit==null?-1:outfits.indexOf(outfit);int n=Math.floorMod(i+1+delta,outfits.size()+1)-1;
-            AppearanceCatalog.outfit(draft,n<0?"":outfits.get(n).id());
-        });
-        String group=AppearanceCatalog.GROUPS.get(garmentGroup);
-        text(g,"Часть костюма",302,185,INK,false);
-        chooser(435,176,306,AppearanceCatalog.GROUP_NAMES.get(garmentGroup),true,delta->garmentGroup=Math.floorMod(garmentGroup+delta,AppearanceCatalog.GROUPS.size()));
-        var choice=draft.wardrobe.get(group);var asset=choice==null?null:AppearanceCatalog.clothing(choice.asset);
-        var list=AppearanceCatalog.clothes(draft.sex,group);
-        chooser(302,211,439,asset==null?"Нет":asset.name(),!list.isEmpty(),delta->{
-            int i=asset==null?-1:list.indexOf(asset),n=Math.floorMod(i+1+delta,list.size()+1)-1;
-            draft.wardrobeEnabled=true;draft.outfitPreset="";
-            if(n<0)draft.wardrobe.remove(group);else draft.wardrobe.put(group,new CharacterData.Garment(list.get(n).id()));
-        });
-        if(asset!=null)assetColors(g,asset,252,new int[]{choice.main,choice.decor1,choice.decor2},(i,n)->{
-            if(i==0)choice.main=n;else if(i==1)choice.decor1=n;else choice.decor2=n;
-        },true);
+    private void clothing(GuiGraphics g){
+        button(716,176,211,23,(draft.naked?"[x]":"[ ]")+" Только нижнее бельё",true,()->draft.naked=!draft.naked);
+        var outfits=AppearanceCatalog.outfits(draft.sex);var outfit=outfits.stream().filter(o->o.id().equals(draft.outfitPreset)).findFirst().orElse(null);
+        chooser(716,207,211,outfit==null?"Свой комплект":outfit.name(),true,delta->{int i=outfit==null?-1:outfits.indexOf(outfit),n=Math.floorMod(i+1+delta,outfits.size()+1)-1;AppearanceCatalog.outfit(draft,n<0?"":outfits.get(n).id());});
+        String group=garmentGroup==9?"underwear":AppearanceCatalog.GROUPS.get(garmentGroup);
+        chooser(716,240,211,garmentGroup==9?"Нижнее бельё":AppearanceCatalog.GROUP_NAMES.get(garmentGroup),true,delta->garmentGroup=Math.floorMod(garmentGroup+delta,10));
+        if(garmentGroup==9){String[] palette={"#E0D5B9","#44434A","#A45B6C","#578FB8","#687E60","#9B7753"};palette(g,"Цвет нижнего белья",294,palette,draft.underwearColor-1,true,n->draft.underwearColor=n+1,draft.underwearColor>0);button(716,355,211,23,"Исходный цвет белья",true,()->draft.underwearColor=0,draft.underwearColor==0);return;}
+        var choice=draft.wardrobe.get(group);var asset=choice==null?null:AppearanceCatalog.clothing(choice.asset);var list=AppearanceCatalog.clothes(draft.sex,group);
+        chooser(716,273,211,asset==null?"Нет":asset.name(),!list.isEmpty(),delta->{int i=asset==null?-1:list.indexOf(asset),n=Math.floorMod(i+1+delta,list.size()+1)-1;draft.wardrobeEnabled=true;draft.outfitPreset="";if(n<0)draft.wardrobe.remove(group);else draft.wardrobe.put(group,new CharacterData.Garment(list.get(n).id()));});
+        if(asset!=null)assetColors(g,asset,313,new int[]{choice.main,choice.decor1,choice.decor2},(i,n)->{if(i==0)choice.main=n;else if(i==1)choice.decor1=n;else choice.decor2=n;});
     }
-    private void chooser(int x,int y,int w,String value,boolean enabled,IntConsumer change) {
-        button(x,y,25,25,"<",enabled,()->change.accept(-1));
-        button(x+29,y,w-58,25,value,enabled,()->change.accept(1));
-        button(x+w-25,y,25,25,">",enabled,()->change.accept(1));
+    private void bust(GuiGraphics g,RaceDefinition r){
+        boolean enabled=mode.body() && draft.female() && !r.id.equals("forged");
+        if(breastAdvanced){number(g,"Подвижность",190,draft.bounce,.025f,0,.5f,n->draft.bounce=n,enabled);number(g,"Мягкость",240,draft.floppiness,.05f,.25f,1,n->draft.floppiness=n,enabled);button(716,305,211,24,"Физика под бронёй: "+yes(draft.armorPhysics),enabled,()->draft.armorPhysics=!draft.armorPhysics);button(716,350,211,24,"Основные настройки",true,()->breastAdvanced=false);return;}
+        number(g,"Размер груди",185,draft.bust,.05f,0,.8f,n->draft.bust=n,enabled);
+        number(g,"Смещение X",233,draft.bustX,.1f,-1,1,n->draft.bustX=n,enabled);number(g,"Смещение Y",281,draft.bustY,.1f,-1,1,n->draft.bustY=n,enabled);number(g,"Смещение Z",329,draft.bustZ,.1f,-1,0,n->draft.bustZ=n,enabled);number(g,"Расстояние",377,draft.cleavage,.01f,0,.1f,n->draft.cleavage=n,enabled);
+        button(716,428,103,22,"Физика: "+yes(draft.breastPhysics),enabled,()->draft.breastPhysics=!draft.breastPhysics);button(824,428,103,22,"Броня: "+yes(draft.showInArmor),enabled,()->draft.showInArmor=!draft.showInArmor);
+        button(716,455,211,22,"Форма: "+(draft.uniboob?"единая":"парная"),enabled,()->draft.uniboob=!draft.uniboob);button(716,483,211,24,"Дополнительные настройки",enabled,()->breastAdvanced=true);
     }
-    private void assetColors(GuiGraphics g,AppearanceCatalog.Asset asset,int y,int[] values,java.util.function.BiConsumer<Integer,Integer> setter,boolean enabled) {
-        for(int i=0;i<3;i++) {
-            var channel=asset.controls().get(AppearanceCatalog.CHANNELS.get(i));if(channel==null)continue;
-            int row=y+i*44,ci=i;
-            text(g,i==0?"Основной цвет":"Декор "+i,302,row,INK,false);
-            button(302,row+13,111,18,"Исходный",enabled,()->setter.accept(ci,0),values[i]==0);
-            int count=channel.colors().size()-1;
-            for(int n=1;n<=count;n++) {
-                int index=n,x=435+(n-1)*51;var color=channel.colors().get(n);
-                controls.add(new Control(x,row,45,29,"",color.label()+" • "+channel.affects(),enabled,()->setter.accept(ci,index)));
-                g.fill(x+3,row+3,x+42,row+26,0xFF000000|color.rgb());
-                if(values[i]==n){g.fill(x,row,x+45,row+2,GOLD);g.fill(x,row+27,x+45,row+29,GOLD);}
-            }
-        }
+    private void footer(GuiGraphics g){
+        panel(g,270,478,418,54);
+        button(280,485,67,18,"↶",true,()->angle-=.4f);button(353,485,67,18,"↷",true,()->angle+=.4f);
+        button(426,485,77,18,"Голова +",true,()->previewZoom=Math.min(3,previewZoom+.4f));button(509,485,77,18,"Голова −",true,()->previewZoom=Math.max(1,previewZoom-.4f));
+        button(592,485,86,18,"Весь рост",true,()->previewZoom=1);
+        button(280,508,92,18,"Отмена",!sending,this::onClose);button(378,508,145,18,"Сброс раздела",!sending && (mode.body() || category==1),this::resetSection);
+        button(529,508,149,18,sending?"Сохранение…":"Подтвердить",!sending,()->{confirming=true;nameFocus=false;});
     }
-    private void confirmationPage(GuiGraphics g,float partial) {
-        preview(g,42,107,234,281,partial);
-        panel(g,291,107,466,281);
-        var r=RaceCatalog.get(draft.race);
-        text(g,"ЛИЧНОЕ ДЕЛО ПРИБЫВШЕГО",307,119,0xFF746040,false);
-        text(g,"Имя: "+(draft.name.isBlank()?minecraft.player.getGameProfile().getName():draft.name),307,144,INK,false);
-        text(g,"Происхождение: "+r.name,307,165,INK,false);
-        text(g,"Пол: "+(draft.female()?"Женский":"Мужской")+"   •   Рост: "+format(draft.height)+" блока",307,186,INK,false);
-        text(g,"Скин: "+(draft.usePlayerSkin?"собственный":"шаблон")+"   •   Отметины: "+draft.tattoo,307,207,INK,false);
-        text(g,"Уши: "+style(draft.ears)+"   •   Рога: "+style(draft.horns)+"   •   Хвост: "+yes(draft.tail>0),307,228,INK,false);
-        traits(g,r,307,252,433,129);
+    private void resetSection(){
+        var source=initial.race.equals(draft.race) && initial.sex.equals(draft.sex)?initial.copy():RaceCatalog.defaults(draft.race,draft.sex);
+        String[] fields=switch(tab){case 0->new String[]{"skin","skinOriginal"};case 9->new String[]{"eyes","eyesOriginal","eyeHeight"};case 1->new String[]{"ears","earPitch","earYaw","earRoll","earOffset"};case 2,13->new String[]{"horns","hornColor","hornPitch","hornYaw","hornRoll","hornOffset","hornSize","hornOnForehead"};case 7->new String[]{"tail"};case 8->new String[]{"height"};case 3->new String[]{"hairAsset","hairStyle","hair","hairMain","hairDecor1","hairDecor2"};case 10->new String[]{"beard","hair"};case 4->new String[]{"tattoo","tattooColor","glow"};case 6->new String[]{"wardrobe","wardrobeEnabled","outfitPreset","naked","underwearColor"};case 5->new String[]{"bust","bustX","bustY","bustZ","cleavage","bounce","floppiness","breastPhysics","armorPhysics","showInArmor","uniboob"};case 11->new String[]{"birthsign"};default->new String[]{"usePlayerSkin","armModel"};};
+        try{for(String field:fields){var f=CharacterData.class.getField(field);f.set(draft,f.get(source));}}catch(ReflectiveOperationException e){throw new IllegalStateException(e);}
     }
-    private void preview(GuiGraphics g,int x,int y,int w,int h,float partial) {
-        g.fill(x,y,x+w,y+h,0xFF3B4244);
-        for(int line=0;line<8;line++) g.fill(x+8,y+line*34,x+w-8,y+line*34+1,0xFF484F4D);
-        text(g,"ПРЕДПРОСМОТР",x+w/2,y+9,0xFFD2C3A9,true);
+    private void confirmation(GuiGraphics g){
+        panel(g,282,186,394,235);var r=RaceCatalog.get(draft.race);centered(g,"ПОДТВЕРЖДЕНИЕ",479,199,GOLD);
+        wrapped(g,(draft.name.isBlank()?minecraft.player.getGameProfile().getName():draft.name)+"\n"+r.name+" • "+(draft.female()?"женский":"мужской")+" • "+format(draft.height)+" блока\n"+BirthsignCatalog.get(draft.birthsign).name()+"\n\n"+(mode==EditorMode.COSMETIC?"Изменятся только доступные внешние детали.":"Проверьте выбранные настройки персонажа."),298,226,360,INK,12);
+        // Prevent click-through into controls behind this window.
+        controls.replaceAll(c->new Control(c.x,c.y,c.w,c.h,c.text,c.tip,false,c.selected,c.action));sliders.clear();
+        controls.add(new Control(282,186,394,235,"","",false,false,()->{}));
+        button(298,378,165,28,"Назад к настройкам",!sending,()->confirming=false);
+        button(478,378,180,28,sending?"Сохранение…":"Сохранить персонажа",!sending,()->{try{draft=RaceCatalog.validate(draft);sending=true;PacketDistributor.sendToServer(new RaceNetwork.Serverbound(0,token,draft.json()));}catch(RuntimeException e){error(e.getMessage());}});
+    }
+    private void preview(GuiGraphics g,int x,int y,int w,int h,float partial){
         if(minecraft.player==null)return;
-        if(previewModel==null || previewModel.level()!=minecraft.level || !previewModel.getUUID().equals(minecraft.player.getUUID()))
-            previewModel=new net.minecraft.client.player.RemotePlayer(minecraft.level,minecraft.player.getGameProfile());
-        var model=previewModel;
-        model.yBodyRot=model.yBodyRotO=180;model.setYRot(180);model.yRotO=180;
-        model.yHeadRot=model.yHeadRotO=180;model.setXRot(0);model.xRotO=0;
-        model.tickCount=minecraft.player.tickCount;
-        ClientCharacters.preview=draft;ClientCharacters.previewPlayer=model.getUUID();ClientCharacters.previewEntity=model;
-        try {
-            int size=Math.max(1,(int)((h-34)/2.45f*1.8f/draft.height));
-            g.pose().pushPose();
-            try {
-                g.pose().translate(-panX/zoom,-panY/zoom,0);g.pose().scale(1/zoom,1/zoom,1);
-                int left=Math.round(panX+(x+8)*zoom),top=Math.round(panY+(y+24)*zoom);
-                int right=Math.round(panX+(x+w-8)*zoom),bottom=Math.round(panY+(y+h-10)*zoom);
-                g.enableScissor(left,top,right,bottom);
-                try {
-                    var rotation=new org.joml.Quaternionf().rotateZ((float)Math.PI).rotateY(angle).rotateX(-.08f);
-                    InventoryScreen.renderEntityInInventory(g,(left+right)/2f,bottom-8*zoom,Math.round(size*zoom),
-                        new org.joml.Vector3f(),rotation,null,model);
-                } finally {g.disableScissor();}
-            } finally {g.pose().popPose();}
-        } finally {
-            ClientCharacters.preview=null;ClientCharacters.previewPlayer=null;ClientCharacters.previewEntity=null;
-        }
-    }
-
-    private void portrait(GuiGraphics g,RaceDefinition r,int x,int y,int size) {
-        g.fill(x-3,y-3,x+size+3,y+size+3,0xFF625C4A);
-        g.fill(x,y,x+size,y+size,0xFF394145);
-        // Original transparent portrait assets; no dragon survival artwork.
-        g.blit(Civitatum.res("textures/gui/portraits/"+r.id+".png"),x,y,size,size,0,0,1254,1254,1254,1254);
-    }
-    private void traits(GuiGraphics g,RaceDefinition r,int x,int y,int w,int h) {
-        String content="+ "+r.positive+"\n− "+r.negative;
-        if(!r.active.isBlank()) {
-            String price=r.magic && net.neoforged.fml.ModList.get().isLoaded("ars_nouveau")
-                ? "мана Ars Nouveau" : r.food+" питания";
-            content+="\n"+r.active+"\nЦена: "+price+"  •  Откат: "+r.cooldown+" сек.";
-        }
-        var lines=font.split(Component.literal(content),w-20);
-        int visible=h/11;
-        if(lines.size()>visible) visible=Math.max(1,(h-12)/11);
-        if(lines.size()>visible) {
-            portraitScroll=Math.max(0,Math.min(portraitScroll,lines.size()-visible));
-            text(g,"Колесо мыши: особенности",x+w-font.width("Колесо мыши: особенности"),y+h-8,0xFF786951,false);
-        } else portraitScroll=0;
-        for(int i=0;i<visible && i+portraitScroll<lines.size();i++)
-            g.drawString(font,lines.get(i+portraitScroll),x,y+i*11,0xFF534837,false);
-    }
-    private void colors(GuiGraphics g,String label,String part,int y,int chosen,boolean enabled,IntConsumer setter) {
-        text(g,label,302,y,INK,false);
-        var r=RaceCatalog.get(draft.race);var palette=r.palette(part);
-        for(int i=0;i<palette.length;i++) {
-            int index=i,x=435+i*51;
-            var control=new Control(x,y-3,45,24,"",palette[i]+(enabled?"":" • цвет задаётся вашим скином или недоступен"),enabled,()->setter.accept(index));
-            controls.add(control);
-            g.fill(x+3,y,x+42,y+18,0xFF000000|r.color(part,i));
-            if(i==chosen) {g.fill(x,y-3,x+45,y-1,GOLD);g.fill(x,y+20,x+45,y+22,GOLD);}
-        }
-    }
-    private void number(GuiGraphics g,String name,int y,float value,float step,float min,float max,Consumer<Float> setter,boolean enabled) {
-        number(g,name,y,value,step,min,max,setter,enabled,302);
-    }
-    private void number(GuiGraphics g,String name,int y,float value,float step,float min,float max,Consumer<Float> setter,boolean enabled,int labelX) {
-        int buttons=labelX==302?584:620;
-        text(g,name,labelX,y+3,INK,false);
-        text(g,format(value),buttons-12,y+3,enabled?INK:0xFF998D79,true);
-        button(buttons,y-2,53,22,"−",enabled,()->setter.accept(Math.max(min,Math.round((value-step)*100)/100f)));
-        button(buttons+60,y-2,53,22,"+",enabled,()->setter.accept(Math.min(max,Math.round((value+step)*100)/100f)));
-    }
-    private void cycle(GuiGraphics g,String name,int y,int value,int[] options,IntConsumer setter,boolean enabled) {
-        text(g,name,302,y+4,INK,false);
-        button(435,y-2,306,25,style(value),enabled,()->{
-            int current=0;for(int i=0;i<options.length;i++) if(options[i]==value)current=i;
-            setter.accept(options[(current+1)%options.length]);
-        });
-    }
-    private static int[] prepend(int[] array,int first) {int[] result=new int[array.length+1];result[0]=first;System.arraycopy(array,0,result,1,array.length);return result;}
-    private static String yes(boolean value){return value?"да":"нет";}
-    private static String format(float value){return String.format(Locale.ROOT,"%.2f",value).replace('.',',');}
-    private static String style(int value){return value==0?"Нет":"Вариант "+value;}
-    private void button(int x,int y,int w,int h,String label,boolean enabled,Runnable action){button(x,y,w,h,label,enabled,action,false);}
-    private void button(int x,int y,int w,int h,String label,boolean enabled,Runnable action,boolean selected){
-        controls.add(new Control(x,y,w,h,label,selected?"Выбрано":enabled?"":"Недоступно для выбранной расы / пола",enabled,action));
-    }
-    private void draw(GuiGraphics g,Control b,int index) {
-        boolean hovered=b.inside(mouseX,mouseY)||focus==index;
-        if(b.text.isEmpty()) {
-            if(hovered) {g.fill(b.x,b.y,b.x+2,b.y+b.h,GOLD);g.fill(b.x+b.w-2,b.y,b.x+b.w,b.y+b.h,GOLD);}
-            if(!b.enabled) g.fill(b.x+3,b.y+3,b.x+b.w-3,b.y+b.h-3,0xAA9A9386);
-            return;
-        }
-        String sprite=!b.enabled?"widget/button_disabled":hovered?"widget/button_highlighted":"widget/button";
-        g.blitSprite(net.minecraft.resources.ResourceLocation.withDefaultNamespace(sprite),b.x,b.y,b.w,b.h);
-        if(b.tip.equals("Выбрано")) { g.fill(b.x,b.y,b.x+b.w,b.y+2,GOLD);g.fill(b.x,b.y+b.h-2,b.x+b.w,b.y+b.h,GOLD); }
-        String label=b.text;
-        while(font.width(label)>b.w-12 && label.length()>1)label=label.substring(0,label.length()-1);
-        text(g,label,b.x+b.w/2,b.y+(b.h-8)/2,b.enabled?0xFFF5F1E8:0xFF9C9C94,true);
-    }
-    private void parchment(GuiGraphics g,int x,int y,int w,int h){
-        g.fill(x,y,x+w,y+h,0xFF564532);g.fill(x+4,y+4,x+w-4,y+h-4,0xFFE8DBBA);
-        g.fill(x+9,y+9,x+w-9,y+h-9,0xFFF0E5C9);
-        for(int i=0;i<4;i++){int yy=y+18+i*94;g.fill(x+10,yy,x+w-10,yy+1,0x115B4127);}
-        g.fill(x+12,y+12,x+18,y+18,GOLD);g.fill(x+w-18,y+12,x+w-12,y+18,GOLD);
-        g.fill(x+12,y+h-18,x+18,y+h-12,GOLD);g.fill(x+w-18,y+h-18,x+w-12,y+h-12,GOLD);
-    }
-    private void panel(GuiGraphics g,int x,int y,int w,int h){g.fill(x,y,x+w,y+h,0xFFB7A37C);g.fill(x+1,y+1,x+w-1,y+h-1,0xFFE6D8B9);}
-    private void text(GuiGraphics g,String s,int x,int y,int color,boolean centered){g.drawString(font,s,centered?x-font.width(s)/2:x,y,color,false);}
-    private void centeredWrapped(GuiGraphics g,String s,int x,int y,int w,int color){
-        var lines=font.split(Component.literal(s),w);for(var line:lines){g.drawString(font,line,x+(w-font.width(line))/2,y,color,false);y+=11;}
-    }
-    private void wrapped(GuiGraphics g,String s,int x,int y,int w,int color,int spacing,int maxLines){
-        int i=0;for(var line:font.split(Component.literal(s),w)){if(i++>=maxLines)break;g.drawString(font,line,x,y,color,false);y+=spacing;}
-    }
-    @Override public boolean mouseClicked(double x,double y,int button) {
-        geometry();double mx=(x-panX)/zoom,my=(y-panY)/zoom;
-        if(button==0)for(int i=controls.size()-1;i>=0;i--) {
-            var c=controls.get(i);
-            if(c.inside(mx,my)) {
-                if(c.enabled){focus=i;error="";if(!c.text.equals(draft.name))nameFocus=false;c.action.run();minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK,1));}
-                return true;
+        if(previewModel==null || previewModel.level()!=minecraft.level)previewModel=new net.minecraft.client.player.RemotePlayer(minecraft.level,minecraft.player.getGameProfile()){
+            @Override public boolean isModelPartShown(net.minecraft.world.entity.player.PlayerModelPart part){return part!=net.minecraft.world.entity.player.PlayerModelPart.CAPE;}
+        };
+        var model=previewModel;model.yBodyRot=model.yBodyRotO=180;model.setYRot(180);model.yRotO=180;model.yHeadRot=model.yHeadRotO=180;model.setXRot(0);model.xRotO=0;model.tickCount=minecraft.player.tickCount;
+        ClientCharacters.preview=draft;ClientCharacters.previewPlayer=model.getUUID();ClientCharacters.previewEntity=model;ClientCharacters.previewTime=minecraft.player.tickCount+partial-startTick;
+        try{
+            float size=(h-38)/2.15f*1.8f/draft.height*previewZoom;
+            float feet=previewZoom==1?y+h-8:y+h*.42f+size*draft.height*.84f;
+            var renderer=(PlayerRenderer)minecraft.getEntityRenderDispatcher().getRenderer(model);
+            try(var saved=PreviewPose.preserve(renderer.getModel())){
+                g.pose().pushPose();try{
+                    g.pose().translate(-panX/zoom,-panY/zoom,0);g.pose().scale(1/zoom,1/zoom,1);
+                    g.enableScissor(Math.round(panX+x*zoom),Math.round(panY+y*zoom),Math.round(panX+(x+w)*zoom),Math.round(panY+(y+h)*zoom));
+                    try{var rotation=new org.joml.Quaternionf().rotateZ((float)Math.PI).rotateY(angle).rotateX(-.04f);InventoryScreen.renderEntityInInventory(g,panX+(x+w/2f)*zoom,panY+feet*zoom,size*zoom,new org.joml.Vector3f(),rotation,null,model);}finally{g.disableScissor();}
+                }finally{g.pose().popPose();}
             }
+        }finally{clearPreview();}
+    }
+    private static void clearPreview(){ClientCharacters.preview=null;ClientCharacters.previewPlayer=null;ClientCharacters.previewEntity=null;ClientCharacters.previewTime=0;}
+    private void palette(GuiGraphics g,String label,int y,String[] colors,int chosen,boolean enabled,IntConsumer set,boolean selection){
+        text(g,label,716,y,MUTED);int step=211/Math.max(6,colors.length);
+        for(int i=0;i<colors.length;i++){int n=i,x=716+i*step;swatch(g,x,y+18,29,24,Integer.parseInt(colors[i].substring(1),16),enabled,selection && chosen==i,colors[i],()->set.accept(n));}
+    }
+    private void assetColors(GuiGraphics g,AppearanceCatalog.Asset asset,int y,int[] values,java.util.function.BiConsumer<Integer,Integer> set){
+        for(int i=0;i<3;i++){
+            var c=asset.controls().get(AppearanceCatalog.CHANNELS.get(i));if(c==null)continue;int row=y+i*67,channel=i;
+            text(g,i==0?"Основной цвет":"Декор "+i,716,row,MUTED);button(856,row-4,71,18,"Исходный",true,()->set.accept(channel,0),values[i]==0);
+            for(int n=1;n<c.colors().size();n++){int index=n;var color=c.colors().get(n);swatch(g,716+(n-1)*35,row+19,29,26,color.rgb(),true,values[i]==n,color.label()+" • "+c.affects(),()->set.accept(channel,index));}
         }
-        if(button==0 && stage==2 && mx>=42 && mx<274 && my>=130 && my<366){portraitDragging=true;return true;}
+    }
+    private void swatch(GuiGraphics g,int x,int y,int w,int h,int color,boolean enabled,boolean selected,String tip,Runnable action){
+        g.fill(x,y,x+w,y+h,selected?GOLD:0xFF30271D);g.fill(x+3,y+3,x+w-3,y+h-3,0xFF000000|color);
+        if(!enabled)g.fill(x+3,y+3,x+w-3,y+h-3,0xAA403B34);controls.add(new Control(x,y,w,h,"",tip,enabled,selected,action));
+    }
+    private void number(GuiGraphics g,String label,int y,float value,float step,float min,float max,Consumer<Float> set,boolean enabled){
+        text(g,label,716,y,enabled?INK:MUTED);String v=step>=1?Integer.toString(Math.round(value)):format(value);g.drawString(font,v,927-font.width(v),y,MUTED,false);
+        button(716,y+15,22,20,"−",enabled,()->set.accept(Math.max(min,Math.round((value-step)*1000)/1000f)));button(905,y+15,22,20,"+",enabled,()->set.accept(Math.min(max,Math.round((value+step)*1000)/1000f)));
+        int x=745,w=153;g.fill(x,y+23,x+w,y+27,0xFF372D22);int thumb=x+Math.round((value-min)/(max-min)*(w-4));g.fill(thumb,y+18,thumb+4,y+32,enabled?GOLD:0xFF6A5D4A);
+        if(enabled)sliders.add(new Slider(x,y+15,w,min,max,step,set));
+    }
+    private void cycle(GuiGraphics g,String label,int y,int value,int[] values,IntConsumer set,boolean enabled){
+        text(g,label,716,y,MUTED);chooser(716,y+17,211,value==0?"Нет":"Вариант "+value,enabled,delta->{int index=0;for(int i=0;i<values.length;i++)if(values[i]==value)index=i;set.accept(values[Math.floorMod(index+delta,values.length)]);});
+    }
+    private void chooser(int x,int y,int w,String value,boolean enabled,IntConsumer set){button(x,y,23,25,"<",enabled,()->set.accept(-1));button(x+28,y,w-56,25,value,enabled,()->set.accept(1));button(x+w-23,y,23,25,">",enabled,()->set.accept(1));}
+    private static int[] prepend(int[] a,int first){int[] b=new int[a.length+1];b[0]=first;System.arraycopy(a,0,b,1,a.length);return b;}
+    private void button(int x,int y,int w,int h,String label,boolean enabled,Runnable action){button(x,y,w,h,label,enabled,action,false);}
+    private void button(int x,int y,int w,int h,String label,boolean enabled,Runnable action,boolean selected){controls.add(new Control(x,y,w,h,label,label,enabled,selected,action));}
+    private void draw(GuiGraphics g,Control c,int index){
+        if(c.text.isEmpty())return;boolean hover=c.inside(mouseX,mouseY)||focus==index;
+        g.fill(c.x,c.y,c.x+c.w,c.y+c.h,c.selected?0xCC6A5030:hover && c.enabled?0xDD4A3924:0xC018130E);
+        int border=c.selected?GOLD:c.enabled?0xAA8E7450:0x77544734;g.fill(c.x,c.y,c.x+c.w,c.y+1,border);g.fill(c.x,c.y+c.h-1,c.x+c.w,c.y+c.h,border);
+        g.fill(c.x,c.y,c.x+1,c.y+c.h,border);g.fill(c.x+c.w-1,c.y,c.x+c.w,c.y+c.h,border);
+        String text=c.text;while(font.width(text)>c.w-8 && text.length()>1)text=text.substring(0,text.length()-1);
+        centered(g,text,c.x+c.w/2,c.y+(c.h-8)/2,c.enabled?INK:0xFF7E725F);
+    }
+    private void panel(GuiGraphics g,int x,int y,int w,int h){g.fill(x,y,x+w,y+h,0xB3292018);g.fill(x,y,x+w,y+2,0xCCA78A5E);g.fill(x,y+h-2,x+w,y+h,0xCC7E6441);g.fill(x,y,x+2,y+h,0xCC9A7F55);g.fill(x+w-2,y,x+w,y+h,0xCC9A7F55);}
+    private void text(GuiGraphics g,String value,int x,int y,int color){g.drawString(font,value,x,y,color,true);}
+    private void centered(GuiGraphics g,String value,int x,int y,int color){text(g,value,x-font.width(value)/2,y,color);}
+    private void wrapped(GuiGraphics g,String value,int x,int y,int width,int color,int count){int row=0;for(var line:font.split(Component.literal(value),width)){if(row>=count)break;g.drawString(font,line,x,y+row++*11,color,true);}}
+    private static String yes(boolean v){return v?"да":"нет";}
+    private static String format(float v){return String.format(Locale.ROOT,"%.2f",v).replace('.',',');}
+    private void slide(Slider slider,double x){float f=(float)Math.clamp((x-slider.x)/slider.w,0,1);float value=slider.min+Math.round(f*(slider.max-slider.min)/slider.step)*slider.step;slider.setter.accept(Math.clamp(Math.round(value*1000)/1000f,slider.min,slider.max));}
+    @Override public boolean mouseClicked(double x,double y,int button){
+        geometry();double mx=(x-panX)/zoom,my=(y-panY)/zoom;
+        if(button==0){
+            for(int i=controls.size()-1;i>=0;i--){var c=controls.get(i);if(c.inside(mx,my)){if(c.enabled){focus=i;error="";if(!c.text.equals(draft.name) && !(c.x==365 && c.y==102))nameFocus=false;c.action.run();}return true;}}
+            if(!confirming)for(var slider:sliders)if(mx>=slider.x-3 && mx<=slider.x+slider.w+3 && my>=slider.y && my<slider.y+20){dragging=slider;slide(slider,mx);return true;}
+            if(!confirming && mx>=258 && mx<696 && my>=136 && my<472){portraitDragging=true;nameFocus=false;return true;}
+        }
         nameFocus=false;return super.mouseClicked(x,y,button);
     }
-    @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy) {
-        if(portraitDragging){angle+=(float)(dx/zoom)*.035f;return true;}return super.mouseDragged(x,y,button,dx,dy);
+    @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy){if(dragging!=null){slide(dragging,(x-panX)/zoom);return true;}if(portraitDragging){angle+=(float)(dx/zoom)*.012f;return true;}return super.mouseDragged(x,y,button,dx,dy);}
+    @Override public boolean mouseReleased(double x,double y,int button){dragging=null;portraitDragging=false;return super.mouseReleased(x,y,button);}
+    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){geometry();double mx=(x-panX)/zoom,my=(y-panY)/zoom;if(mx<250 && my>=285 && my<=437)portraitScroll=Math.max(0,portraitScroll-(int)vertical*3);else if(mx>=258 && mx<=696 && my>=136 && my<=472)previewZoom=Math.clamp(previewZoom+(float)vertical*.2f,1,3);return true;}
+    @Override public boolean charTyped(char c,int modifiers){if(nameFocus && !Character.isISOControl(c) && c!='§' && draft.name.length()<32){draft.name+=c;return true;}return super.charTyped(c,modifiers);}
+    @Override public boolean keyPressed(int key,int scan,int modifiers){
+        if(nameFocus){if(key==GLFW.GLFW_KEY_BACKSPACE){if(!draft.name.isEmpty())draft.name=draft.name.substring(0,draft.name.length()-1);return true;}if(key==GLFW.GLFW_KEY_V && Screen.hasControlDown()){String s=minecraft.keyboardHandler.getClipboard().replaceAll("[\\p{Cntrl}§]","");draft.name=(draft.name+s).substring(0,Math.min(32,draft.name.length()+s.length()));return true;}if(key==GLFW.GLFW_KEY_ENTER){nameFocus=false;return true;}}
+        if(key==GLFW.GLFW_KEY_ESCAPE && confirming){confirming=false;return true;}if(key==GLFW.GLFW_KEY_TAB){for(int i=0;i<controls.size();i++){focus=Math.floorMod(focus+1,controls.size());if(controls.get(focus).enabled)break;}return true;}
+        if((key==GLFW.GLFW_KEY_ENTER || key==GLFW.GLFW_KEY_SPACE) && focus>=0 && focus<controls.size()){var c=controls.get(focus);if(c.enabled)c.action.run();return true;}return super.keyPressed(key,scan,modifiers);
     }
-    @Override public boolean mouseReleased(double x,double y,int button){portraitDragging=false;return super.mouseReleased(x,y,button);}
-    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){
-        portraitScroll=Math.max(0,portraitScroll-(int)vertical*2);return true;
-    }
-    @Override public boolean charTyped(char character,int modifiers) {
-        if(nameFocus && !Character.isISOControl(character) && character!='§' && draft.name.length()<32){draft.name+=character;return true;}
-        return super.charTyped(character,modifiers);
-    }
-    @Override public boolean keyPressed(int key,int scan,int modifiers) {
-        if(nameFocus) {
-            if(key==GLFW.GLFW_KEY_BACKSPACE){if(!draft.name.isEmpty())draft.name=draft.name.substring(0,draft.name.length()-1);return true;}
-            if(key==GLFW.GLFW_KEY_ENTER){nameFocus=false;return true;}
-        }
-        if(key==GLFW.GLFW_KEY_TAB){focus=(focus+1)%Math.max(1,controls.size());return true;}
-        if((key==GLFW.GLFW_KEY_ENTER || key==GLFW.GLFW_KEY_SPACE) && focus>=0 && focus<controls.size()){
-            var c=controls.get(focus);if(c.enabled)c.action.run();return true;
-        }
-        return super.keyPressed(key,scan,modifiers);
-    }
-    @Override public void onClose() {
-        ClientCharacters.preview=null;ClientCharacters.previewPlayer=null;ClientCharacters.previewEntity=null;
-        PacketDistributor.sendToServer(new RaceNetwork.Serverbound(3,token,""));
-        minecraft.setScreen(null);
-    }
+    @Override public void onClose(){clearPreview();PacketDistributor.sendToServer(new RaceNetwork.Serverbound(3,token,""));minecraft.setScreen(null);}
 }

@@ -24,6 +24,9 @@ public final class Civitatum {
     public static final DeferredItem<Item> MIRROR = ITEMS.registerSimpleItem("appearance_mirror", new Item.Properties().stacksTo(16));
     public Civitatum(IEventBus bus) {
         ATTACHMENTS.register(bus); ITEMS.register(bus);
+        bus.addListener((net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent e)->{
+            if(e.getTabKey()==net.minecraft.world.item.CreativeModeTabs.TOOLS_AND_UTILITIES){e.accept(MIRROR.get());e.accept(SHARD.get());}
+        });
         bus.addListener(RaceNetwork::register);
         bus.addListener((net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent e) -> e.enqueueWork(CompatPatches::init));
         RaceCatalog.all();

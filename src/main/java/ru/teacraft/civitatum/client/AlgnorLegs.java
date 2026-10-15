@@ -18,7 +18,7 @@ public final class AlgnorLegs {
     }
     public void render(PoseStack pose,VertexConsumer buffer,int light,ModelPart anchor,int color) {
         pose.pushPose();anchor.translateAndRotate(pose);
-        var thigh=root.getChild("thigh"),shank=thigh.getChild("shank"),pastern=shank.getChild("pastern"),hoof=pastern.getChild("hoof");
+        ModelPart thigh=root.getChild("thigh"),shank=thigh.getChild("shank"),pastern=shank.getChild("pastern"),hoof=pastern.getChild("hoof");
         hoof.visible=false;root.render(pose,buffer,light,OverlayTexture.NO_OVERLAY,0xFF000000|color);hoof.visible=true;
         pose.pushPose();thigh.translateAndRotate(pose);shank.translateAndRotate(pose);pastern.translateAndRotate(pose);
         hoof.render(pose,buffer,light,OverlayTexture.NO_OVERLAY,0xFF34302B);pose.popPose();pose.popPose();

@@ -27,7 +27,7 @@ public final class RaceNetwork {
     /** Installed exclusively on the client, without loading Minecraft client classes on servers. */
     public static Consumer<Clientbound> CLIENT_RECEIVER = ignored -> {};
     public static void register(RegisterPayloadHandlersEvent event) {
-        var r = event.registrar("2");
+        var r = event.registrar("3");
         r.playToClient(Clientbound.TYPE, Clientbound.CODEC, (p,c) -> c.enqueueWork(() -> CLIENT_RECEIVER.accept(p)));
         r.playToServer(Serverbound.TYPE, Serverbound.CODEC, (p,c) -> c.enqueueWork(() -> {
             if (!(c.player() instanceof ServerPlayer player)) return;

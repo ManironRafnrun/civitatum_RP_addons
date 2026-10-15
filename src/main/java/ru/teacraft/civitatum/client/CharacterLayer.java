@@ -118,12 +118,12 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
         for(int style=1;style<=7;style++) {
             var ears=root.addOrReplaceChild("ears"+style,cube(),PartPose.ZERO);
             for(int sign:new int[]{-1,1}) {
-                float height=switch(style) { case 3,6 -> 7;case 5 -> 5;default -> 4; };
-                float width=style==5?2:1.1f;
+                float height=switch(style) { case 3,6 -> 7;case 2,4,5 -> 5;default -> 4; };
+                float width=style==5?2:style==2?1.6f:1.1f;
                 var build=cube().addBox(-width/2,-height,-.65f,width,height,1.3f)
                     .addBox(-width/4,-height-1,-.4f,width/2,1,.8f);
-                float roll=switch(style) {case 3,6 -> sign*1.1f;case 5 -> sign*1.8f;case 7 -> sign*.8f;default -> sign*.6f;};
-                ears.addOrReplaceChild(sign<0?"left":"right",build,PartPose.offsetAndRotation(sign*4,-3.6f,0,0,0,roll));
+                float roll=switch(style) {case 3,6 -> sign*1.1f;case 2 -> sign*.9f;case 4 -> sign*.75f;case 5 -> sign*1.8f;case 7 -> sign*.8f;default -> sign*.6f;};
+                ears.addOrReplaceChild(sign<0?"left":"right",build,PartPose.offsetAndRotation(sign*4,-3.6f,0,0,style==4?sign*.55f:0,roll));
             }
         }
         for(int style=1;style<=10;style++) {
