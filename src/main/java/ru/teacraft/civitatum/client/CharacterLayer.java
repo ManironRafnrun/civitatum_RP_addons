@@ -18,6 +18,7 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
     public static final ModelLayerLocation MODEL=new ModelLayerLocation(Civitatum.res("body_details"),"main");
     private static final net.minecraft.resources.ResourceLocation TEXTURE=Civitatum.res("textures/entity/details.png");
     private final ModelPart root;
+    private final ModelPart bust=createBustModel().bakeRoot();
     public CharacterLayer(RenderLayerParent<AbstractClientPlayer,PlayerModel<AbstractClientPlayer>> parent,ModelPart root) { super(parent);this.root=root; }
     @Override public void render(PoseStack pose,MultiBufferSource buffers,int light,AbstractClientPlayer p,
             float walk,float amount,float partial,float age,float yaw,float pitch) {
@@ -25,13 +26,13 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
         if(!c.selected || p.isInvisible() || p.isSpectator()) return;
         RaceDefinition r=RaceCatalog.get(c.race);
         if(r==null) return;
-        FemaleGenderBridge.apply(p.getUUID(),c,false);
+        if(!ClientCharacters.isPreview(p))FemaleGenderBridge.apply(p.getUUID(),c,false);
         var buffer=buffers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
         boolean helmet=!p.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
         if(!helmet) {
             pair(pose,buffer,light,getParentModel().head,"ears"+c.ears,c.ears!=0,r.color("skin",c.skin),1,c.earPitch,c.earYaw,c.earRoll,c.earOffset,false);
             if(c.beard!=0) attached(pose,buffer,light,getParentModel().head,"beard"+c.beard,r.color("hair",c.hair));
-            if(c.hairStyle!=0 && r.hairAllowed) attached(pose,buffer,light,getParentModel().head,"hair"+c.hairStyle,r.color("hair",c.hair));
+            if(c.hairAsset.isEmpty() && c.hairStyle!=0 && r.hairAllowed) attached(pose,buffer,light,getParentModel().head,"hair"+c.hairStyle,r.color("hair",c.hair));
             if(r.id.equals("orc")) attached(pose,buffer,light,getParentModel().head,"tusks",0xEADBB7);
             if(r.id.equals("firbolg")) attached(pose,buffer,light,getParentModel().head,"nose",r.color("skin",c.skin));
             if(r.dragon()) attached(pose,buffer,light,getParentModel().head,"muzzle",r.color("skin",c.skin));
@@ -59,16 +60,19 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
             if(p.getItemBySlot(EquipmentSlot.CHEST).isEmpty())
                 attached(pose,buffer,c.glow ? 0xF000F0 : light,getParentModel().body,"orthoBody"+c.tattoo,r.color("tattoo",c.tattooColor));
         }
-        if(c.female() && c.bust>0 && !r.id.equals("forged") && !FemaleGenderBridge.available()
+        if(c.female() && c.bust>0 && !r.id.equals("forged") && (!FemaleGenderBridge.available() || ClientCharacters.isPreview(p))
             && (p.getItemBySlot(EquipmentSlot.CHEST).isEmpty() || c.showInArmor)) {
             pose.pushPose();getParentModel().body.translateAndRotate(pose);
             float jiggle=c.breastPhysics && (p.getItemBySlot(EquipmentSlot.CHEST).isEmpty() || c.armorPhysics)
                 ? (float)Math.sin(walk*1.7f)*amount*c.bounce*c.floppiness*.08f : 0;
-            pose.translate(0,c.bustY/16f+jiggle,c.bustZ/16f);
-            pose.scale(1,1,.25f+c.bust*1.1f);
+            pose.translate(0,c.bustY/16f+jiggle,(-2.01f+c.bustZ)/16f);
+            pose.scale(1,1,c.bust*1.4f);
+            var skinBuffer=buffers.getBuffer(RenderType.entityCutoutNoCull(p.getSkin().texture()));
             for(int sign:new int[]{-1,1}) {
                 pose.pushPose();pose.translate(sign*(c.bustX/32f+(c.uniboob?0:c.cleavage)),0,0);
-                root.getChild("chest"+(sign<0?"left":"right")).render(pose,buffer,light,OverlayTexture.NO_OVERLAY,0xFF6C7075);
+                String side=sign<0?"left":"right";
+                bust.getChild(side).render(pose,skinBuffer,light,OverlayTexture.NO_OVERLAY);
+                bust.getChild(side+"_overlay").render(pose,skinBuffer,light,OverlayTexture.NO_OVERLAY);
                 pose.popPose();
             }
             pose.popPose();
@@ -97,6 +101,16 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
             pose.popPose();
         }
         pose.popPose();
+    }
+    private static LayerDefinition createBustModel() {
+        var mesh=new MeshDefinition();var root=mesh.getRoot();
+        for(int side=0;side<2;side++) {
+            String name=side==0?"left":"right";float x=side==0?-4:0;
+            root.addOrReplaceChild(name,CubeListBuilder.create().texOffs(17+side*4,17).addBox(x,2,-3.4f,4,4,3.4f),PartPose.ZERO);
+            root.addOrReplaceChild(name+"_overlay",CubeListBuilder.create().texOffs(17+side*4,33)
+                .addBox(x,2,-3.4f,4,4,3.4f,new CubeDeformation(.035f)),PartPose.ZERO);
+        }
+        return LayerDefinition.create(mesh,64,64);
     }
     private static CubeListBuilder cube() { return CubeListBuilder.create().texOffs(0,0); }
     private static void box(PartDefinition root,String name,float x,float y,float z,float w,float h,float d) {

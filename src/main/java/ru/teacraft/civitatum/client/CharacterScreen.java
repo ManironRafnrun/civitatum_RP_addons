@@ -25,10 +25,12 @@ public final class CharacterScreen extends Screen {
     private final List<Control> controls=new ArrayList<>();
     private CharacterData draft;
     private String root="human", child="", sex="male", error="";
-    private int stage, tab, focus=-1, portraitScroll;
+    private int stage, tab, focus=-1, portraitScroll, garmentGroup;
+    private boolean beardPage;
     private boolean nameFocus, sending, portraitDragging, breastAdvanced;
     private float zoom=1, panX, panY, angle=-.8f;
     private double mouseX,mouseY;
+    private net.minecraft.client.player.RemotePlayer previewModel;
     public CharacterScreen(long token,boolean choose,CharacterData saved) {
         super(Component.literal("Право на Возвращение"));
         this.token=token;this.choose=choose;this.draft=saved.copy();this.sex=saved.sex;
@@ -145,8 +147,8 @@ public final class CharacterScreen extends Screen {
         preview(g,42,130,232,259,partial);
         button(49,366,37,18,"<",true,()->angle-=.65f);
         button(230,366,37,18,">",true,()->angle+=.65f);
-        String[] tabs={"Основа","Уши","Рога","Волосы","Отметины","Фигура"};
-        for(int i=0;i<tabs.length;i++) {int n=i;button(290+i*77,105,73,23,tabs[i],true,()->{tab=n;nameFocus=false;},tab==i);}
+        String[] tabs={"Основа","Уши","Рога","Волосы","Отметины","Фигура","Одежда"};
+        for(int i=0;i<tabs.length;i++) {int n=i;button(290+i*66,105,63,23,tabs[i],true,()->{tab=n;nameFocus=false;},tab==i);}
         panel(g,288,134,470,255);
         switch(tab) {
             case 0 -> {
@@ -160,7 +162,7 @@ public final class CharacterScreen extends Screen {
                 colors(g,"Глаза","eyes",264,draft.eyes,true,n->draft.eyes=n);
                 number(g,"Рост, блоки",317,draft.height,.05f,r.minHeight,r.maxHeight,n->draft.height=n,true);
                 text(g,"Меняет модель, хитбокс, камеру и досягаемость",302,352,0xFF786951,false);
-                text(g,"Текстуры этой версии — простые заготовки",302,370,0xFF786951,false);
+                text(g,"Причёски и костюм настраиваются по отдельности",302,370,0xFF786951,false);
             }
             case 1 -> {
                 cycle(g,"Форма ушей",147,draft.ears,r.earStyles,n->draft.ears=n,true);
@@ -183,13 +185,7 @@ public final class CharacterScreen extends Screen {
                 button(302,358,203,21,draft.hornOnForehead?"Крепление: лоб":"Крепление: макушка",r.hornsAllowed,()->draft.hornOnForehead=!draft.hornOnForehead);
                 number(g,"Высота",360,draft.hornOffset,.2f,-.2f,2,n->draft.hornOffset=n,r.hornsAllowed,510);
             }
-            case 3 -> {
-                cycle(g,"Причёска",147,draft.hairStyle,new int[]{0,1,2,3,4},n->draft.hairStyle=n,r.hairAllowed);
-                colors(g,"Волосы / борода","hair",189,draft.hair,r.hairAllowed || r.beardAllowed,n->draft.hair=n);
-                cycle(g,"Борода",241,draft.beard,new int[]{0,1,2,3},n->draft.beard=n,r.beardAllowed);
-                text(g,r.dragon()?"У этой расы вместо волос — рога":"Борода зависит от правил расы",302,283,0xFF786951,false);
-                if(r.id.equals("dwarf")) text(g,"Борода доступна для обоих полов",302,302,0xFF786951,false);
-            }
+            case 3 -> hairPage(g,r);
             case 4 -> {
                 int[] tattoos=new int[r.tattoos+1];for(int i=0;i<tattoos.length;i++)tattoos[i]=i;
                 cycle(g,"Татуировка",147,draft.tattoo,tattoos,n->draft.tattoo=n,r.tattoos>0);
@@ -197,6 +193,7 @@ public final class CharacterScreen extends Screen {
                 button(302,245,217,23,"Свечение: "+(draft.glow?"да":"нет"),r.id.equals("orthosian"),()->draft.glow=!draft.glow);
                 text(g,r.id.equals("jahar")?"Белые глаза светятся всегда":"Свечение не освещает мир вокруг",302,285,0xFF786951,false);
             }
+            case 6 -> clothingPage(g);
             case 5 -> {
                 button(302,144,180,22,"Хвост: "+(draft.tail==0?"нет":"олений"),r.tailAllowed,()->draft.tail=1-draft.tail);
                 boolean chest=draft.female() && !r.id.equals("forged");
@@ -220,6 +217,70 @@ public final class CharacterScreen extends Screen {
             }
         }
     }
+    private void hairPage(GuiGraphics g,RaceDefinition r) {
+        button(302,145,210,23,beardPage?"← Причёски":"Настройки бороды",true,()->beardPage=!beardPage);
+        if(beardPage) {
+            cycle(g,"Борода",194,draft.beard,new int[]{0,1,2,3},n->draft.beard=n,r.beardAllowed);
+            colors(g,"Цвет бороды","hair",239,draft.hair,r.beardAllowed,n->draft.hair=n);
+            cycle(g,"Старая причёска",290,draft.hairStyle,new int[]{0,1,2,3,4},n->{draft.hairStyle=n;draft.hairAsset="";},r.hairAllowed);
+            text(g,"Цвет старых причёсок совпадает с цветом бороды",302,340,0xFF786951,false);
+            return;
+        }
+        var list=AppearanceCatalog.hair();var asset=AppearanceCatalog.hair(draft.hairAsset);
+        text(g,"Причёска",302,186,INK,false);
+        chooser(435,179,306,asset==null?(draft.hairStyle==0?"Нет":"Старая причёска"):asset.name(),r.hairAllowed,delta->{
+            int i=-1;for(int n=0;n<list.size();n++)if(list.get(n).id().equals(draft.hairAsset))i=n;
+            int next=Math.floorMod(i+1+delta,list.size()+1)-1;
+            draft.hairAsset=next<0?"":list.get(next).id();draft.hairStyle=0;
+            draft.hairMain=draft.hairDecor1=draft.hairDecor2=0;
+        });
+        if(asset!=null) assetColors(g,asset,225,new int[]{draft.hairMain,draft.hairDecor1,draft.hairDecor2},(i,n)->{
+            if(i==0)draft.hairMain=n;else if(i==1)draft.hairDecor1=n;else draft.hairDecor2=n;
+        },r.hairAllowed);
+        if(!r.hairAllowed)text(g,"У этой расы волосы недоступны",302,367,0xFF786951,false);
+    }
+    private void clothingPage(GuiGraphics g) {
+        var outfits=AppearanceCatalog.outfits(draft.sex);
+        var outfit=outfits.stream().filter(o->o.id().equals(draft.outfitPreset)).findFirst().orElse(null);
+        text(g,"Комплект",302,150,INK,false);
+        chooser(435,141,306,outfit==null?(draft.wardrobeEnabled?"Свой комплект":"Базовая одежда"):outfit.name(),true,delta->{
+            int i=outfit==null?-1:outfits.indexOf(outfit);int n=Math.floorMod(i+1+delta,outfits.size()+1)-1;
+            AppearanceCatalog.outfit(draft,n<0?"":outfits.get(n).id());
+        });
+        String group=AppearanceCatalog.GROUPS.get(garmentGroup);
+        text(g,"Часть костюма",302,185,INK,false);
+        chooser(435,176,306,AppearanceCatalog.GROUP_NAMES.get(garmentGroup),true,delta->garmentGroup=Math.floorMod(garmentGroup+delta,AppearanceCatalog.GROUPS.size()));
+        var choice=draft.wardrobe.get(group);var asset=choice==null?null:AppearanceCatalog.clothing(choice.asset);
+        var list=AppearanceCatalog.clothes(draft.sex,group);
+        chooser(302,211,439,asset==null?"Нет":asset.name(),!list.isEmpty(),delta->{
+            int i=asset==null?-1:list.indexOf(asset),n=Math.floorMod(i+1+delta,list.size()+1)-1;
+            draft.wardrobeEnabled=true;draft.outfitPreset="";
+            if(n<0)draft.wardrobe.remove(group);else draft.wardrobe.put(group,new CharacterData.Garment(list.get(n).id()));
+        });
+        if(asset!=null)assetColors(g,asset,252,new int[]{choice.main,choice.decor1,choice.decor2},(i,n)->{
+            if(i==0)choice.main=n;else if(i==1)choice.decor1=n;else choice.decor2=n;
+        },true);
+    }
+    private void chooser(int x,int y,int w,String value,boolean enabled,IntConsumer change) {
+        button(x,y,25,25,"<",enabled,()->change.accept(-1));
+        button(x+29,y,w-58,25,value,enabled,()->change.accept(1));
+        button(x+w-25,y,25,25,">",enabled,()->change.accept(1));
+    }
+    private void assetColors(GuiGraphics g,AppearanceCatalog.Asset asset,int y,int[] values,java.util.function.BiConsumer<Integer,Integer> setter,boolean enabled) {
+        for(int i=0;i<3;i++) {
+            var channel=asset.controls().get(AppearanceCatalog.CHANNELS.get(i));if(channel==null)continue;
+            int row=y+i*44,ci=i;
+            text(g,i==0?"Основной цвет":"Декор "+i,302,row,INK,false);
+            button(302,row+13,111,18,"Исходный",enabled,()->setter.accept(ci,0),values[i]==0);
+            int count=channel.colors().size()-1;
+            for(int n=1;n<=count;n++) {
+                int index=n,x=435+(n-1)*51;var color=channel.colors().get(n);
+                controls.add(new Control(x,row,45,29,"",color.label()+" • "+channel.affects(),enabled,()->setter.accept(ci,index)));
+                g.fill(x+3,row+3,x+42,row+26,0xFF000000|color.rgb());
+                if(values[i]==n){g.fill(x,row,x+45,row+2,GOLD);g.fill(x,row+27,x+45,row+29,GOLD);}
+            }
+        }
+    }
     private void confirmationPage(GuiGraphics g,float partial) {
         preview(g,42,107,234,281,partial);
         panel(g,291,107,466,281);
@@ -237,28 +298,32 @@ public final class CharacterScreen extends Screen {
         for(int line=0;line<8;line++) g.fill(x+8,y+line*34,x+w-8,y+line*34+1,0xFF484F4D);
         text(g,"ПРЕДПРОСМОТР",x+w/2,y+9,0xFFD2C3A9,true);
         if(minecraft.player==null)return;
-        ClientCharacters.preview=draft;ClientCharacters.previewPlayer=minecraft.player.getUUID();
+        if(previewModel==null || previewModel.level()!=minecraft.level || !previewModel.getUUID().equals(minecraft.player.getUUID()))
+            previewModel=new net.minecraft.client.player.RemotePlayer(minecraft.level,minecraft.player.getGameProfile());
+        var model=previewModel;
+        model.yBodyRot=model.yBodyRotO=180;model.setYRot(180);model.yRotO=180;
+        model.yHeadRot=model.yHeadRotO=180;model.setXRot(0);model.xRotO=0;
+        model.tickCount=minecraft.player.tickCount;
+        ClientCharacters.preview=draft;ClientCharacters.previewPlayer=model.getUUID();ClientCharacters.previewEntity=model;
         try {
-            FemaleGenderBridge.apply(minecraft.player.getUUID(),draft,true);
-            var saved=ClientCharacters.state(minecraft.player).character();
-            float previousHeight=saved.selected?saved.height:1.8f;
-            int size=Math.max(1,(int)((h-34)/2.45f*previousHeight/draft.height));
-            float feetOffset=((h-34)/2f-8)/size-minecraft.player.getBbHeight()/(2*minecraft.player.getScale());
-            // Minecraft's scissor ignores the pose matrix; supply actual GUI coordinates.
+            int size=Math.max(1,(int)((h-34)/2.45f*1.8f/draft.height));
             g.pose().pushPose();
             try {
-                g.pose().translate(-panX/zoom,-panY/zoom,0);
-                g.pose().scale(1/zoom,1/zoom,1);
-                InventoryScreen.renderEntityInInventoryFollowsAngle(g,
-                    Math.round(panX+(x+8)*zoom),Math.round(panY+(y+24)*zoom),
-                    Math.round(panX+(x+w-8)*zoom),Math.round(panY+(y+h-10)*zoom),
-                    Math.max(1,Math.round(size*zoom)),feetOffset,angle,0,minecraft.player);
-            } finally { g.pose().popPose(); }
+                g.pose().translate(-panX/zoom,-panY/zoom,0);g.pose().scale(1/zoom,1/zoom,1);
+                int left=Math.round(panX+(x+8)*zoom),top=Math.round(panY+(y+24)*zoom);
+                int right=Math.round(panX+(x+w-8)*zoom),bottom=Math.round(panY+(y+h-10)*zoom);
+                g.enableScissor(left,top,right,bottom);
+                try {
+                    var rotation=new org.joml.Quaternionf().rotateZ((float)Math.PI).rotateY(angle).rotateX(-.08f);
+                    InventoryScreen.renderEntityInInventory(g,(left+right)/2f,bottom-8*zoom,Math.round(size*zoom),
+                        new org.joml.Vector3f(),rotation,null,model);
+                } finally {g.disableScissor();}
+            } finally {g.pose().popPose();}
         } finally {
-            ClientCharacters.preview=null;ClientCharacters.previewPlayer=null;
-            FemaleGenderBridge.apply(minecraft.player.getUUID(),ClientCharacters.state(minecraft.player).character(),true);
+            ClientCharacters.preview=null;ClientCharacters.previewPlayer=null;ClientCharacters.previewEntity=null;
         }
     }
+
     private void portrait(GuiGraphics g,RaceDefinition r,int x,int y,int size) {
         g.fill(x-3,y-3,x+size+3,y+size+3,0xFF625C4A);
         g.fill(x,y,x+size,y+size,0xFF394145);
@@ -382,7 +447,7 @@ public final class CharacterScreen extends Screen {
         return super.keyPressed(key,scan,modifiers);
     }
     @Override public void onClose() {
-        ClientCharacters.preview=null;ClientCharacters.previewPlayer=null;
+        ClientCharacters.preview=null;ClientCharacters.previewPlayer=null;ClientCharacters.previewEntity=null;
         PacketDistributor.sendToServer(new RaceNetwork.Serverbound(3,token,""));
         minecraft.setScreen(null);
     }

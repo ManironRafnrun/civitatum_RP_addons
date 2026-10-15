@@ -1,1 +1,1 @@
-{"required":true,"minVersion":"0.8","package":"ru.teacraft.civitatum.mixin","compatibilityLevel":"JAVA_21","mixins":["PlayerMixin","ArmorSlotMixin","VillagerMixin"],"client":["PlayerRendererMixin","ClientPlayerSkinMixin"],"injectors":{"defaultRequire":1}}
+{"required":true,"minVersion":"0.8","package":"ru.teacraft.civitatum.mixin","compatibilityLevel":"JAVA_21","mixins":["PlayerMixin","ArmorSlotMixin","VillagerMixin"],"client":["PlayerRendererMixin","ClientPlayerSkinMixin","FemaleGenderPreviewMixin"],"injectors":{"defaultRequire":1}}

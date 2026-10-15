@@ -10,14 +10,17 @@ import ru.teacraft.civitatum.client.ClientCharacters;
 
 @Mixin(PlayerRenderer.class)
 public abstract class PlayerRendererMixin {
+    @Inject(method="renderNameTag(Lnet/minecraft/client/player/AbstractClientPlayer;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IF)V",at=@At("HEAD"),cancellable=true)
+    private void civitatum$previewName(AbstractClientPlayer p,net.minecraft.network.chat.Component name,PoseStack pose,
+            net.minecraft.client.renderer.MultiBufferSource buffers,int light,float partial,CallbackInfo ci) {
+        if(ClientCharacters.isPreview(p))ci.cancel();
+    }
     @Inject(method="scale(Lnet/minecraft/client/player/AbstractClientPlayer;Lcom/mojang/blaze3d/vertex/PoseStack;F)V",at=@At("TAIL"))
     private void civitatum$pose(AbstractClientPlayer p,PoseStack pose,float partial,CallbackInfo ci) {
         var c=ClientCharacters.get(p);
         if(!c.selected) return;
-        if(ClientCharacters.preview!=null && p.getUUID().equals(ClientCharacters.previewPlayer)) {
-            var saved=ClientCharacters.state(p).character();
-            float previous=saved.selected ? saved.height : 1.8f;
-            float ratio=c.height/previous;
+        if(ClientCharacters.isPreview(p)) {
+            float ratio=c.height/1.8f;
             pose.scale(ratio,ratio,ratio);
         }
         if(p.isCrouching() && c.height>=2.2) {

@@ -72,6 +72,7 @@ public final class RaceCatalog {
         c.bustZ = finite(c.bustZ, -1, 0, 0); c.cleavage = finite(c.cleavage, 0, .1f, 0);
         c.bounce = finite(c.bounce, 0, .5f, .333f); c.floppiness = finite(c.floppiness, .25f, 1, .75f);
         if (!c.female() || "forged".equals(c.race)) c.bust = 0;
+        AppearanceCatalog.validate(c,r.hairAllowed);
         return c;
     }
     static int paletteIndex(int index, String[] palette) {

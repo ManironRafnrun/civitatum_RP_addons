@@ -1,25 +1,32 @@
+# Civitatum Character Creation 0.3.0
 
-Installation information
-=======
+Minecraft 1.21.1 · NeoForge 21.1.256 · Java 21 · Civitatum Team
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+Выбор происхождения, пола, внешности и расовых способностей. ID мода `civitatum` сохранён для совместимости с персонажами версии 0.2.0.
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+## Внешность
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+Открытие редактора: F6 (или клавиша из настроек управления).
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+- «Волосы»: 13 подготовленных причёсок. Основной цвет и до двух цветов декора. В каждом канале «Исходный» восстанавливает оригинальные цвета. Настройки бороды и старых причёсок открываются отдельной кнопкой.
+- «Одежда»: 7 женских и 6 мужских комплектов, 43 отдельных предмета. Можно выбрать готовый комплект, затем менять его части — брюки, юбку, рубашку, жилет, верхнюю одежду, корсет, пояс, перчатки, обувь. Цвета сохраняются для каждой выбранной вещи.
+- «Фигура»: грудь видна сразу при изменении размера; текстура соответствует скину и одежде. В редакторе используется отдельная модель без игровой брони. Поворот мышью и стрелками вращает голову и тело вместе.
+- «Мой скин»: исходная кожа сохраняется, выбранные причёска и одежда накладываются сверху. «Шаблон» позволяет менять расовый цвет кожи.
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+Архивы CCC Hairstyles 2.0.1 и CCC Clothing 2.0.0 включены без изменения PNG. Оригинальные каталоги, сведения об авторах и описание масок находятся в `src/main/resources/appearance/`. Отдельного подготовленного архива нижнего белья на момент этой сборки нет; для шаблона оставлена техническая базовая текстура.
+
+Female Gender Mod 3.2.2 необязателен. В мире его физика работает через адаптер. Предпросмотр редактора использует встроенную модель для мгновенного применения размера и смещений. Сам FGM не включён в JAR.
+
+## Сборка и проверка
+
+```sh
+./gradlew build
+./gradlew -Psmoke compileSmokeJava
+./gradlew -Psmoke runGameTestServer
+./gradlew -Psmoke runClient
+./gradlew -Psmoke -Pfemale -PfemaleJar=/path/to/FemaleGenderMod.jar runClient
+```
+
+Проверки клиента и серверные GameTests находятся в отдельном `smoke` source set и не входят в релизный JAR. Результаты этой версии: `VALIDATION_RU.md`. Правила резервного копирования: `BACKUP_RU.md`.
+
+Код распространяется по LICENSE.txt; сведения об исходном шаблоне — TEMPLATE_LICENSE.txt. Исходные пользовательские изображения и концепции сохраняют свои авторские права.

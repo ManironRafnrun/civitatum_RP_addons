@@ -9,6 +9,9 @@ import json
 from pathlib import Path
 import re
 import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+import time
 from urllib.parse import quote
 
 
@@ -92,7 +95,11 @@ class GitHubBackup:
     def upload_tree(self, commit, known_blobs=()):
         expected_tree = self.local_tree(commit)
         known = set(known_blobs)
-        elements = []
+        cache_path = self.root / ".git/civitatum-backup/uploaded-blobs.json"
+        cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
+        verified = set(cache.get(self.repo, []))
+        known.update(verified)
+        elements, binary = [], {}
         for row in self.git_bytes("ls-tree", "-r", "-z", commit).split(b"\0"):
             if not row:
                 continue
@@ -111,14 +118,37 @@ class GitHubBackup:
                         raise UnicodeError("binary")
                     entry["content"] = content
                 except UnicodeError:
-                    uploaded = self.api("create_blob", repository_full_name=self.repo,
-                                        content=base64.b64encode(data).decode(), encoding="base64")
-                    if uploaded.get("sha") != sha:
-                        raise GitHubBackupError("Binary source verification failed")
+                    binary[sha] = data
                     entry["sha"] = sha
             elements.append(entry)
-        uploaded = self.api("create_tree", repository_full_name=self.repo,
-                            tree_elements=elements)
+        # Git blobs are immutable and content addressed. Upload each unique binary once;
+        # only the final, verified branch update mutates a ref, and it remains sequential.
+        guard = threading.Lock()
+        def upload(item):
+            sha, data = item
+            for attempt in range(3):
+                try:
+                    result = self.api("create_blob", repository_full_name=self.repo,
+                                      content=base64.b64encode(data).decode(), encoding="base64")
+                    break
+                except GitHubBackupError:
+                    if attempt == 2:
+                        raise
+                    time.sleep(2 ** attempt)
+            if result.get("sha") != sha:
+                raise GitHubBackupError("Binary source verification failed")
+            with guard:
+                verified.add(sha)
+                cache[self.repo] = sorted(verified)
+                temporary = cache_path.with_suffix(".tmp")
+                temporary.write_text(json.dumps(cache))
+                temporary.replace(cache_path)
+            return sha
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            futures = [pool.submit(upload, item) for item in binary.items()]
+            for future in as_completed(futures):
+                future.result()
+        uploaded = self.api("create_tree", repository_full_name=self.repo, tree_elements=elements)
         if uploaded.get("sha") != expected_tree:
             raise GitHubBackupError("Source-tree verification failed; no branch was changed")
         return expected_tree
