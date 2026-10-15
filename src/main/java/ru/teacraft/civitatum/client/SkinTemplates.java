@@ -31,7 +31,7 @@ public final class SkinTemplates {
             // 1 skin -> 2 race markings -> 3 underwear -> 4 eyes -> 5 clothes -> 6 hair.
             tattoos(image,emission,c,race);
             String underwear="textures/character/underwear/underwear_"+(c.female()?"fem":"male")+".png";
-            AppearanceTextures.underwear(image,underwear,UNDERWEAR_COLORS[c.underwearColor]);AppearanceTextures.occlude(emission,underwear);
+            AppearanceTextures.underwear(image,emission,underwear,UNDERWEAR_COLORS[c.underwearColor],UnderwearVisibility.of(c));
             if(!c.usePlayerSkin) {
                 String path="textures/character/eyes/pmc_eyes/"+model;
                 var colors=new LinkedHashMap<String,Integer>();colors.put(path+"/mask_iris.png",c.eyesOriginal?-1:race.color("eyes",c.eyes));

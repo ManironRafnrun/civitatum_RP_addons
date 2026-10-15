@@ -10,6 +10,7 @@ public final class IdleAnimation {
     private record Key(float tick,float value) {}
     private static final Map<String,List<Key>> TRACKS=new LinkedHashMap<>();
     public static final float BEGIN,RETURN,END;
+    public static final float PLAYBACK_RATE=.5f,HOLD_TICKS=40;
     static {
         try(var in=IdleAnimation.class.getResourceAsStream("/assets/civitatum/animations/idle.json")) {
             var emote=JsonParser.parseReader(new InputStreamReader(Objects.requireNonNull(in),StandardCharsets.UTF_8)).getAsJsonObject().getAsJsonObject("emote");
@@ -25,6 +26,16 @@ public final class IdleAnimation {
             }
             TRACKS.values().forEach(keys->keys.sort(Comparator.comparingDouble(Key::tick)));
         } catch(Exception e){throw new IllegalStateException("Cannot load supplied idle animation",e);}
+    }
+    /** Real game ticks -> authored ticks: half speed, then two seconds holding the final pose. */
+    public static float playbackTime(float elapsed) {
+        if(!Float.isFinite(elapsed) || elapsed<=0)return BEGIN;
+        float first=(END-BEGIN)/PLAYBACK_RATE;
+        if(elapsed<first)return BEGIN+elapsed*PLAYBACK_RATE;
+        if(elapsed<first+HOLD_TICKS)return END;
+        float movement=(END-RETURN)/PLAYBACK_RATE;
+        float cycle=(elapsed-first-HOLD_TICKS)%(movement+HOLD_TICKS);
+        return cycle<movement?RETURN+cycle*PLAYBACK_RATE:END;
     }
     public static float loopTime(float elapsed) {if(!Float.isFinite(elapsed))return BEGIN;float t=Math.max(BEGIN,elapsed);return t<=END?t:RETURN+(t-END)%(END-RETURN);}
     public static float rest(String part,String axis) {

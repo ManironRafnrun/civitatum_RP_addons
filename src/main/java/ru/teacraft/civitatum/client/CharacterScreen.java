@@ -59,7 +59,7 @@ public final class CharacterScreen extends Screen {
     @Override public void render(GuiGraphics g,int mx,int my,float partial) {
         geometry();mouseX=(mx-panX)/zoom;mouseY=(my-panY)/zoom;controls.clear();sliders.clear();
         g.pose().pushPose();g.pose().translate(panX,panY,0);g.pose().scale(zoom,zoom,1);
-        preview(g,258,136,438,336,partial);
+        if(!confirming)preview(g,258,136,438,336,partial);
         raceWindow(g);navigation(g);settingsWindow(g);footer(g);
         if(confirming)confirmation(g);
         for(int i=0;i<controls.size();i++)draw(g,controls.get(i),i);
@@ -222,7 +222,7 @@ public final class CharacterScreen extends Screen {
             @Override public boolean isModelPartShown(net.minecraft.world.entity.player.PlayerModelPart part){return part!=net.minecraft.world.entity.player.PlayerModelPart.CAPE;}
         };
         var model=previewModel;model.yBodyRot=model.yBodyRotO=180;model.setYRot(180);model.yRotO=180;model.yHeadRot=model.yHeadRotO=180;model.setXRot(0);model.xRotO=0;model.tickCount=minecraft.player.tickCount;
-        ClientCharacters.preview=draft;ClientCharacters.previewPlayer=model.getUUID();ClientCharacters.previewEntity=model;ClientCharacters.previewTime=minecraft.player.tickCount+partial-startTick;
+        ClientCharacters.preview=draft;ClientCharacters.previewPlayer=model.getUUID();ClientCharacters.previewEntity=model;ClientCharacters.previewTime=IdleAnimation.playbackTime(minecraft.player.tickCount+partial-startTick);
         try{
             float size=(h-38)/2.15f*1.8f/draft.height*previewZoom;
             float feet=previewZoom==1?y+h-8:y+h*.42f+size*draft.height*.84f;

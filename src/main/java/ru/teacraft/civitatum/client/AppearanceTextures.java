@@ -73,13 +73,14 @@ public final class AppearanceTextures {
             for(int dy=0;dy<scale;dy++)for(int dx=0;dx<scale;dx++){int tx=x*scale+dx,ty=yy*scale+dy;target.setPixelRGBA(tx,ty,over(p,target.getPixelRGBA(tx,ty)));}
         }
     }
-    public static void underwear(NativeImage target,String path,int tint) {
+    public static void underwear(NativeImage target,NativeImage emission,String path,int tint,UnderwearVisibility visibility) {
         var original=image(path);int scale=target.getWidth()/64;
         for(int y=0;y<64;y++)for(int x=0;x<64;x++) {
+            if(!visibility.visible(x,y))continue;
             int p=original.getPixelRGBA(x,y),alpha=p>>>24;if(alpha==0)continue;
             if(tint!=0){float brightness=((p&255)*.2126f+(p>>8&255)*.7152f+(p>>16&255)*.0722f)/255f;
                 p=alpha<<24|Math.round((tint>>16&255)*brightness)|Math.round((tint>>8&255)*brightness)<<8|Math.round((tint&255)*brightness)<<16;}
-            for(int dy=0;dy<scale;dy++)for(int dx=0;dx<scale;dx++){int tx=x*scale+dx,ty=y*scale+dy;target.setPixelRGBA(tx,ty,over(p,target.getPixelRGBA(tx,ty)));}
+            for(int dy=0;dy<scale;dy++)for(int dx=0;dx<scale;dx++){int tx=x*scale+dx,ty=y*scale+dy;target.setPixelRGBA(tx,ty,over(p,target.getPixelRGBA(tx,ty)));emission.setPixelRGBA(tx,ty,0);}
         }
     }
     public static void occlude(NativeImage emission,String path) {

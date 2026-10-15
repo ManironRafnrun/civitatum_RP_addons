@@ -51,7 +51,9 @@ public final class SmokeClient {
         else if(phase==11 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"09-bust-full.png");s.selectForTest("forest_algnor","female");s.draft().tail=3;s.tabForTest(7);s.angleForTest(-.8f);next(12);}
         else if(phase==12 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"10-algnor-legs.png");s.selectForTest("human","female");s.tabForTest(11);s.draft().birthsign="lady";s.draft().name="Арина";s.draft().hairAsset="ponytail_streak";s.draft().hairDecor1=3;next(13);}
         else if(phase==13 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"11-birthsign.png");s.stageForTest(3);next(14);}
-        else if(phase==14 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"12-confirmation.png");click(s,560,390);next(15);}
+        else if(phase==14 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"12-confirmation.png");s.stageForTest(0);next(26);}
+        else if(phase==26 && game.screen instanceof CharacterScreen s && ticks>15){capture(game,"12b-back-from-confirmation.png");s.stageForTest(3);next(27);}
+        else if(phase==27 && game.screen instanceof CharacterScreen s && ticks>15){click(s,560,390);next(15);}
         else if(phase==15 && game.screen==null && ticks>50){
             var c=ClientCharacters.get(game.player);check(c.selected && c.female() && c.name.equals("Арина") && c.birthsign.equals("lady"),"creation server roundtrip");
             check(c.hairAsset.equals("ponytail_streak") && c.hairDecor1==3,"hair synchronized");check(game.player.getMaxHealth()==24,"birthsign bonus applied");
@@ -86,7 +88,7 @@ public final class SmokeClient {
         else if(phase==23 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"14-compact-editor.png");s.onClose();next(24);}
         else if(phase==24 && game.screen==null && ticks>35){
             check(game.options.getCameraType()==CameraType.THIRD_PERSON_BACK && game.options.hideGui==oldHide,"cancel restores view");
-            System.out.println("CCC_040_CLIENT_PASS checks="+checks+" female_adapter="+FemaleGenderBridge.available());phase=25;game.stop();
+            System.out.println("CCC_041_CLIENT_PASS checks="+checks+" female_adapter="+FemaleGenderBridge.available());phase=25;game.stop();
         }
     }
     private static net.minecraft.server.level.ServerPlayer serverPlayer(Minecraft g){return g.getSingleplayerServer().getPlayerList().getPlayer(g.player.getUUID());}
@@ -110,7 +112,7 @@ public final class SmokeClient {
         boolean changed=false;for(int y=20;y<32;y++)for(int x=20;x<28;x++)changed|=d.getPixelRGBA(x,y)!=b.getPixelRGBA(x,y);check(changed,"decorative costume layer toggles");
         c.usePlayerSkin=true;check(SkinTemplates.skin(c,original).model()==PlayerSkin.Model.SLIM,"own skin with selectable Slim");
         check(IdleAnimation.value("head","yaw",15)!=IdleAnimation.value("head","yaw",200),"authored idle moves");
-        System.out.println("CCC_040_COMPOSITOR_PASS");
+        System.out.println("CCC_041_COMPOSITOR_PASS");
     }
-    private void capture(Minecraft game,String name){var dir=new java.io.File("../build/ccc040-captures"+(net.neoforged.fml.ModList.get().isLoaded("wildfire_gender")?"-female":""));dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,game.getMainRenderTarget(),m->System.out.println("CCC_CAPTURE "+m.getString()));}
+    private void capture(Minecraft game,String name){var dir=new java.io.File("../build/ccc041-captures"+(net.neoforged.fml.ModList.get().isLoaded("wildfire_gender")?"-female":""));dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,game.getMainRenderTarget(),m->System.out.println("CCC_CAPTURE "+m.getString()));}
 }
