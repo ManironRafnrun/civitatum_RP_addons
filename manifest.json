@@ -1,0 +1,122 @@
+{
+  "bundle": "CCC-0.4.1-history.bundle",
+  "sha256": "74f6f97a7591664f8e780d7646b1f19911fd4a6730cf56cabb19e684a37e3cb9",
+  "size": 23645983,
+  "parts": [
+    {
+      "name": "parts/CCC-0.4.1.bundle.part000",
+      "size": 1048576,
+      "sha256": "728055bf32500fd7e3bc4955f2248c880743c2fd2354ef65d0125dba46cf6da6"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part001",
+      "size": 1048576,
+      "sha256": "d8dd3537594263e8f989f7c160e0cf2f72bcbe77b8740bb80e0a1021688386f4"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part002",
+      "size": 1048576,
+      "sha256": "5d8935e560cb91d31611100dfedda36a8abd42d0e397d695673949a608d7dd3d"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part003",
+      "size": 1048576,
+      "sha256": "6de3ca54f3ced4b72fbd5eae52420904972e953fa53dd738d4647badd50d311a"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part004",
+      "size": 1048576,
+      "sha256": "4221338029d8c0bfbf65b43e47fbefaa917ad4ca4afcca78f14e730ce4f9de31"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part005",
+      "size": 1048576,
+      "sha256": "feb6b24b42c27fb2b10b3758db265f6a1d431207e5136d759608df421f878d6e"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part006",
+      "size": 1048576,
+      "sha256": "fdd541270c816f2f5e9b6de9f0959eab485636ce42d1a54ae6c12ce3ae056312"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part007",
+      "size": 1048576,
+      "sha256": "d8ba70ccd994a7419c2e660ded30340af05e63ac92a41fcc5e4c19ab691898bf"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part008",
+      "size": 1048576,
+      "sha256": "78742d8e84176efdf7a6a2d97614c59ee69d094cb2a13f5ad6019df31689cd20"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part009",
+      "size": 1048576,
+      "sha256": "120e7992f7c25306f8209b1425447ab475d5ac4b21bd1015ad239f4478cd2b39"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part010",
+      "size": 1048576,
+      "sha256": "1721546017091acf412ecfa9d0f96a5ee07d838f69243b3b7ef3b79419430b36"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part011",
+      "size": 1048576,
+      "sha256": "79e734b08b767029184075101d4f78b8f1fc27752a5d00ca8ad9e36e1ff01aef"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part012",
+      "size": 1048576,
+      "sha256": "dabf9d2ae018ab386f8497cb71837c09250015ff14fbdd752aeee63202e2249c"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part013",
+      "size": 1048576,
+      "sha256": "5b0cb3ac489c71bda3dc19dccfada5da098da44d91a55ae16fa9453331049079"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part014",
+      "size": 1048576,
+      "sha256": "93d9375ad1fd226ce30909587145a20b1bed5b5ee0b62fdf0d2493b87186ab48"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part015",
+      "size": 1048576,
+      "sha256": "983009aadf6e25232de0b7f38ff97a55e50f89a0488a09a59afc80109ffccf0a"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part016",
+      "size": 1048576,
+      "sha256": "ae19a935156cf6def215d6dbdbfd20aa9f757ac0161c3572d99c34271999ae45"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part017",
+      "size": 1048576,
+      "sha256": "181231c481cd660423c02a62de1f4b299fcf97034088ef94b0c58c3b8ef52197"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part018",
+      "size": 1048576,
+      "sha256": "ddeb715b800198a5ecbb63c5ae6b58b2847220730c8c385c41141ef482a004c9"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part019",
+      "size": 1048576,
+      "sha256": "f38d383e2e0fc666a70bd89af0bea0542202f29a3f6ed8466a1bfd893ade8f34"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part020",
+      "size": 1048576,
+      "sha256": "56c9b642360047aa34bdbed228059b16627cac070a8a4cb3861abb8f920d9d86"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part021",
+      "size": 1048576,
+      "sha256": "14f6f87037aa53cbf3ea03a96f856c4bbd75fbe84548ea019f4669a1c9576202"
+    },
+    {
+      "name": "parts/CCC-0.4.1.bundle.part022",
+      "size": 577311,
+      "sha256": "532bdb0c82754e5b453eaa78f180a5b337c35fac05e25f3efc74a11206e98c9e"
+    }
+  ]
+}

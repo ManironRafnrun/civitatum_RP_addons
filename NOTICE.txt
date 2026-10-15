@@ -1,8 +1,0 @@
-Civitatum Races expands TeaCraft PlayerAppearance 0.1.0 (MIT).
-Its renderer uses the original PlayerAppearance ModelPart layer structure.
-No Dragon Survival code, textures, models or GUI assets are included.
-Female Gender Mod 3.2.2 settings were inspected from its public release;
-the optional adapter invokes its public methods without embedding its code.
-Reference: https://github.com/FemaleGenderMod/FemaleGenderMod
-Race concept art and author lore are provided by the project author.
-Race-selection portraits are newly generated pixel-style illustrations.
