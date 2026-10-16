@@ -41,6 +41,6 @@ BEARDS=[
     (['34....43','34566543'],['.345543.','..4564..','..3443..','...45...','...34...','...45...','...34...','...23...']),
 ]
 for n,(front,chest) in enumerate(BEARDS,1):texture('beard',n,EMPTY+front,chest)
-MUSTACHES=[['..3443..','........'],['.342243.','2......2'],['..32.23.','........'],['.345543.','..32.23.'],['..2332..','........']]
+MUSTACHES=[['.234432.','...22...'],['.342243.','2......2'],['.23..32.','........'],['.345543.','.234432.'],['..2332..','........']]
 for n,front in enumerate(MUSTACHES,1):texture('mustache',n,EMPTY+front,[])
 print('Prepared five textured beards and five mustaches with SVG source art')

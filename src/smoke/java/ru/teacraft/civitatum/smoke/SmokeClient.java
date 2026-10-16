@@ -176,8 +176,15 @@ public final class SmokeClient {
         try(var clear=new com.mojang.blaze3d.platform.NativeImage(64,64,true);var clothed=new com.mojang.blaze3d.platform.NativeImage(64,64,true)){
             for(int y=0;y<64;y++)for(int x=0;x<64;x++)clothed.setPixelRGBA(x,y,0xFF3377BB);
             var asset=AppearanceCatalog.hair(c.hairAsset);AppearanceTextures.applyHair(clear,asset,"slim",c);AppearanceTextures.applyHair(clothed,asset,"slim",c);int samples=0;
-            for(int y=20;y<32;y++)for(int x=20;x<28;x++)if((clear.getPixelRGBA(x,y)>>>24)==255 && (clear.getPixelRGBA(x,y+16)>>>24)==0){check(clothed.getPixelRGBA(x,y+16)==clear.getPixelRGBA(x,y),"base-UV hair covers outer clothing without a new model");samples++;}
+            for(int y=20;y<32;y++)for(int x=16;x<40;x++)if((clear.getPixelRGBA(x,y)>>>24)==255 && (clear.getPixelRGBA(x,y+16)>>>24)==0){check(clothed.getPixelRGBA(x,y+16)==clear.getPixelRGBA(x,y),"base-UV hair covers outer clothing without a new model");samples++;}
             check(samples>0,"long hairstyle exercises jacket coverage");
+        }
+        try(var clear=new com.mojang.blaze3d.platform.NativeImage(64,64,true);var clothed=new com.mojang.blaze3d.platform.NativeImage(64,64,true)){
+            for(int y=0;y<64;y++)for(int x=0;x<64;x++)clothed.setPixelRGBA(x,y,0xFF3377BB);
+            String path="textures/character/facial_hair/beard_5.png";var colors=java.util.Map.of(path,0x78513B);
+            AppearanceTextures.paint(clear,path,path,colors,0,true);AppearanceTextures.paint(clothed,path,path,colors,0,true);int samples=0;
+            for(int y=20;y<32;y++)for(int x=20;x<28;x++)if((clear.getPixelRGBA(x,y)>>>24)==255){check(clothed.getPixelRGBA(x,y+16)==clear.getPixelRGBA(x,y),"textured beard covers outer chest clothing");samples++;}
+            check(samples>0,"dwarf beard exercises chest coverage");
         }
     }
     private boolean equalTexture(Minecraft g,PlayerSkin a,PlayerSkin b){var first=((DynamicTexture)g.getTextureManager().getTexture(a.texture())).getPixels();var second=((DynamicTexture)g.getTextureManager().getTexture(b.texture())).getPixels();for(int y=0;y<first.getHeight();y++)for(int x=0;x<first.getWidth();x++)if(first.getPixelRGBA(x,y)!=second.getPixelRGBA(x,y))return false;return true;}
