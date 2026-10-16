@@ -32,7 +32,6 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
         boolean helmet=!p.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
         if(!helmet) {
             pair(pose,buffer,light,getParentModel().head,"ears"+c.ears,c.ears!=0,r.color("skin",c.skin),1,c.earPitch,c.earYaw,c.earRoll,c.earOffset,false);
-            if(c.beard!=0) attached(pose,buffer,light,getParentModel().head,"beard"+c.beard,SkinTemplates.hairColor(c));
             if(c.hairAsset.isEmpty() && c.hairStyle!=0 && r.hairAllowed) attached(pose,buffer,light,getParentModel().head,"hair"+c.hairStyle,SkinTemplates.hairColor(c));
             if(r.id.equals("orc")) attached(pose,buffer,light,getParentModel().head,"tusks",0xEADBB7);
             if(r.id.equals("firbolg")) attached(pose,buffer,light,getParentModel().head,"nose",r.color("skin",c.skin));
@@ -142,11 +141,6 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer,Playe
                 if(style==2 || style==6) node.addOrReplaceChild("tip",cube().addBox(-.5f,-2.5f,-.5f,1,2.5f,1),PartPose.offsetAndRotation(0,-len,0,-.7f,0,0));
             }
         }
-        box(root,"beard1",-3,-.4f,-4.2f,6,2,1);
-        root.addOrReplaceChild("beard2",cube().addBox(-3.5f,0,-4.2f,7,3,1.4f).addBox(-2,3,-3.8f,4,3,1),PartPose.ZERO);
-        box(root,"beard3",-3,-1.5f,-4.15f,6,1,1);
-        root.addOrReplaceChild("beard4",cube().addBox(-2.5f,0,-4.2f,5,3,1).addBox(-1,3,-4,2,4,1),PartPose.ZERO);
-        root.addOrReplaceChild("beard5",cube().addBox(-3.7f,-2,-4.2f,1.3f,4.5f,1).addBox(2.4f,-2,-4.2f,1.3f,4.5f,1).addBox(-2.5f,1,-4.2f,5,2,1),PartPose.ZERO);
         box(root,"hair1",-4.2f,-8.3f,-4.2f,8.4f,1.5f,8.4f);
         root.addOrReplaceChild("hair2",cube().addBox(-4.2f,-8.3f,-4.2f,8.4f,1.6f,8.4f).addBox(-4.2f,-6.7f,2.7f,8.4f,7,1.6f),PartPose.ZERO);
         root.addOrReplaceChild("hair3",cube().addBox(-4.2f,-8.3f,-4.2f,8.4f,1.4f,8.4f).addBox(-1.3f,-5.5f,4,2.6f,7,2),PartPose.ZERO);

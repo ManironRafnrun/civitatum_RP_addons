@@ -29,6 +29,7 @@ public final class CharacterScreen extends Screen {
     private String error="";
     private boolean nameFocus,sending,portraitDragging,breastAdvanced,confirming;
     private float zoom=1,panX,panY,angle=-.35f,previewZoom=1,startTick;
+    private float lastPreviewSize;
     private double mouseX,mouseY;
     private Slider dragging;
     private net.minecraft.client.player.RemotePlayer previewModel;
@@ -55,6 +56,7 @@ public final class CharacterScreen extends Screen {
     public void tabForTest(int value){tab=value;category=value==11?2:List.of(3,4,6,10).contains(value)?1:0;}
     public void angleForTest(float value){angle=value;}
     public void zoomForTest(float value){previewZoom=Math.clamp(value,1,3);}
+    public float previewSizeForTest(){return lastPreviewSize;}
     private void geometry(){zoom=Math.min(width/(float)W,height/(float)H);panX=(width-W*zoom)/2;panY=(height-H*zoom)/2;}
     @Override public void render(GuiGraphics g,int mx,int my,float partial) {
         geometry();mouseX=(mx-panX)/zoom;mouseY=(my-panY)/zoom;controls.clear();sliders.clear();
@@ -151,7 +153,7 @@ public final class CharacterScreen extends Screen {
             case 7->{cycle(g,"Вид хвоста",215,draft.tail,new int[]{0,1,2,3},n->draft.tail=n,mode.body() && r.tailAllowed);wrapped(g,r.tailAllowed?"Три варианта оленьего хвоста: короткий, удлинённый и пушистый.":"Для этой расы хвост недоступен.",716,280,208,MUTED,7);}
             case 8->{number(g,"Рост, блоки",195,draft.height,.05f,r.minHeight,r.maxHeight,n->draft.height=n,mode.body());wrapped(g,"Рост влияет на модель, камеру, размеры тела и досягаемость. Диапазон определяется расой.",716,270,208,MUTED,7);}
             case 3->hair(g,r);
-            case 10->{cycle(g,"Вид бороды",188,draft.beard,new int[]{0,1,2,3,4,5},n->draft.beard=n,r.beardAllowed);palette(g,"Цвет бороды / волос",249,r.hairColors,draft.hair,r.beardAllowed,n->draft.hair=n,true);wrapped(g,"При выбранной причёске из каталога борода и контур глаз используют её основной цвет.",716,330,208,MUTED,7);}
+            case 10->facialHair(g,r);
             case 4->{int[] options=new int[r.tattoos+1];for(int i=0;i<options.length;i++)options[i]=i;cycle(g,"Вид отметок",188,draft.tattoo,options,n->draft.tattoo=n,r.tattoos>0);palette(g,"Цвет отметок",249,r.tattooColors,draft.tattooColor,r.tattoos>0,n->draft.tattooColor=n,true);button(716,312,211,25,"Свечение: "+yes(draft.glow),r.id.equals("orthosian"),()->draft.glow=!draft.glow);wrapped(g,"Отметки находятся под нижним бельём и одеждой. Особенности зависят от расы.",716,365,208,MUTED,7);}
             case 5->bust(g,r);
             case 6->clothing(g);
@@ -167,8 +169,24 @@ public final class CharacterScreen extends Screen {
             int i=-1;for(int n=0;n<list.size();n++)if(list.get(n).id().equals(draft.hairAsset))i=n;int next=Math.floorMod(i+1+delta,list.size()+1)-1;
             draft.hairAsset=next<0?"":list.get(next).id();draft.hairStyle=0;draft.hairMain=draft.hairDecor1=draft.hairDecor2=0;
         });
-        if(asset!=null)assetColors(g,asset,245,new int[]{draft.hairMain,draft.hairDecor1,draft.hairDecor2},(i,n)->{if(i==0)draft.hairMain=n;else if(i==1)draft.hairDecor1=n;else draft.hairDecor2=n;});
+        if(asset!=null){
+            if(asset.linkedShades())button(716,229,211,22,"Оттенки от цвета волос: "+yes(draft.hairLinkedShades),true,()->{draft.hairLinkedShades=!draft.hairLinkedShades;draft.hairDecor1=draft.hairDecor2=0;});
+            assetColors(g,asset,asset.linkedShades()?267:245,new int[]{draft.hairMain,draft.hairDecor1,draft.hairDecor2},(i,n)->{if(i==0)draft.hairMain=n;else if(i==1)draft.hairDecor1=n;else draft.hairDecor2=n;});
+        }
         else {cycle(g,"Старая причёска",255,draft.hairStyle,new int[]{0,1,2,3,4},n->draft.hairStyle=n,r.hairAllowed);palette(g,"Цвет волос",315,r.hairColors,draft.hair,r.hairAllowed,n->draft.hair=n,true);}
+    }
+    private void facialHair(GuiGraphics g,RaceDefinition r){
+        boolean enabled=RaceCatalog.beardAllowed(draft);
+        text(g,"Борода",716,185,MUTED);chooser(716,202,211,FacialHair.BEARDS.get(Math.clamp(draft.beard,0,5)),enabled,n->draft.beard=Math.floorMod(draft.beard+n,6));
+        text(g,"Усы",716,244,MUTED);chooser(716,261,211,FacialHair.MUSTACHES.get(Math.clamp(draft.mustache,0,5)),enabled,n->draft.mustache=Math.floorMod(draft.mustache+n,6));
+        var hair=AppearanceCatalog.hair(draft.hairAsset);
+        if(hair==null)palette(g,"Цвет волос и бороды",319,r.hairColors,draft.hair,enabled,n->draft.hair=n,true);
+        else{
+            text(g,"Цвет волос и бороды",716,319,MUTED);button(856,336,71,20,"Исходный",enabled,()->draft.hairMain=0,draft.hairMain==0);
+            var colors=hair.controls().get("main").colors();
+            for(int i=1;i<colors.size();i++){int n=i;var c=colors.get(i);swatch(g,716+(i-1)*35,365,29,26,c.rgb(),enabled,draft.hairMain==i,c.label(),()->draft.hairMain=n);}
+        }
+        wrapped(g,enabled?"Борода и усы — текстуры скина. Цвет связан с основным цветом волос.":"Для этой расы борода недоступна. Из женщин бороды и усы могут выбирать только дварфы.",716,418,208,MUTED,8);
     }
     private void clothing(GuiGraphics g){
         button(716,176,211,23,(draft.naked?"[x]":"[ ]")+" Только нижнее бельё",true,()->draft.naked=!draft.naked);
@@ -204,7 +222,7 @@ public final class CharacterScreen extends Screen {
             draft.usePlayerSkin=base.usePlayerSkin;draft.armModel=base.armModel;return;
         }
         var source=initial.race.equals(draft.race) && initial.sex.equals(draft.sex)?initial.copy():RaceCatalog.defaults(draft.race,draft.sex);
-        String[] fields=switch(tab){case 0->new String[]{"skin","skinOriginal"};case 9->new String[]{"eyes","eyesOriginal","eyeHeight"};case 1->new String[]{"ears","earPitch","earYaw","earRoll","earOffset"};case 2,13->new String[]{"horns","hornColor","hornPitch","hornYaw","hornRoll","hornOffset","hornSize","hornOnForehead"};case 7->new String[]{"tail"};case 8->new String[]{"height"};case 3->new String[]{"hairAsset","hairStyle","hair","hairMain","hairDecor1","hairDecor2"};case 10->new String[]{"beard","hair"};case 4->new String[]{"tattoo","tattooColor","glow"};case 6->new String[]{"wardrobe","wardrobeEnabled","outfitPreset","naked","underwearColor"};case 5->new String[]{"bust","bustX","bustY","bustZ","cleavage","bounce","floppiness","breastPhysics","armorPhysics","showInArmor","uniboob"};case 11->new String[]{"birthsign"};default->new String[]{"usePlayerSkin","armModel"};};
+        String[] fields=switch(tab){case 0->new String[]{"skin","skinOriginal"};case 9->new String[]{"eyes","eyesOriginal","eyeHeight"};case 1->new String[]{"ears","earPitch","earYaw","earRoll","earOffset"};case 2,13->new String[]{"horns","hornColor","hornPitch","hornYaw","hornRoll","hornOffset","hornSize","hornOnForehead"};case 7->new String[]{"tail"};case 8->new String[]{"height"};case 3->new String[]{"hairAsset","hairStyle","hair","hairMain","hairDecor1","hairDecor2","hairLinkedShades"};case 10->new String[]{"beard","mustache","hair","hairMain"};case 4->new String[]{"tattoo","tattooColor","glow"};case 6->new String[]{"wardrobe","wardrobeEnabled","outfitPreset","naked","underwearColor"};case 5->new String[]{"bust","bustX","bustY","bustZ","cleavage","bounce","floppiness","breastPhysics","armorPhysics","showInArmor","uniboob"};case 11->new String[]{"birthsign"};default->new String[]{"usePlayerSkin","armModel"};};
         try{for(String field:fields){var f=CharacterData.class.getField(field);f.set(draft,f.get(source));}}catch(ReflectiveOperationException e){throw new IllegalStateException(e);}
     }
     private void confirmation(GuiGraphics g){
@@ -224,7 +242,9 @@ public final class CharacterScreen extends Screen {
         var model=previewModel;model.yBodyRot=model.yBodyRotO=180;model.setYRot(180);model.yRotO=180;model.yHeadRot=model.yHeadRotO=180;model.setXRot(0);model.xRotO=0;model.tickCount=minecraft.player.tickCount;
         ClientCharacters.preview=draft;ClientCharacters.previewPlayer=model.getUUID();ClientCharacters.previewEntity=model;ClientCharacters.previewTime=IdleAnimation.playbackTime(minecraft.player.tickCount+partial-startTick);
         try{
-            float size=(h-38)/2.15f*1.8f/draft.height*previewZoom;
+            // One camera scale for every race/height. The renderer applies draft.height / 1.8.
+            // Dividing by draft.height here used to cancel the entire visible height change.
+            float size=(h-38)/2.65f*previewZoom;lastPreviewSize=size;
             float feet=previewZoom==1?y+h-8:y+h*.42f+size*draft.height*.84f;
             var renderer=(PlayerRenderer)minecraft.getEntityRenderDispatcher().getRenderer(model);
             try(var saved=PreviewPose.preserve(renderer.getModel())){
@@ -235,6 +255,11 @@ public final class CharacterScreen extends Screen {
                 }finally{g.pose().popPose();}
             }
         }finally{clearPreview();}
+        centered(g,"Рост: "+format(draft.height)+" блока",x+w/2,y+7,MUTED);
+        if(previewZoom==1){
+            int base=y+h-8,line=x+25;g.fill(line,base-Math.round(lastPreviewSize*2.5f*.9375f),line+1,base,GOLD);
+            for(float mark:new float[]{1,1.5f,2,2.5f}){int yy=base-Math.round(lastPreviewSize*mark*.9375f);g.fill(line-3,yy,line+5,yy+1,GOLD);text(g,format(mark),line+9,yy-3,MUTED);}
+        }
     }
     private static void clearPreview(){ClientCharacters.preview=null;ClientCharacters.previewPlayer=null;ClientCharacters.previewEntity=null;ClientCharacters.previewTime=0;}
     private void palette(GuiGraphics g,String label,int y,String[] colors,int chosen,boolean enabled,IntConsumer set,boolean selection){
@@ -242,10 +267,14 @@ public final class CharacterScreen extends Screen {
         for(int i=0;i<colors.length;i++){int n=i,x=716+i*step;swatch(g,x,y+18,29,24,Integer.parseInt(colors[i].substring(1),16),enabled,selection && chosen==i,colors[i],()->set.accept(n));}
     }
     private void assetColors(GuiGraphics g,AppearanceCatalog.Asset asset,int y,int[] values,java.util.function.BiConsumer<Integer,Integer> set){
+        int row=y;boolean linked=asset==AppearanceCatalog.hair(draft.hairAsset) && draft.hairLinkedShades;
         for(int i=0;i<3;i++){
-            var c=asset.controls().get(AppearanceCatalog.CHANNELS.get(i));if(c==null)continue;int row=y+i*67,channel=i;
-            text(g,i==0?"Основной цвет":"Декор "+i,716,row,MUTED);button(856,row-4,71,18,"Исходный",true,()->set.accept(channel,0),values[i]==0);
-            for(int n=1;n<c.colors().size();n++){int index=n;var color=c.colors().get(n);swatch(g,716+(n-1)*35,row+19,29,26,color.rgb(),true,values[i]==n,color.label()+" • "+c.affects(),()->set.accept(channel,index));}
+            String key=AppearanceCatalog.CHANNELS.get(i);var c=asset.controls().get(key);if(c==null)continue;int channel=i;
+            boolean shade=AppearanceCatalog.shadeChannel(asset,key,linked);int count=AppearanceCatalog.colorCount(asset,key,linked);
+            text(g,i==0?"Основной цвет":shade?"Оттенок волос":"Декор "+i,716,row,MUTED);button(856,row-4,71,18,"Исходный",true,()->set.accept(channel,0),values[i]==0);
+            for(int n=1;n<count;n++){int index=n;var color=c.colors().get(Math.min(n,c.colors().size()-1));int rgb=shade?AppearanceCatalog.tint(asset,key,n,draft.hairMain,true):color.rgb();
+                swatch(g,716+(n-1)%6*35,row+19+(n-1)/6*29,29,26,rgb,true,values[i]==n,(shade?HairTones.LABELS[n]:color.label())+" • "+c.affects(),()->set.accept(channel,index));}
+            row+=count>7?82:67;
         }
     }
     private void swatch(GuiGraphics g,int x,int y,int w,int h,int color,boolean enabled,boolean selected,String tip,Runnable action){

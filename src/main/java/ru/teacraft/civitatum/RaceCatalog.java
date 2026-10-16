@@ -64,7 +64,8 @@ public final class RaceCatalog {
             else if (c.horns != 0 && !contains(r.hornStyles, c.horns)) c.horns = r.hornStyles[0];
         }
         c.tail = r.tailAllowed ? clamp(c.tail, 0, 3) : 0;
-        c.beard = r.beardAllowed ? clamp(c.beard, 0, 5) : 0;
+        c.beard = beardAllowed(c) ? clamp(c.beard, 0, 5) : 0;
+        c.mustache = beardAllowed(c) ? clamp(c.mustache, 0, 5) : 0;
         c.hairStyle = r.hairAllowed ? clamp(c.hairStyle, 0, 4) : 0;
         c.tattoo = clamp(c.tattoo, 0, r.tattoos);
         if (!"orthosian".equals(r.id) && !"jahar".equals(r.id)) c.glow = false;
@@ -89,6 +90,7 @@ public final class RaceCatalog {
         if (index < 0 || index >= palette.length) throw new IllegalArgumentException("Цвет не входит в палитру");
         return index;
     }
+    public static boolean beardAllowed(CharacterData c){var r=get(c.race);return r!=null && r.beardAllowed && (!c.female() || r.id.equals("dwarf"));}
     public static float finite(float value, float min, float max, float fallback) {
         return Float.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
     }

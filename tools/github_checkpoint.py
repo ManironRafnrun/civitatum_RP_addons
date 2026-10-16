@@ -92,35 +92,23 @@ class GitHubBackup:
     def local_tree(self, commit):
         return self.git_bytes("rev-parse", commit + "^{tree}").decode().strip()
 
-    def upload_tree(self, commit, known_blobs=()):
+    def upload_tree(self, commit, known_blobs=(), known_tree_shas=()):
         expected_tree = self.local_tree(commit)
         known = set(known_blobs)
         cache_path = self.root / ".git/civitatum-backup/uploaded-blobs.json"
         cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
         verified = set(cache.get(self.repo, []))
         known.update(verified)
-        elements, binary = [], {}
+        binary = {}
         for row in self.git_bytes("ls-tree", "-r", "-z", commit).split(b"\0"):
             if not row:
                 continue
-            metadata, filename = row.split(b"\t", 1)
+            metadata, _ = row.split(b"\t", 1)
             mode, kind, sha = metadata.decode().split()
             if kind != "blob" or mode not in ("100644", "100755", "120000"):
                 raise GitHubBackupError("Unsupported source-tree entry")
-            entry = {"path": filename.decode("utf-8"), "mode": mode, "type": "blob"}
-            if sha in known:
-                entry["sha"] = sha
-            else:
-                data = self.git_bytes("cat-file", "blob", sha)
-                try:
-                    content = data.decode("utf-8")
-                    if "\0" in content:
-                        raise UnicodeError("binary")
-                    entry["content"] = content
-                except UnicodeError:
-                    binary[sha] = data
-                    entry["sha"] = sha
-            elements.append(entry)
+            if sha not in known:
+                binary[sha] = self.git_bytes("cat-file", "blob", sha)
         # Git blobs are immutable and content addressed. Upload each unique binary once;
         # only the final, verified branch update mutates a ref, and it remains sequential.
         guard = threading.Lock()
@@ -148,9 +136,26 @@ class GitHubBackup:
             futures = [pool.submit(upload, item) for item in binary.items()]
             for future in as_completed(futures):
                 future.result()
-        uploaded = self.api("create_tree", repository_full_name=self.repo, tree_elements=elements)
-        if uploaded.get("sha") != expected_tree:
-            raise GitHubBackupError("Source-tree verification failed; no branch was changed")
+        # Build one directory at a time. A flat tree with thousands of appearance assets
+        # exceeds the connector request limit; unchanged directory objects need no upload.
+        known_trees = set(known_tree_shas)
+        def directory(sha):
+            if sha in known_trees:
+                return
+            entries = []
+            for row in self.git_bytes("ls-tree", "-z", sha).split(b"\0"):
+                if not row:
+                    continue
+                metadata, name = row.split(b"\t", 1)
+                mode, kind, child = metadata.decode().split()
+                if kind == "tree":
+                    directory(child)
+                entries.append({"path": name.decode("utf-8"), "mode": mode, "type": kind, "sha": child})
+            uploaded = self.api("create_tree", repository_full_name=self.repo, tree_elements=entries)
+            if uploaded.get("sha") != sha:
+                raise GitHubBackupError("Directory verification failed; no branch was changed")
+            known_trees.add(sha)
+        directory(expected_tree)
         return expected_tree
 
     def publish(self, commit, branch, previous_remote=None, base_branch="main", message=None):
@@ -176,7 +181,7 @@ class GitHubBackup:
             old_tree = self.fetch("git/commits/" + parent)["tree"]["sha"]
         old = self.tree(old_tree)
         known = [entry["sha"] for entry in old["tree"] if entry["type"] == "blob"]
-        tree = self.upload_tree(commit, known)
+        tree = self.upload_tree(commit, known, [old_tree] + [entry["sha"] for entry in old["tree"] if entry["type"] == "tree"])
         label = message or "Source checkpoint"
         created = self.api("create_commit", repository_full_name=self.repo,
                            parent_sha=parent, tree_sha=tree,

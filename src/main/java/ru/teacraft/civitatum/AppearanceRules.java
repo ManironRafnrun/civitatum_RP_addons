@@ -10,6 +10,7 @@ public final class AppearanceRules {
         allowed.name=incoming.name;
         allowed.hair=incoming.hair;allowed.hairStyle=incoming.hairStyle;allowed.hairAsset=incoming.hairAsset;
         allowed.hairMain=incoming.hairMain;allowed.hairDecor1=incoming.hairDecor1;allowed.hairDecor2=incoming.hairDecor2;
+        allowed.hairLinkedShades=incoming.hairLinkedShades;allowed.mustache=incoming.mustache;
         allowed.beard=incoming.beard;allowed.tattoo=incoming.tattoo;allowed.tattooColor=incoming.tattooColor;allowed.glow=incoming.glow;
         allowed.wardrobe=incoming.wardrobe;allowed.wardrobeEnabled=incoming.wardrobeEnabled;allowed.outfitPreset=incoming.outfitPreset;
         allowed.underwearColor=incoming.underwearColor;allowed.naked=incoming.naked;

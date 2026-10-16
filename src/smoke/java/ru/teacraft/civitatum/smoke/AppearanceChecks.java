@@ -26,6 +26,7 @@ public final class AppearanceChecks {
                     variants++;
                     for(int i=0;i<3;i++) {
                         String key=AppearanceCatalog.CHANNELS.get(i);var control=a.controls().get(key);if(control==null)continue;
+                        if(v.gradient()!=null){gradient(a,model,v,original,key,i,control.colors().size()-1);channels++;continue;}
                         try(var mask=read(v.directory()+"/"+v.masks().get(key));var changed=new NativeImage(64,64,true)) {
                             int[] colors={0,0,0};colors[i]=control.colors().size()-1;AppearanceTextures.apply(changed,a,model,colors);
                             int tint=control.colors().get(colors[i]).rgb();boolean changedPixel=false;
@@ -47,6 +48,19 @@ public final class AppearanceChecks {
             }
         } catch(java.io.IOException e){throw new IllegalStateException(e);}
         System.out.println("CCC_APPEARANCE_PIXELS_PASS variants="+variants+" independent_channels="+channels);
+    }
+    private static void gradient(AppearanceCatalog.Asset a,String model,AppearanceCatalog.Variant v,NativeImage original,String key,int channel,int choice) throws java.io.IOException {
+        try(var weights=read(v.directory()+"/"+v.gradient().masks().get(key));var neutral=read(v.directory()+"/"+v.gradient().neutral());var changed=new NativeImage(64,64,true)){
+            int[] colors={0,0,0};colors[channel]=choice;AppearanceTextures.apply(changed,a,model,colors);int tint=a.controls().get(key).colors().get(choice).rgb();boolean visible=false;
+            for(int y=0;y<64;y++)for(int x=0;x<64;x++){
+                int before=original.getPixelRGBA(x,y),after=changed.getPixelRGBA(x,y),w=weights.getPixelRGBA(x,y)>>>24;
+                check((before>>>24)==(after>>>24),a.id()+" gradient preserves authored alpha");if((before>>>24)==0)continue;
+                if(w==0)check(before==after,a.id()+" zero-weight pixels protected");
+                for(int shift=0;shift<=16;shift+=8){int full=Math.round((neutral.getPixelRGBA(x,y)>>>shift&255)*(tint>>>(16-shift)&255)/255f);int expected=Math.round(((before>>>shift&255)*(255-w)+full*w)/255f);check(Math.abs(expected-(after>>>shift&255))<=1,a.id()+" smooth weighted channel");}
+                visible|=before!=after;
+            }
+            check(visible,a.id()+" gradient tint changes pixels");
+        }
     }
     private static void underwear() {
         // Authored bra: base torso band + jacket front. Briefs: torso bottom/waist + both leg layers.

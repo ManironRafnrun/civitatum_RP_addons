@@ -19,7 +19,7 @@ public final class SkinTemplates {
     public static PlayerSkin skin(CharacterData c,PlayerSkin original) {
         if(!c.selected)return original;var race=RaceCatalog.get(c.race);if(race==null)return original;
         String model=model(c);
-        String key=c.race+"/"+c.sex+"/"+model+"/"+c.skin+"/"+c.eyes+"/"+c.skinOriginal+"/"+c.eyesOriginal+"/"+c.eyeHeight+"/"+c.hair+"/"+c.hairStyle+"/"+c.hairAsset+"/"+c.hairMain+"/"+c.hairDecor1+"/"+c.hairDecor2+"/"+c.usePlayerSkin+"/"+original.texture()+"/"+c.naked+"/"+c.underwearColor+"/"+c.wardrobeEnabled+"/"+DataJson.GSON.toJson(c.wardrobe)+"/"+c.tattoo+"/"+c.tattooColor+"/"+c.glow;
+        String key=c.race+"/"+c.sex+"/"+model+"/"+c.skin+"/"+c.eyes+"/"+c.skinOriginal+"/"+c.eyesOriginal+"/"+c.eyeHeight+"/"+c.hair+"/"+c.hairStyle+"/"+c.hairAsset+"/"+c.hairMain+"/"+c.hairDecor1+"/"+c.hairDecor2+"/"+c.hairLinkedShades+"/"+c.beard+"/"+c.mustache+"/"+c.usePlayerSkin+"/"+original.texture()+"/"+c.naked+"/"+c.underwearColor+"/"+c.wardrobeEnabled+"/"+DataJson.GSON.toJson(c.wardrobe)+"/"+c.tattoo+"/"+c.tattooColor+"/"+c.glow;
         Entry entry=CACHE.get(key);
         if(entry==null) {
             NativeImage image=c.usePlayerSkin?AppearanceTextures.ownSkin(original.texture()):new NativeImage(64,64,true);
@@ -28,7 +28,7 @@ public final class SkinTemplates {
             if(c.usePlayerSkin)AppearanceTextures.remapArms(image,original.model()==PlayerSkin.Model.SLIM?3:4,model.equals("slim")?3:4);
             else AppearanceTextures.paint(image,"textures/character/skin/base_07/"+model+"/original.png","textures/character/skin/base_07/"+model+"/neutral.png",
                 Map.of("textures/character/skin/base_07/"+model+"/mask_skin.png",c.skinOriginal?-1:race.color("skin",c.skin)),0);
-            // 1 skin -> 2 race markings -> 3 underwear -> 4 eyes -> 5 clothes -> 6 hair.
+            // Skin -> race markings -> underwear -> eyes -> clothes -> facial hair -> hair.
             tattoos(image,emission,c,race);
             String underwear="textures/character/underwear/underwear_"+(c.female()?"fem":"male")+".png";
             AppearanceTextures.underwear(image,emission,underwear,UNDERWEAR_COLORS[c.underwearColor],UnderwearVisibility.of(c));
@@ -46,9 +46,13 @@ public final class SkinTemplates {
                     var v=asset.models().get(model);AppearanceTextures.occlude(emission,v.directory()+"/original.png");
                 }
             }
+            if(RaceCatalog.beardAllowed(c)){
+                facialHair(image,emission,"beard",c.beard,c);
+                facialHair(image,emission,"mustache",c.mustache,c);
+            }
             var hair=AppearanceCatalog.hair(c.hairAsset);
             if(hair!=null && race.hairAllowed) {
-                AppearanceTextures.apply(image,hair,model,c.hairMain,c.hairDecor1,c.hairDecor2);
+                AppearanceTextures.applyHair(image,hair,model,c);
                 AppearanceTextures.occlude(emission,hair.models().get(model).directory()+"/original.png");
             } else if(!c.usePlayerSkin && c.hairStyle>0 && race.hairAllowed) {
                 int color=rgba(hairColor(c));fill(image,0,0,32,8,color);fill(image,0,8,8,4,color);fill(image,16,8,16,4,color);
@@ -67,6 +71,12 @@ public final class SkinTemplates {
         var a=AppearanceCatalog.hair(c.hairAsset);
         if(a!=null){var colors=a.controls().get("main").colors();return colors.get(AppearanceCatalog.color(a,"main",c.hairMain)).rgb();}
         return RaceCatalog.get(c.race).color("hair",c.hair);
+    }
+    private static void facialHair(NativeImage image,NativeImage emission,String kind,int style,CharacterData c){
+        if(style<1 || style>5)return;
+        String path="textures/character/facial_hair/"+kind+"_"+style+".png";
+        AppearanceTextures.paint(image,path,path,Map.of(path,hairColor(c)),0);
+        AppearanceTextures.occlude(emission,path);
     }
     private static void tattoos(NativeImage image,NativeImage emission,CharacterData c,RaceDefinition r) {
         if(c.tattoo<=0 || (!r.id.equals("jahar") && !r.id.equals("orthosian")))return;

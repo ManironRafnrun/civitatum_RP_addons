@@ -5,7 +5,7 @@ import java.util.*;
 class AppearanceTest {
  @Test void allPreparedVariantsAndMasksExist() {
   var assets=new ArrayList<>(AppearanceCatalog.hair());
-  assertEquals(13,assets.size());int clothing=0;
+  assertEquals(41,assets.size());int clothing=0;
   for(String sex:List.of("male","female")) for(String group:AppearanceCatalog.GROUPS) {
    var items=AppearanceCatalog.clothes(sex,group);assets.addAll(items);clothing+=items.size();
   }

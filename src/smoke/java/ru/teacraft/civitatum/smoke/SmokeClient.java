@@ -18,6 +18,7 @@ import ru.teacraft.civitatum.client.*;
 public final class SmokeClient {
     private int phase,ticks,checks;
     private boolean oldHide;
+    private float smallPreviewSize;
     public SmokeClient(){NeoForge.EVENT_BUS.addListener(this::tick);}
     private void tick(ClientTickEvent.Post e){
         var game=Minecraft.getInstance();ticks++;
@@ -88,7 +89,40 @@ public final class SmokeClient {
         else if(phase==23 && game.screen instanceof CharacterScreen s && ticks>35){capture(game,"14-compact-editor.png");s.onClose();next(24);}
         else if(phase==24 && game.screen==null && ticks>35){
             check(game.options.getCameraType()==CameraType.THIRD_PERSON_BACK && game.options.hideGui==oldHide,"cancel restores view");
-            System.out.println("CCC_041_CLIENT_PASS checks="+checks+" female_adapter="+FemaleGenderBridge.available());phase=25;game.stop();
+            game.getSingleplayerServer().execute(()->RaceService.open(serverPlayer(game),true,false));next(42);
+        }
+        else if(phase==42 && game.screen instanceof CharacterScreen s && ticks>20){
+            newPixels(game);s.selectForTest("human","female");s.draft().height=1.6f;s.draft().hairAsset="hc_blonde";s.tabForTest(8);s.zoomForTest(1);next(43);
+        }
+        else if(phase==43 && game.screen instanceof CharacterScreen s && ticks>20){
+            smallPreviewSize=s.previewSizeForTest();heightTransform(game,s);capture(game,"15-height-160.png");s.draft().height=1.9f;next(44);
+        }
+        else if(phase==44 && game.screen instanceof CharacterScreen s && ticks>20){
+            check(Math.abs(smallPreviewSize-s.previewSizeForTest())<.001,"changing draft height never auto-fits it away");heightTransform(game,s);capture(game,"16-height-190.png");
+            s.draft().hairAsset="hc_tangled";s.draft().hairMain=2;s.draft().hairDecor1=0;s.tabForTest(3);next(45);
+        }
+        else if(phase==45 && game.screen instanceof CharacterScreen s && ticks>20){
+            capture(game,"17-tangled-linked-shades.png");click(s,760,362);check(s.draft().hairDecor1==2,"linked shade swatch input");s.draft().hairAsset="hc_celestial";s.draft().hairMain=5;s.draft().hairDecor1=8;s.draft().hairDecor2=9;next(46);
+        }
+        else if(phase==46 && game.screen instanceof CharacterScreen s && ticks>20){
+            capture(game,"18-celestial-three-colors.png");s.selectForTest("dwarf","female");s.draft().hairAsset="hc_medieval_male";s.draft().beard=5;s.draft().mustache=2;s.draft().hairMain=2;s.tabForTest(10);s.zoomForTest(2.1f);s.angleForTest(0);next(47);
+        }
+        else if(phase==47 && game.screen instanceof CharacterScreen s && ticks>20){
+            capture(game,"19-dwarf-woman-textured-beard.png");check(RaceCatalog.beardAllowed(s.draft()),"dwarf women have beard controls");
+            PacketDistributor.sendToServer(new RaceNetwork.Serverbound(0,s.tokenForTest(),RaceCatalog.validate(s.draft()).json()));next(48);
+        }
+        else if(phase==48 && game.screen==null && ticks>30){
+            var c=ClientCharacters.get(game.player);check(c.race.equals("dwarf") && c.female() && c.beard==5 && c.mustache==2 && c.hairAsset.equals("hc_medieval_male"),"new hair, beard and mustache roundtrip through server");
+            command(game,"civitatum race looks");next(49);
+        }
+        else if(phase==49 && game.screen instanceof CharacterScreen s && ticks>20){
+            s.selectForTest("human","female");s.draft().beard=5;s.draft().mustache=2;s.tabForTest(10);s.zoomForTest(2.1f);next(50);
+        }
+        else if(phase==50 && game.screen instanceof CharacterScreen s && ticks>20){
+            check(!RaceCatalog.beardAllowed(s.draft()),"human women cannot choose facial hair");capture(game,"20-human-woman-no-beard.png");s.onClose();next(51);
+        }
+        else if(phase==51 && game.screen==null && ticks>20){
+            System.out.println("CCC_042_CLIENT_PASS checks="+checks+" female_adapter="+FemaleGenderBridge.available());phase=99;game.stop();
         }
     }
     private static net.minecraft.server.level.ServerPlayer serverPlayer(Minecraft g){return g.getSingleplayerServer().getPlayerList().getPlayer(g.player.getUUID());}
@@ -114,5 +148,28 @@ public final class SmokeClient {
         check(IdleAnimation.value("head","yaw",15)!=IdleAnimation.value("head","yaw",200),"authored idle moves");
         System.out.println("CCC_041_COMPOSITOR_PASS");
     }
-    private void capture(Minecraft game,String name){var dir=new java.io.File("../build/ccc041-captures"+(net.neoforged.fml.ModList.get().isLoaded("wildfire_gender")?"-female":""));dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,game.getMainRenderTarget(),m->System.out.println("CCC_CAPTURE "+m.getString()));}
+    private void heightTransform(Minecraft g,CharacterScreen s){try{
+        var ghost=new net.minecraft.client.player.RemotePlayer(g.level,g.player.getGameProfile());
+        ClientCharacters.preview=s.draft();ClientCharacters.previewEntity=ghost;
+        var renderer=g.getEntityRenderDispatcher().getRenderer(ghost);var stack=new com.mojang.blaze3d.vertex.PoseStack();
+        var method=net.minecraft.client.renderer.entity.player.PlayerRenderer.class.getDeclaredMethod("scale",net.minecraft.client.player.AbstractClientPlayer.class,com.mojang.blaze3d.vertex.PoseStack.class,float.class);method.setAccessible(true);method.invoke(renderer,ghost,stack,0f);
+        float height=new org.joml.Vector3f(0,1.8f,0).mulDirection(stack.last().pose()).length();
+        check(Math.abs(height-s.draft().height*.9375f)<.001,"real PlayerRenderer applies draft height before confirmation");
+    }catch(Exception ex){throw new IllegalStateException(ex);}finally{ClientCharacters.preview=null;ClientCharacters.previewEntity=null;}}
+    private void newPixels(Minecraft g){
+        var source=g.player.getSkin();var c=RaceCatalog.defaults("human","male");c.hairAsset="";c.beard=0;c.mustache=0;
+        var clean=SkinTemplates.skin(c,source);c.beard=2;var bearded=SkinTemplates.skin(c,source);
+        var a=((DynamicTexture)g.getTextureManager().getTexture(clean.texture())).getPixels();var b=((DynamicTexture)g.getTextureManager().getTexture(bearded.texture())).getPixels();
+        check(!clean.texture().equals(bearded.texture()) && a.getPixelRGBA(11,15)!=b.getPixelRGBA(11,15),"beard is baked into cached skin, not a geometry layer");
+        c.mustache=2;var mustache=SkinTemplates.skin(c,source);check(!mustache.texture().equals(bearded.texture()),"mustache has an independent texture cache key");
+        c=RaceCatalog.defaults("human","female");c.hairAsset="";var woman=SkinTemplates.skin(c,source);c.beard=5;c.mustache=2;check(woman.texture().equals(SkinTemplates.skin(c,source).texture()) || equalTexture(g,woman,SkinTemplates.skin(c,source)),"forbidden beard is never rendered on human woman");
+        int checked=0;
+        for(var h:AppearanceCatalog.hair())if(h.id().startsWith("hc_"))for(String model:java.util.List.of("classic","slim")){
+            c=RaceCatalog.defaults("human","female");c.hairAsset=h.id();c.armModel=model;c.hairMain=5;
+            var skin=SkinTemplates.skin(c,source);var texture=((DynamicTexture)g.getTextureManager().getTexture(skin.texture())).getPixels();check(texture.getWidth()==64,"new hair renders in "+model);checked++;
+        }
+        System.out.println("CCC_042_NEW_HAIR_RENDER_PASS variants="+checked);
+    }
+    private boolean equalTexture(Minecraft g,PlayerSkin a,PlayerSkin b){var first=((DynamicTexture)g.getTextureManager().getTexture(a.texture())).getPixels();var second=((DynamicTexture)g.getTextureManager().getTexture(b.texture())).getPixels();for(int y=0;y<first.getHeight();y++)for(int x=0;x<first.getWidth();x++)if(first.getPixelRGBA(x,y)!=second.getPixelRGBA(x,y))return false;return true;}
+    private void capture(Minecraft game,String name){var dir=new java.io.File("../build/ccc042-captures"+(net.neoforged.fml.ModList.get().isLoaded("wildfire_gender")?"-female":""));dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,game.getMainRenderTarget(),m->System.out.println("CCC_CAPTURE "+m.getString()));}
 }

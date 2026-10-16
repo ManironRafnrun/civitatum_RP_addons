@@ -36,19 +36,31 @@ public final class AppearanceTextures {
         var result=new NativeImage(source.getWidth(),source.getHeight(),false);result.copyFrom(source);return result;
     }
     public static void apply(NativeImage target,AppearanceCatalog.Asset asset,String model,int... colors) {
+        int[] tints={-1,-1,-1};
+        for(int i=0;i<3;i++){String key=AppearanceCatalog.CHANNELS.get(i);int n=AppearanceCatalog.color(asset,key,colors[i]);if(n>0)tints[i]=asset.controls().get(key).colors().get(n).rgb();}
+        applyTints(target,asset,model,tints);
+    }
+    public static void applyHair(NativeImage target,AppearanceCatalog.Asset asset,String model,CharacterData c) {
+        int[] choices={c.hairMain,c.hairDecor1,c.hairDecor2},tints={-1,-1,-1};
+        for(int i=0;i<3;i++){String key=AppearanceCatalog.CHANNELS.get(i);if(asset.controls().containsKey(key))tints[i]=AppearanceCatalog.tint(asset,key,choices[i],c.hairMain,c.hairLinkedShades);}
+        applyTints(target,asset,model,tints);
+    }
+    private static void applyTints(NativeImage target,AppearanceCatalog.Asset asset,String model,int[] tints) {
         var v=asset.models().get(model);if(v==null)v=asset.models().get("classic");
         var original=image(v.directory()+"/"+v.textures().get("original"));
         var neutral=image(v.directory()+"/"+v.textures().get("neutral"));
-        NativeImage[] masks=new NativeImage[3];int[] tints=new int[3];
+        NativeImage gradient=v.gradient()==null?null:image(v.directory()+"/"+v.gradient().neutral());
+        NativeImage[] masks=new NativeImage[3],blends=new NativeImage[3];int[] weights=new int[3];
         for(int i=0;i<3;i++) {
-            String key=AppearanceCatalog.CHANNELS.get(i);int n=AppearanceCatalog.color(asset,key,colors[i]);
-            if(n==0 || !v.masks().containsKey(key))continue;
-            masks[i]=image(v.directory()+"/"+v.masks().get(key));tints[i]=asset.controls().get(key).colors().get(n).rgb();
+            String key=AppearanceCatalog.CHANNELS.get(i);
+            if(gradient!=null && v.gradient().masks().containsKey(key))blends[i]=image(v.directory()+"/"+v.gradient().masks().get(key));
+            if(tints[i]>=0 && v.masks().containsKey(key))masks[i]=image(v.directory()+"/"+v.masks().get(key));
         }
         int scale=target.getWidth()/64;
         for(int y=0;y<64;y++)for(int x=0;x<64;x++) {
             int pixel=original.getPixelRGBA(x,y),alpha=pixel>>>24;if(alpha==0)continue;
-            for(int i=0;i<3;i++)if(masks[i]!=null && (masks[i].getPixelRGBA(x,y)>>>24)>0) {
+            if(gradient!=null){for(int i=0;i<3;i++)weights[i]=blends[i]==null?0:blends[i].getPixelRGBA(x,y)>>>24;pixel=HairTones.weighted(pixel,gradient.getPixelRGBA(x,y),weights,tints);}
+            else for(int i=0;i<3;i++)if(masks[i]!=null && (masks[i].getPixelRGBA(x,y)>>>24)>0) {
                 int n=neutral.getPixelRGBA(x,y),t=tints[i];
                 int red=Math.round((n&255)*(t>>16&255)/255f),green=Math.round((n>>8&255)*(t>>8&255)/255f),blue=Math.round((n>>16&255)*(t&255)/255f);
                 pixel=(alpha<<24)|(blue<<16)|(green<<8)|red;break;

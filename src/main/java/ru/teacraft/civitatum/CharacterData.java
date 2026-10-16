@@ -6,7 +6,8 @@ public final class CharacterData {
     public String race = "human", sex = "male", name = "";
     public float height = 1.8f;
     public int skin, hair, eyes, hornColor, tattooColor;
-    public int ears, horns, tail, beard, hairStyle, tattoo;
+    public int ears, horns, tail, beard, mustache, hairStyle, tattoo;
+    public boolean hairLinkedShades=true;
     public boolean usePlayerSkin, glow = true;
     public String hairAsset = "", outfitPreset = "";
     public int hairMain, hairDecor1, hairDecor2;
