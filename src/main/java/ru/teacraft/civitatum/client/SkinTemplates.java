@@ -75,7 +75,7 @@ public final class SkinTemplates {
     private static void facialHair(NativeImage image,NativeImage emission,String kind,int style,CharacterData c){
         if(style<1 || style>5)return;
         String path="textures/character/facial_hair/"+kind+"_"+style+".png";
-        AppearanceTextures.paint(image,path,path,Map.of(path,hairColor(c)),0);
+        AppearanceTextures.paint(image,path,path,Map.of(path,hairColor(c)),0,true);
         AppearanceTextures.occlude(emission,path);
     }
     private static void tattoos(NativeImage image,NativeImage emission,CharacterData c,RaceDefinition r) {

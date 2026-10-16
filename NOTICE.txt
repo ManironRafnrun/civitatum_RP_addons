@@ -6,3 +6,8 @@ the optional adapter invokes its public methods without embedding its code.
 Reference: https://github.com/FemaleGenderMod/FemaleGenderMod
 Race concept art and author lore are provided by the project author.
 Race-selection portraits are newly generated pixel-style illustrations.
+
+CCC 0.4.2 adds the user-supplied CCC_Haircuts_1.0.0 set (28 unique styles).
+Authored original PNGs are retained byte for byte. Source names and provenance:
+appearance/hair_v2_credits.md. Generated shade maps use separate files.
+Facial-hair SVG source artwork and corresponding skin-UV textures: Civitatum Team.

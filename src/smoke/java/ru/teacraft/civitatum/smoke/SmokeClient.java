@@ -157,6 +157,7 @@ public final class SmokeClient {
         check(Math.abs(height-s.draft().height*.9375f)<.001,"real PlayerRenderer applies draft height before confirmation");
     }catch(Exception ex){throw new IllegalStateException(ex);}finally{ClientCharacters.preview=null;ClientCharacters.previewEntity=null;}}
     private void newPixels(Minecraft g){
+        outerHair();
         var source=g.player.getSkin();var c=RaceCatalog.defaults("human","male");c.hairAsset="";c.beard=0;c.mustache=0;
         var clean=SkinTemplates.skin(c,source);c.beard=2;var bearded=SkinTemplates.skin(c,source);
         var a=((DynamicTexture)g.getTextureManager().getTexture(clean.texture())).getPixels();var b=((DynamicTexture)g.getTextureManager().getTexture(bearded.texture())).getPixels();
@@ -169,6 +170,15 @@ public final class SmokeClient {
             var skin=SkinTemplates.skin(c,source);var texture=((DynamicTexture)g.getTextureManager().getTexture(skin.texture())).getPixels();check(texture.getWidth()==64,"new hair renders in "+model);checked++;
         }
         System.out.println("CCC_042_NEW_HAIR_RENDER_PASS variants="+checked);
+    }
+    private void outerHair(){
+        var c=RaceCatalog.defaults("human","female");c.hairAsset="hc_tangled";c.hairMain=2;
+        try(var clear=new com.mojang.blaze3d.platform.NativeImage(64,64,true);var clothed=new com.mojang.blaze3d.platform.NativeImage(64,64,true)){
+            for(int y=0;y<64;y++)for(int x=0;x<64;x++)clothed.setPixelRGBA(x,y,0xFF3377BB);
+            var asset=AppearanceCatalog.hair(c.hairAsset);AppearanceTextures.applyHair(clear,asset,"slim",c);AppearanceTextures.applyHair(clothed,asset,"slim",c);int samples=0;
+            for(int y=20;y<32;y++)for(int x=20;x<28;x++)if((clear.getPixelRGBA(x,y)>>>24)==255 && (clear.getPixelRGBA(x,y+16)>>>24)==0){check(clothed.getPixelRGBA(x,y+16)==clear.getPixelRGBA(x,y),"base-UV hair covers outer clothing without a new model");samples++;}
+            check(samples>0,"long hairstyle exercises jacket coverage");
+        }
     }
     private boolean equalTexture(Minecraft g,PlayerSkin a,PlayerSkin b){var first=((DynamicTexture)g.getTextureManager().getTexture(a.texture())).getPixels();var second=((DynamicTexture)g.getTextureManager().getTexture(b.texture())).getPixels();for(int y=0;y<first.getHeight();y++)for(int x=0;x<first.getWidth();x++)if(first.getPixelRGBA(x,y)!=second.getPixelRGBA(x,y))return false;return true;}
     private void capture(Minecraft game,String name){var dir=new java.io.File("../build/ccc042-captures"+(net.neoforged.fml.ModList.get().isLoaded("wildfire_gender")?"-female":""));dir.mkdirs();net.minecraft.client.Screenshot.grab(dir,name,game.getMainRenderTarget(),m->System.out.println("CCC_CAPTURE "+m.getString()));}

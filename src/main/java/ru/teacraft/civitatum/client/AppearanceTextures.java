@@ -38,14 +38,14 @@ public final class AppearanceTextures {
     public static void apply(NativeImage target,AppearanceCatalog.Asset asset,String model,int... colors) {
         int[] tints={-1,-1,-1};
         for(int i=0;i<3;i++){String key=AppearanceCatalog.CHANNELS.get(i);int n=AppearanceCatalog.color(asset,key,colors[i]);if(n>0)tints[i]=asset.controls().get(key).colors().get(n).rgb();}
-        applyTints(target,asset,model,tints);
+        applyTints(target,asset,model,tints,false);
     }
     public static void applyHair(NativeImage target,AppearanceCatalog.Asset asset,String model,CharacterData c) {
         int[] choices={c.hairMain,c.hairDecor1,c.hairDecor2},tints={-1,-1,-1};
         for(int i=0;i<3;i++){String key=AppearanceCatalog.CHANNELS.get(i);if(asset.controls().containsKey(key))tints[i]=AppearanceCatalog.tint(asset,key,choices[i],c.hairMain,c.hairLinkedShades);}
-        applyTints(target,asset,model,tints);
+        applyTints(target,asset,model,tints,true);
     }
-    private static void applyTints(NativeImage target,AppearanceCatalog.Asset asset,String model,int[] tints) {
+    private static void applyTints(NativeImage target,AppearanceCatalog.Asset asset,String model,int[] tints,boolean overClothing) {
         var v=asset.models().get(model);if(v==null)v=asset.models().get("classic");
         var original=image(v.directory()+"/"+v.textures().get("original"));
         var neutral=image(v.directory()+"/"+v.textures().get("neutral"));
@@ -68,10 +68,14 @@ public final class AppearanceTextures {
             for(int dy=0;dy<scale;dy++)for(int dx=0;dx<scale;dx++) {
                 int tx=x*scale+dx,ty=y*scale+dy;
                 target.setPixelRGBA(tx,ty,over(pixel,target.getPixelRGBA(tx,ty)));
+                if(overClothing)coverOuter(target,original,x,y,dx,dy,scale,pixel);
             }
         }
     }
     public static void paint(NativeImage target,String path,String neutralPath,Map<String,Integer> tintPaths,int eyeOffset) {
+        paint(target,path,neutralPath,tintPaths,eyeOffset,false);
+    }
+    public static void paint(NativeImage target,String path,String neutralPath,Map<String,Integer> tintPaths,int eyeOffset,boolean overClothing) {
         var original=image(path);var neutral=image(neutralPath);var masks=new LinkedHashMap<NativeImage,Integer>();
         tintPaths.forEach((name,color)->{if(color>=0)masks.put(image(name),color);});
         int scale=target.getWidth()/64;
@@ -82,8 +86,21 @@ public final class AppearanceTextures {
                 int n=neutral.getPixelRGBA(x,y),t=entry.getValue();
                 p=(a<<24)|Math.round((n&255)*(t>>16&255)/255f)|Math.round((n>>8&255)*(t>>8&255)/255f)<<8|Math.round((n>>16&255)*(t&255)/255f)<<16;break;
             }
-            for(int dy=0;dy<scale;dy++)for(int dx=0;dx<scale;dx++){int tx=x*scale+dx,ty=yy*scale+dy;target.setPixelRGBA(tx,ty,over(p,target.getPixelRGBA(tx,ty)));}
+            for(int dy=0;dy<scale;dy++)for(int dx=0;dx<scale;dx++){int tx=x*scale+dx,ty=yy*scale+dy;target.setPixelRGBA(tx,ty,over(p,target.getPixelRGBA(tx,ty)));if(overClothing)coverOuter(target,original,x,yy,dx,dy,scale,p);}
         }
+    }
+    /** A base-UV strand must also cover an occupied jacket/sleeve/pants UV at that point.
+     * Never invent an outer silhouette on bare skin, or replace authored outer hair. */
+    private static void coverOuter(NativeImage target,NativeImage original,int x,int y,int dx,int dy,int scale,int pixel){
+        int ox=x,oy=y;
+        if(y<16 && x<32)ox+=32;
+        else if(y>=16 && y<32 && x<56)oy+=16;
+        else if(y>=48 && x>=16 && x<32)ox-=16;
+        else if(y>=48 && x>=32 && x<48)ox+=16;
+        else return;
+        if((original.getPixelRGBA(ox,oy)>>>24)>0)return;
+        int tx=ox*scale+dx,ty=oy*scale+dy,bottom=target.getPixelRGBA(tx,ty);
+        if((bottom>>>24)>0)target.setPixelRGBA(tx,ty,over(pixel,bottom));
     }
     public static void underwear(NativeImage target,NativeImage emission,String path,int tint,UnderwearVisibility visibility) {
         var original=image(path);int scale=target.getWidth()/64;
