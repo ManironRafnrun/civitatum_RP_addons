@@ -1,0 +1,24 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="civitatum_menu"
+version="0.1.0"
+displayName="Civitatum Menu"
+authors="Civitatum Team"
+description='''Seasonal title screen for Право на Возвращение, with cursor parallax and streamed music.'''
+
+[[dependencies.civitatum_menu]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.256,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.civitatum_menu]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="CLIENT"

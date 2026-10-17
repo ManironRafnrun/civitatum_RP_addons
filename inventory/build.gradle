@@ -1,0 +1,22 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+}
+
+dependencies {
+    // Optional at runtime: RacesBridge touches it only when the civitatum mod is loaded.
+    compileOnly project(':character-creation')
+}
+
+// Generators for the mod's textures; not part of the mod jar.
+sourceSets {
+    tools
+}
+
+tasks.register('generateStoneTexture', JavaExec) {
+    group = 'tools'
+    description = 'Regenerates the stone background of the windows, textures/gui/stone.png.'
+    classpath = sourceSets.tools.runtimeClasspath
+    mainClass = 'team.civitatum.inventory.tools.StoneTexture'
+    workingDir = projectDir
+}

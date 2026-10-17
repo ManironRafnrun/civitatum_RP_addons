@@ -1,0 +1,10 @@
+{
+  "source": "sources/pmcskin3d-steve.png",
+  "source_model": "slim",
+  "zones": {
+    "iris": [[10, 13], [13, 13]],
+    "upper_contour": [[9, 12], [10, 12], [13, 12], [14, 12]],
+    "sclera": [[9, 13], [14, 13]]
+  },
+  "tinted": ["iris", "upper_contour"]
+}

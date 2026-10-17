@@ -1,0 +1,40 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="civitatum_couple"
+version="0.2.0-alpha.1"
+displayName="Civitatum Couple Interaction"
+authors="Civitatum Team"
+description='''Radial player interactions: carrying, kisses, hugs and seated shoulder rests. Per-action consent, favorites and optional PlayerAnimator bending.'''
+
+[[mixins]]
+config="civitatum_couple.mixins.json"
+
+[[dependencies.civitatum_couple]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.256,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.civitatum_couple]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.civitatum_couple]]
+modId="playeranimator"
+type="optional"
+versionRange="[2.0.1,)"
+ordering="AFTER"
+side="CLIENT"
+[[dependencies.civitatum_couple]]
+modId="bendylib"
+type="optional"
+versionRange="[5.1,)"
+ordering="AFTER"
+side="CLIENT"

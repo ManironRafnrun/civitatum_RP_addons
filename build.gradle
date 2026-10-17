@@ -1,39 +1,92 @@
 plugins {
-    id 'java-library'
-    id 'net.neoforged.moddev' version '2.0.148'
+    // loaded once here so that the modules share it
+    id 'net.neoforged.moddev' apply false
 }
-version = '0.4.0'
-group = 'ru.teacraft.inventory'
-base { archivesName = 'civitatum-inventory-1.21.1' }
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-repositories { mavenCentral() }
-neoForge {
-    version = '21.1.256'
-    runs {
-        client { client(); programArguments.addAll '--username', 'InventoryTest', '--width', '1440', '--height', '900' }
-        server { server(); programArgument '--nogui' }
-        gameTestServer { type = 'gameTestServer'; systemProperty 'neoforge.enabledGameTestNamespaces', 'inventory_smoke' }
-    }
-    mods { civitatum_inventory { sourceSet(sourceSets.main) } }
-}
-tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
-tasks.named('jar', Jar) { from('LICENSE.txt') }
-if (project.hasProperty('smoke')) {
-    sourceSets { smoke {} }
-    configurations.smokeImplementation.extendsFrom configurations.implementation
-    sourceSets.smoke.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-    sourceSets.smoke.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
-    neoForge.mods { inventory_smoke { sourceSet(sourceSets.smoke) } }
-}
-if (project.hasProperty('racesJar')) { dependencies { runtimeOnly files(project.property('racesJar')) } }
-def compatDirectory = project.findProperty('compatDir') ?: '../compat-reference'
-if (project.hasProperty('compat')) { dependencies { runtimeOnly fileTree(compatDirectory) { include 'camping.jar', 'curios.jar', 'xaeros-world-map.jar', 'xaerolib.jar' } } }
-if (project.hasProperty('accessories')) { dependencies { runtimeOnly fileTree(compatDirectory) { include 'accessories.jar', 'owo-lib.jar' } } }
-if (project.hasProperty('aether')) { dependencies { runtimeOnly fileTree(compatDirectory) { include 'aether.jar', 'owo-lib.jar' } } }
-if (project.hasProperty('apothic')) { dependencies { runtimeOnly fileTree(compatDirectory) { include 'apothic-attributes.jar', 'placebo.jar' } } }
-if (project.hasProperty('revisionSmoke')) { neoForge.runs.client.systemProperty 'inventory.smoke.revision', 'true' }
-if (project.hasProperty('compatOnly')) { neoForge.runs.client.systemProperty 'inventory.smoke.compatOnly', 'true' }
-if (project.hasProperty('accessoriesOnly')) { neoForge.runs.client.systemProperty 'inventory.smoke.accessoriesOnly', 'true' }
 
-if (project.hasProperty('ars')) { dependencies { runtimeOnly fileTree(compatDirectory) { include 'ars-nouveau.jar', 'geckolib.jar', 'curios.jar' } } }
-if (project.hasProperty('updateSmoke')) { neoForge.runs.client.systemProperty 'inventory.smoke.update', 'true' }
+// Settings shared by every mod. Each module's build.gradle keeps only its own extras.
+subprojects {
+    group = 'team.civitatum'
+
+    // mod id and version live in neoforge.mods.toml only (the first modId/version after [[mods]])
+    def modsToml = file('src/main/resources/META-INF/neoforge.mods.toml').text
+    def modsSection = modsToml.substring(modsToml.indexOf('[[mods]]'))
+    def modId = (modsSection =~ /(?m)^\s*modId\s*=\s*"([^"]+)"/)[0][1]
+    version = (modsSection =~ /(?m)^\s*version\s*=\s*"([^"]+)"/)[0][1]
+
+    // the jar: civitatum-<module name>-<version>.jar
+    plugins.withId('base') {
+        project.base.archivesName = "civitatum-${project.name}"
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    plugins.withId('java') {
+        java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+        tasks.withType(JavaCompile).configureEach {
+            options.encoding = 'UTF-8'
+            // no Mixin annotation processor: NeoForge 1.21.1 runs on official names, the mixins need no refmap
+            options.compilerArgs << '-proc:none'
+        }
+
+        // unit tests: JUnit 5 in src/test, run by `test` (and so by `build`)
+        dependencies {
+            testImplementation platform('org.junit:junit-bom:5.11.4')
+            testImplementation 'org.junit.jupiter:junit-jupiter'
+            testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        }
+        tasks.withType(Test).configureEach {
+            useJUnitPlatform()
+        }
+
+        // every mod jar carries the repository's licence
+        tasks.named('jar', Jar) {
+            from(rootProject.file('LICENSE.txt'))
+        }
+    }
+
+    plugins.withId('net.neoforged.moddev') {
+        neoForge {
+            version = neo_version
+            mods {
+                "${modId}" { sourceSet sourceSets.main }
+            }
+        }
+    }
+
+    // Builds the jar and puts it into a local game instance, replacing older versions of the same mod.
+    tasks.register('installToInstance') {
+        group = 'modpack'
+        description = 'Builds the jar, removes older versions of it from the instance mods folder and puts the new one there.'
+
+        def jar = tasks.named('jar', Jar)
+        // the game's minecraft folder: instanceDir, absolute or relative to the user's home (see gradle.properties)
+        def modsDir = providers.gradleProperty('instanceDir').map { path ->
+            def dir = new File(path)
+            new File(dir.isAbsolute() ? dir : new File(System.getProperty('user.home'), path), 'mods')
+        }
+        dependsOn jar
+
+        doLast {
+            if (!modsDir.isPresent()) {
+                throw new GradleException('Set instanceDir in ~/.gradle/gradle.properties (see the root gradle.properties)')
+            }
+            def mods = modsDir.get()
+            if (!mods.isDirectory()) throw new GradleException("No mods folder at ${mods} - check instanceDir")
+            def newJar = jar.get().archiveFile.get().asFile
+            // older versions: <archivesName>-<version starting with a digit>.jar
+            def prefix = java.util.regex.Pattern.quote(jar.get().archiveBaseName.get())
+            mods.listFiles()
+                .findAll { it.isFile() && it.name ==~ /${prefix}-\d.*\.jar/ }
+                .each { old ->
+                    // on Windows a jar cannot be deleted while the game that loaded it is running
+                    if (!old.delete()) throw new GradleException("Could not remove ${old} - is the game still running?")
+                    logger.lifecycle("removed ${old.name}")
+                }
+            java.nio.file.Files.copy(newJar.toPath(), new File(mods, newJar.name).toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            logger.lifecycle("installed ${newJar.name} into ${mods}")
+        }
+    }
+}

@@ -1,0 +1,889 @@
+{
+  "_help": [
+    "Haircuts: one source skin per style (hair drawn on a 64x64 slim skin). The generator splits each style into colour zones",
+    "The first 13 styles (CCC Hairstyles 2.0.1) have no raw sources: their source is the prepared texture, and their decor zones are listed by exact colours.",
+    "(main, decor_1, decor_2) and writes textures/character/haircuts/<id>/<slim|classic>/ and appearance/haircuts.json.",
+    "zones: the colour fields the player can tint; kind is hair or decor (decides the palette).",
+    "rules: checked in order for every pixel, the first matching \"when\" puts it into \"zone\"; otherwise it belongs to main.",
+    "gradient: the pixel is split between main and decor_1 by \"weight\" (clamped to 0..1); \"where\" limits it, elsewhere the weight is 0.",
+    "Styles with a single zone get generated shade maps: a second hair field for the drawn shadows.",
+    "Formulas: r g b lum h s v x y group face surface; + - * / > >= < <= == != && || ( ) and 'text'."
+  ],
+  "zone_labels": {
+    "main": "Цвет волос",
+    "decor_1": "Цвет декораций 1",
+    "decor_2": "Цвет декораций 2"
+  },
+  "palettes": {
+    "hair": [
+      {
+        "label": "Чёрный",
+        "rgb": "#353237"
+      },
+      {
+        "label": "Каштановый",
+        "rgb": "#78513B"
+      },
+      {
+        "label": "Красно-каштановый",
+        "rgb": "#9E5144"
+      },
+      {
+        "label": "Рыжий",
+        "rgb": "#C17A42"
+      },
+      {
+        "label": "Блонд",
+        "rgb": "#E4CC91"
+      },
+      {
+        "label": "Серебристый",
+        "rgb": "#D9DDE2"
+      }
+    ],
+    "hair_secondary_extra": [
+      {
+        "label": "Голубой",
+        "rgb": "#6285BB"
+      },
+      {
+        "label": "Розовый",
+        "rgb": "#C36D8C"
+      },
+      {
+        "label": "Сиреневый",
+        "rgb": "#A085CC"
+      }
+    ],
+    "decor": [
+      {
+        "label": "Бордовый",
+        "rgb": "#A94763"
+      },
+      {
+        "label": "Светлый льняной",
+        "rgb": "#E5D9BB"
+      },
+      {
+        "label": "Синий",
+        "rgb": "#6285BB"
+      },
+      {
+        "label": "Зелёный",
+        "rgb": "#6D9668"
+      },
+      {
+        "label": "Золотистый",
+        "rgb": "#C3A36C"
+      }
+    ]
+  },
+  "shade_zone": {
+    "label": "Оттенок волос",
+    "description": "Тени и более тёмные пряди"
+  },
+  "styles": [
+    {
+      "id": "black_long",
+      "name": "Black Long Hair",
+      "source": "sources/Black-Long-Hair-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "candied_love",
+      "name": "Candied Love",
+      "source": "sources/Candied-Love-HB-Remake-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Завязка косы",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "colors": [
+            "#FBD4B9",
+            "#FBD9BE"
+          ],
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "hair_base_1_2",
+      "name": "Hair Base 1-2",
+      "source": "sources/Hair-Base-1-2-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Розовый бант",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "colors": [
+            "#EABAC5",
+            "#F0CDD5"
+          ],
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "blond_12_1",
+      "name": "Blond 12-1",
+      "source": "sources/Hair-Base-12-1-Blond-Ver-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Светлые завязки",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "colors": [
+            "#E6D7D3"
+          ],
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "blond_16_1",
+      "name": "Blond 16-1",
+      "source": "sources/Hair-Base-16-1-Blond-Ver-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Зелёные завязки",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "colors": [
+            "#C9E1B9"
+          ],
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "black_base_2",
+      "name": "Black Base 2",
+      "source": "sources/Hair-Base-2-black-ver-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Светлые завязки",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "colors": [
+            "#EAE5E3"
+          ],
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "long_auburn",
+      "name": "Long Auburn",
+      "source": "sources/Long-Auburn-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Розовые декоративные вставки",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "colors": [
+            "#954F4F",
+            "#9D5858",
+            "#A76464",
+            "#B77171",
+            "#C47C7C"
+          ],
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "pumpkin_spice",
+      "name": "Pumpkin Spice",
+      "source": "sources/Pumpkin-Spice-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "shaggy_hooligan",
+      "name": "Shaggy Hooligan",
+      "source": "sources/Shaggy-Hooligan-Hair-BASE-F2U-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "steve_weird",
+      "name": "Steve Weird Hair",
+      "source": "sources/Steve-with-weird-hair-base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "loose_plat",
+      "name": "Loose Plat",
+      "source": "sources/loose-plat-hair-base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Светлая завязка косы",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "colors": [
+            "#ABEAE5"
+          ],
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "ombre_wreath",
+      "name": "Ombre + Wreath",
+      "source": "sources/ombre-hair-base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Основной цвет волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Мелирование и светлые концы",
+          "kind": "hair"
+        },
+        "decor_2": {
+          "description": "Весь венок",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "colors": [
+            "#857432",
+            "#948A46",
+            "#B8AA51",
+            "#BD985F",
+            "#D5B964",
+            "#D5C664"
+          ],
+          "zone": "decor_1"
+        },
+        {
+          "colors": [
+            "#1C5D1B",
+            "#751A0E",
+            "#961808",
+            "#C65E8D",
+            "#C92C6B",
+            "#F0417E",
+            "#FF7EB5",
+            "#FFAF65",
+            "#FFE165"
+          ],
+          "zone": "decor_2"
+        }
+      ]
+    },
+    {
+      "id": "ponytail_streak",
+      "name": "Ponytail Streak",
+      "source": "sources/ponytail-streak-on-planetminecraft-com (1).png",
+      "zones": {
+        "main": {
+          "description": "Все волосы, включая передние пряди",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Золотистая завязка",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "colors": [
+            "#BE8044",
+            "#C78F5C"
+          ],
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "hc_beige",
+      "name": "Beige",
+      "source": "sources/beige-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Тёмная деталь на конце пряди",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "when": "r == 14 && g == 14 && b == 14",
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "hc_black_white_ombre",
+      "name": "Black and White Ombre",
+      "source": "sources/Black-and-White-Ombre-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Светлая основа волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Тёмные концы омбре",
+          "kind": "hair"
+        }
+      },
+      "gradient": {
+        "weight": "(220 - lum) / 190",
+        "where": "group != 'head'"
+      }
+    },
+    {
+      "id": "hc_black_tumblr",
+      "name": "Black Tumblr Girl",
+      "source": "sources/Black-Tumblr-Girl-Glompieee-Req-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Коричневые волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Зелёный декор",
+          "kind": "decor"
+        },
+        "decor_2": {
+          "description": "Тёмная основа декора",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "when": "g > r && g > b",
+          "zone": "decor_1"
+        },
+        {
+          "when": "r == g && g == b",
+          "zone": "decor_2"
+        }
+      ]
+    },
+    {
+      "id": "hc_blonde_bangs",
+      "name": "Blonde Bangs",
+      "source": "sources/Blonde-Bangs-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Коричневые волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Светлая чёлка",
+          "kind": "hair"
+        }
+      },
+      "rules": [
+        {
+          "when": "group == 'head' && r >= 95 && b / r >= 0.62",
+          "zone": "decor_1"
+        }
+      ],
+      "linked_shades": true
+    },
+    {
+      "id": "hc_blonde",
+      "name": "Blonde",
+      "source": "sources/Blonde-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "hc_blue",
+      "name": "Blue Hair Base",
+      "source": "sources/Blue-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Голубая основа волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Фиолетовые пряди и переход",
+          "kind": "hair"
+        }
+      },
+      "gradient": {
+        "weight": "(h - 216) / 39"
+      }
+    },
+    {
+      "id": "hc_brown",
+      "name": "Brown Hair Base",
+      "source": "sources/Brown-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "hc_celestial",
+      "name": "Celestial",
+      "source": "sources/celestial-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Светлые кремовые пряди",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Голубые пряди",
+          "kind": "hair"
+        },
+        "decor_2": {
+          "description": "Розово-сиреневые пряди",
+          "kind": "hair"
+        }
+      },
+      "rules": [
+        {
+          "when": "b > r && g > r",
+          "zone": "decor_1"
+        },
+        {
+          "when": "b > r",
+          "zone": "decor_2"
+        },
+        {
+          "when": "b > g",
+          "zone": "decor_2"
+        }
+      ]
+    },
+    {
+      "id": "hc_blue_purple_ombre",
+      "name": "Dark Blue to Purple Ombre",
+      "source": "sources/Dark-Blue-to-Purple-Ombre-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Тёмная основа волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Розово-фиолетовый переход и концы",
+          "kind": "hair"
+        }
+      },
+      "cleanup": {
+        "remove_pixels": [
+          [
+            24,
+            23
+          ],
+          [
+            24,
+            24
+          ]
+        ],
+        "note": "two stray skin-coloured pixels between the front strands"
+      },
+      "gradient": {
+        "weight": "(h - 280) / 40"
+      }
+    },
+    {
+      "id": "hc_fall_leaves",
+      "name": "Fall Leaves",
+      "source": "sources/Fall-Leaves-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Коричневая основа волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Медные концы",
+          "kind": "hair"
+        }
+      },
+      "gradient": {
+        "weight": "(h - 11.5) / 6"
+      }
+    },
+    {
+      "id": "hc_base_10",
+      "name": "Hair Base 10",
+      "source": "sources/Hair-Base-10-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Сиреневые волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Бант и завязка",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "when": "r > b && face == 'back'",
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "hc_pale_base",
+      "name": "Hair Base · Pale",
+      "source": "sources/Hair-base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "hc_hazelnut",
+      "name": "Hazelnut",
+      "source": "sources/hazelnut-hair-base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Зелёная заколка / вставки",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "when": "g > r",
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "hc_jam",
+      "name": "Jam Hair",
+      "source": "sources/Jam-Hair-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Фиолетовая основа волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Розово-малиновые пряди",
+          "kind": "hair"
+        }
+      },
+      "gradient": {
+        "weight": "(h - 295) / 15"
+      }
+    },
+    {
+      "id": "hc_licorice",
+      "name": "Licorice",
+      "source": "sources/Licorice-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "hc_long_brown",
+      "name": "Long Brown Hair",
+      "source": "sources/long-brown-hair-standard-base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "hc_lookalike",
+      "name": "Lookalike",
+      "source": "sources/lookalike-hb-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "hc_medieval_male",
+      "name": "Medieval Kingdoms · Male",
+      "source": "sources/Medieval-Kingdoms-Male-Hair-Base-Brown-on-planetminecraft-com (3).png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      },
+      "cleanup": {
+        "min_alpha": 16,
+        "note": "almost transparent template marks (alpha below 16)"
+      }
+    },
+    {
+      "id": "hc_merry_christmas",
+      "name": "Merry Christmas",
+      "source": "sources/Merry-Christmas-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Светлая основа волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Розовые пряди",
+          "kind": "hair"
+        },
+        "decor_2": {
+          "description": "Декор на голове",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "when": "surface == 'outer' && group == 'head' && (face == 'top' && x >= 44 && x <= 47 && y >= 5 && y <= 7 || face == 'front' && x >= 44 && x <= 47 && y >= 8 && y <= 10 || face == 'left' && x >= 48 && x <= 49 && y >= 8 && y <= 10)",
+          "zone": "decor_2",
+          "note": "the ornament on the head is picked by position: its colours also occur in the hair"
+        },
+        {
+          "when": "r - g > 20 && b >= g",
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "hc_moonlit",
+      "name": "Moonlit",
+      "source": "sources/moonlit-hb-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Тёмная основа волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Голубые пряди и концы",
+          "kind": "hair"
+        }
+      },
+      "gradient": {
+        "weight": "(s - 0.18) / 0.27",
+        "where": "b > r * 1.1"
+      }
+    },
+    {
+      "id": "hc_ezra",
+      "name": "Ezra",
+      "source": "sources/my-oc-s-hair-base-ezra-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Золотистая серьга / деталь",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "when": "r == 157 && g == 129 && b == 63",
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "hc_myriani",
+      "name": "Myriani",
+      "source": "sources/My-OC-s-hair-base-thingy-Myriani-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Светлые волосы",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Завязки хвоста",
+          "kind": "decor"
+        },
+        "decor_2": {
+          "description": "Серебристые боковые детали",
+          "kind": "decor"
+        }
+      },
+      "rules": [
+        {
+          "when": "r == 198 && g == 204 && b == 210",
+          "zone": "decor_2"
+        },
+        {
+          "when": "group == 'body' && r < 200",
+          "zone": "decor_1"
+        }
+      ]
+    },
+    {
+      "id": "hc_pink_anime",
+      "name": "Pink Anime",
+      "source": "sources/pink-anime-hair-base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы, включая светлые блики",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "hc_pink_no1",
+      "name": "Pink Hair No.1",
+      "source": "sources/Pink-hair-base-n-o1-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    },
+    {
+      "id": "hc_pink",
+      "name": "Pink Hair Base",
+      "source": "sources/Pink-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Розовая основа волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Фиолетовые пряди и переход",
+          "kind": "hair"
+        }
+      },
+      "gradient": {
+        "weight": "(340 - h) / 30",
+        "where": "h > 200"
+      }
+    },
+    {
+      "id": "hc_rock",
+      "name": "Rock",
+      "source": "sources/rock-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Тёмная основа волос",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Светлые пряди плетения",
+          "kind": "hair"
+        }
+      },
+      "gradient": {
+        "weight": "(r - 95) / 110",
+        "where": "group != 'head'"
+      }
+    },
+    {
+      "id": "hc_tangled",
+      "name": "Tangled",
+      "source": "sources/Tangled-Hair-Base-FTU-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Тёмные корни и основа",
+          "kind": "hair"
+        },
+        "decor_1": {
+          "description": "Светлый тон длины и плетения",
+          "kind": "hair"
+        }
+      },
+      "gradient": {
+        "weight": "(r - 85) / 60",
+        "where": "group != 'head'"
+      }
+    },
+    {
+      "id": "hc_viola",
+      "name": "Viola",
+      "source": "sources/Viola-Hair-Base-on-planetminecraft-com.png",
+      "zones": {
+        "main": {
+          "description": "Все волосы",
+          "kind": "hair"
+        }
+      }
+    }
+  ]
+}

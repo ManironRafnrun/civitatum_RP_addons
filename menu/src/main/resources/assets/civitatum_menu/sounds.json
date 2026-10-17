@@ -1,0 +1,38 @@
+{
+  "maintheme01": {
+    "sounds": [
+      {
+        "name": "civitatum_menu:maintheme01",
+        "stream": true,
+        "preload": false
+      }
+    ]
+  },
+  "maintheme02": {
+    "sounds": [
+      {
+        "name": "civitatum_menu:maintheme02",
+        "stream": true,
+        "preload": false
+      }
+    ]
+  },
+  "maintheme03": {
+    "sounds": [
+      {
+        "name": "civitatum_menu:maintheme03",
+        "stream": true,
+        "preload": false
+      }
+    ]
+  },
+  "maintheme04": {
+    "sounds": [
+      {
+        "name": "civitatum_menu:maintheme04",
+        "stream": true,
+        "preload": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT (code); original race lore and supplied concepts belong to their author"
+[[mods]]
+modId="civitatum"
+version="0.4.2"
+displayName="Civitatum Character Creation"
+authors="Civitatum Team"
+description='''Выбор расы, подрасы и пола, редактор персонажа, ванильные расовые черты и способности.'''
+[[dependencies.civitatum]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.256,)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.civitatum]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="BOTH"
+[[mixins]]
+config="civitatum.mixins.json"

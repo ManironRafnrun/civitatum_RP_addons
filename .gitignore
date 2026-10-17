@@ -1,10 +1,25 @@
+# Gradle and game runs
 .gradle/
 build/
 run/
 *.log
+
+# IDE
+.idea/
+*.iml
+out/
+
+# Python tools
 __pycache__/
 *.py[cod]
+
+# archives and jars (downloaded mods, built mods); the Gradle wrapper is the only tracked jar
 *.bundle
+*.zip
+*.jar
+!/gradle/wrapper/gradle-wrapper.jar
+
+# secrets
 .env
 .env.*
 *.pem

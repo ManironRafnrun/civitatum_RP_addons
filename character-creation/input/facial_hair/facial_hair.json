@@ -1,0 +1,117 @@
+{
+  "_help": [
+    "Beards and mustaches: grey 64x64 skin overlays, tinted in game with the hair colour. One texture per style, named by \"name\".",
+    "face: rows at the bottom of the face (8x8 square at 8,8), so the eye rows stay free; chest: rows from the top of the body front (20,20).",
+    "In a row every character is one pixel: \".\" is transparent, a digit 2-6 is a shade of grey (digit * 25 + 35, darker to lighter).",
+    "face_alpha: opacity of the face rows (default 255).",
+    "jaw: also shade the sides of the face and the underside of the jaw (head bottom face) with a fixed pattern."
+  ],
+  "styles": [
+    {
+      "name": "beard_1",
+      "face": [
+        "2......2",
+        "243..342"
+      ],
+      "face_alpha": 205,
+      "note": "stubble: the face part is slightly see-through",
+      "jaw": true,
+      "chest": [
+        "..2323.."
+      ]
+    },
+    {
+      "name": "beard_2",
+      "face": [
+        "34....43",
+        "34655463"
+      ],
+      "jaw": true,
+      "chest": [
+        ".346643.",
+        "..4564..",
+        "..3453..",
+        "...34..."
+      ]
+    },
+    {
+      "name": "beard_3",
+      "face": [
+        "...23...",
+        "..3443.."
+      ],
+      "chest": [
+        "...34...",
+        "...23..."
+      ]
+    },
+    {
+      "name": "beard_4",
+      "face": [
+        "34....43",
+        "34566543"
+      ],
+      "jaw": true,
+      "chest": [
+        "..4564..",
+        "..3453..",
+        "...45...",
+        "...34...",
+        "...23..."
+      ]
+    },
+    {
+      "name": "beard_5",
+      "face": [
+        "34....43",
+        "34566543"
+      ],
+      "jaw": true,
+      "chest": [
+        ".345543.",
+        "..4564..",
+        "..3443..",
+        "...45...",
+        "...34...",
+        "...45...",
+        "...34...",
+        "...23..."
+      ]
+    },
+    {
+      "name": "mustache_1",
+      "face": [
+        ".234432.",
+        "...22..."
+      ]
+    },
+    {
+      "name": "mustache_2",
+      "face": [
+        ".342243.",
+        "2......2"
+      ]
+    },
+    {
+      "name": "mustache_3",
+      "face": [
+        ".23..32.",
+        "........"
+      ]
+    },
+    {
+      "name": "mustache_4",
+      "face": [
+        ".345543.",
+        ".234432."
+      ]
+    },
+    {
+      "name": "mustache_5",
+      "face": [
+        "..2332..",
+        "........"
+      ]
+    }
+  ]
+}

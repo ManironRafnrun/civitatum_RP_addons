@@ -1,0 +1,13 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+}
+
+repositories {
+    maven { url = 'https://maven.kosmx.dev/' }
+}
+
+dependencies {
+    compileOnly 'dev.kosmx.player-anim:player-animation-lib-forge:2.0.1+1.21.1'
+    testImplementation 'com.google.code.gson:gson:2.10.1'
+}

@@ -1,0 +1,850 @@
+{
+  "_help": [
+    "Clothing: one source skin per outfit. Every pixel is put into a garment (piece) and a colour field (slot: main, decor_1, decor_2, or fixed = never tinted)",
+    "by the outfit rules: checked in order, the first matching \"when\" (or \"colors\") decides; \"default\" takes the rest.",
+    "The generator writes textures/character/clothing/<gender>/<outfit>/<slim|classic>/<piece>/ and appearance/clothing.json.",
+    "descriptions: what each colour field of a garment covers; without one the garment name is used.",
+    "palettes: the colours offered per field; an outfit can override them per \"piece/slot\".",
+    "Formulas: r g b lum h s v x y row group face surface; max() min() abs(); + - * / > >= < <= == != ! && || ( ) and 'text'."
+  ],
+  "slot_labels": {
+    "main": "Цвет одежды",
+    "decor_1": "Цвет декораций 1",
+    "decor_2": "Цвет декораций 2"
+  },
+  "piece_labels": {
+    "coat": "Верхняя одежда",
+    "blouse": "Блузка",
+    "corset": "Корсет",
+    "trousers": "Брюки",
+    "boots": "Обувь",
+    "breeches": "Бриджи",
+    "belt": "Пояс",
+    "dress": "Платье",
+    "skirt": "Юбка",
+    "shirt": "Рубаха",
+    "vest": "Жилет",
+    "sash": "Кушак",
+    "tunic": "Туника",
+    "gambeson": "Гамбезон",
+    "gloves": "Наручи / перчатки"
+  },
+  "palettes": {
+    "main": [
+      {
+        "label": "Синий",
+        "rgb": "#578FB8"
+      },
+      {
+        "label": "Зелёный",
+        "rgb": "#687E60"
+      },
+      {
+        "label": "Бордовый",
+        "rgb": "#A45B6C"
+      },
+      {
+        "label": "Льняной",
+        "rgb": "#D9C7A5"
+      },
+      {
+        "label": "Угольный",
+        "rgb": "#535B66"
+      }
+    ],
+    "leather": [
+      {
+        "label": "Тёмно-коричневый",
+        "rgb": "#4B3327"
+      },
+      {
+        "label": "Чёрный",
+        "rgb": "#353437"
+      },
+      {
+        "label": "Коньячный",
+        "rgb": "#99623F"
+      },
+      {
+        "label": "Светлая кожа",
+        "rgb": "#B18F65"
+      },
+      {
+        "label": "Серый",
+        "rgb": "#78736B"
+      }
+    ],
+    "decor_1": [
+      {
+        "label": "Розовый",
+        "rgb": "#C36D8C"
+      },
+      {
+        "label": "Светлый льняной",
+        "rgb": "#E0D5B9"
+      },
+      {
+        "label": "Синий",
+        "rgb": "#7296BD"
+      },
+      {
+        "label": "Зелёный",
+        "rgb": "#7A9D70"
+      },
+      {
+        "label": "Золотистый",
+        "rgb": "#BD9A58"
+      }
+    ],
+    "decor_2": [
+      {
+        "label": "Сиреневый",
+        "rgb": "#A085CC"
+      },
+      {
+        "label": "Светлый льняной",
+        "rgb": "#E0D5B9"
+      },
+      {
+        "label": "Зелёный",
+        "rgb": "#7A9D70"
+      },
+      {
+        "label": "Коричневый",
+        "rgb": "#8F674A"
+      },
+      {
+        "label": "Серебристый",
+        "rgb": "#B5BEC7"
+      }
+    ]
+  },
+  "leather_pieces": [
+    "boots",
+    "corset",
+    "belt",
+    "gloves"
+  ],
+  "outfits": [
+    {
+      "id": "many_layers",
+      "name": "Many Layers",
+      "gender": "female",
+      "source": "sources/female/Many-Layers-FTU-on-planetminecraft-com.png",
+      "source_model": "slim",
+      "rules": [
+        {
+          "when": "b - r >= 8 && b - g >= 9 && h >= 222",
+          "piece": "coat",
+          "slot": "main"
+        },
+        {
+          "when": "b > r + 5 && b >= g + 3",
+          "piece": "trousers",
+          "slot": "main"
+        },
+        {
+          "when": "max(r, g, b) - min(r, g, b) <= 4 && r >= 70 || r >= 180 && g >= 175 && b >= 160",
+          "piece": "coat",
+          "slot": "decor_1"
+        },
+        {
+          "when": "group == 'leg'",
+          "piece": "boots",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'body'",
+          "piece": "corset",
+          "slot": "main"
+        }
+      ],
+      "default": {
+        "piece": "coat",
+        "slot": "fixed"
+      },
+      "descriptions": {
+        "coat": {
+          "main": "Фиолетовая ткань",
+          "decor_1": "Светлая обшивка и белые вставки"
+        },
+        "corset": {
+          "main": "Корсет и кожаные детали торса"
+        },
+        "trousers": {
+          "main": "Тёмно-синяя ткань брюк"
+        },
+        "boots": {
+          "main": "Нижние кожаные детали и обувь"
+        }
+      }
+    },
+    {
+      "id": "aegipants",
+      "name": "Aegipants",
+      "gender": "female",
+      "source": "sources/female/Aegipants-MassiveLooks-FTU-on-planetminecraft-com.png",
+      "source_model": "slim",
+      "rules": [
+        {
+          "when": "b > r + 5 && b > g + 4",
+          "piece": "breeches",
+          "slot": "main"
+        },
+        {
+          "when": "r > 170 && g > 160 && b > 140 && group == 'leg'",
+          "piece": "boots",
+          "slot": "fixed"
+        },
+        {
+          "when": "r > 170 && g > 160 && b > 140",
+          "piece": "blouse",
+          "slot": "main"
+        },
+        {
+          "when": "r > g * 1.7 && r > b * 1.5 && group == 'leg'",
+          "piece": "boots",
+          "slot": "decor_1"
+        },
+        {
+          "when": "r > g * 1.7 && r > b * 1.5",
+          "piece": "blouse",
+          "slot": "decor_1"
+        },
+        {
+          "when": "group == 'leg' && r >= 80 && g >= 55 && h >= 23 && h <= 60",
+          "piece": "boots",
+          "slot": "decor_2"
+        },
+        {
+          "when": "group == 'leg'",
+          "piece": "boots",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'arm'",
+          "piece": "blouse",
+          "slot": "decor_2"
+        },
+        {
+          "when": "group == 'body' && row <= 5",
+          "piece": "blouse",
+          "slot": "decor_2"
+        }
+      ],
+      "default": {
+        "piece": "belt",
+        "slot": "main"
+      },
+      "descriptions": {
+        "blouse": {
+          "main": "Светлая ткань блузки",
+          "decor_1": "Красный бант на шее",
+          "decor_2": "Манжеты и пуговицы"
+        },
+        "breeches": {
+          "main": "Синяя ткань бриджей"
+        },
+        "boots": {
+          "main": "Тёмная кожа обуви",
+          "decor_1": "Красные манжеты",
+          "decor_2": "Золотистая отделка"
+        }
+      }
+    },
+    {
+      "id": "verer_daelaf",
+      "name": "Verer Daelaf",
+      "gender": "female",
+      "source": "sources/female/F2U-Verer-Daelaf-on-planetminecraft-com.png",
+      "source_model": "slim",
+      "rules": [
+        {
+          "when": "b > r + 6 && b >= g + 5",
+          "piece": "dress",
+          "slot": "main"
+        },
+        {
+          "when": "g > r + 4 && g >= b",
+          "piece": "dress",
+          "slot": "decor_2"
+        },
+        {
+          "when": "abs(g - b) <= 4 && r > g * 1.3",
+          "piece": "dress",
+          "slot": "decor_1"
+        }
+      ],
+      "default": {
+        "piece": "dress",
+        "slot": "fixed"
+      },
+      "descriptions": {
+        "dress": {
+          "main": "Основная синяя ткань платья",
+          "decor_1": "Красный центральный элемент",
+          "decor_2": "Зелёный плащ"
+        }
+      }
+    },
+    {
+      "id": "mistress_arrives",
+      "name": "Mistress Arrives",
+      "gender": "female",
+      "source": "sources/female/FTU-Mistress-Arrives-on-planetminecraft-com.png",
+      "source_model": "slim",
+      "rules": [
+        {
+          "colors": [
+            "#642A31",
+            "#5B2832",
+            "#532632",
+            "#4B2431",
+            "#6D2B2F",
+            "#712C35",
+            "#43222F",
+            "#3B1F2C",
+            "#752D3B",
+            "#792E42"
+          ],
+          "piece": "dress",
+          "slot": "main",
+          "note": "the burgundy fabric is told from the corset leather by its exact colours"
+        }
+      ],
+      "default": {
+        "piece": "corset",
+        "slot": "main"
+      },
+      "descriptions": {
+        "dress": {
+          "main": "Бордовая ткань платья"
+        },
+        "corset": {
+          "main": "Вся кожа корсета, включая тени"
+        }
+      }
+    },
+    {
+      "id": "ladylike",
+      "name": "Ladylike",
+      "gender": "female",
+      "source": "sources/female/Ladylike-MassiveLooks-FTU-on-planetminecraft-com (1).png",
+      "source_model": "slim",
+      "rules": [
+        {
+          "when": "g >= r - 4 && g - b >= 4 && r < 150 && r >= 60",
+          "piece": "skirt",
+          "slot": "decor_1"
+        },
+        {
+          "when": "g >= r - 4 && g - b >= 4 && r < 150",
+          "piece": "skirt",
+          "slot": "main"
+        },
+        {
+          "when": "r >= 140 && r - g <= 22 && g - b <= 22",
+          "piece": "blouse",
+          "slot": "main"
+        },
+        {
+          "when": "r >= 140",
+          "piece": "corset",
+          "slot": "decor_1"
+        }
+      ],
+      "default": {
+        "piece": "corset",
+        "slot": "main"
+      },
+      "descriptions": {
+        "skirt": {
+          "main": "Тёмно-зелёная ткань",
+          "decor_1": "Светлая передняя вставка"
+        },
+        "blouse": {
+          "main": "Светлая ткань блузки"
+        },
+        "corset": {
+          "main": "Тёмная кожа корсета",
+          "decor_1": "Светлая окантовка корсета"
+        }
+      }
+    },
+    {
+      "id": "sunset",
+      "name": "Sunset",
+      "gender": "female",
+      "source": "sources/female/Massivelooks-Sunset-on-planetminecraft-com.png",
+      "source_model": "slim",
+      "rules": [
+        {
+          "when": "r > g * 2 && abs(g - b) < 5",
+          "piece": "dress",
+          "slot": "main"
+        }
+      ],
+      "default": {
+        "piece": "dress",
+        "slot": "decor_1"
+      },
+      "descriptions": {
+        "dress": {
+          "main": "Красная ткань платья",
+          "decor_1": "Золотистые узоры и пояс"
+        }
+      },
+      "palettes": {
+        "dress/main": [
+          {
+            "label": "Рубиновый",
+            "rgb": "#C51E3A"
+          },
+          {
+            "label": "Королевский синий",
+            "rgb": "#244FCA"
+          },
+          {
+            "label": "Изумрудный",
+            "rgb": "#17865A"
+          },
+          {
+            "label": "Фиолетовый",
+            "rgb": "#7936B2"
+          },
+          {
+            "label": "Охра",
+            "rgb": "#C08A25"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pumpkin_field",
+      "name": "Pumpkin Field",
+      "gender": "female",
+      "source": "sources/female/Massivelooks-Pumpkin-Field-on-planetminecraft-com.png",
+      "source_model": "slim",
+      "rules": [
+        {
+          "when": "r >= 150 && g >= 140 && b >= 120",
+          "piece": "blouse",
+          "slot": "main"
+        },
+        {
+          "when": "h > 25 && h < 65 && s > 0.25 && r < 160 && g >= r * 0.72",
+          "piece": "skirt",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'arm'",
+          "piece": "blouse",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'body' && row <= 2 && r > g * 1.5",
+          "piece": "blouse",
+          "slot": "decor_1"
+        },
+        {
+          "when": "group == 'body' && row <= 2",
+          "piece": "blouse",
+          "slot": "decor_2"
+        },
+        {
+          "when": "group == 'body' && r > g * 1.5",
+          "piece": "belt",
+          "slot": "decor_1"
+        },
+        {
+          "when": "group == 'body'",
+          "piece": "belt",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg' && (row >= 10 || face == 'bottom')",
+          "piece": "skirt",
+          "slot": "decor_2"
+        },
+        {
+          "when": "group == 'leg' && (row <= 1 || face == 'top')",
+          "piece": "belt",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg'",
+          "piece": "skirt",
+          "slot": "decor_1"
+        }
+      ],
+      "descriptions": {
+        "skirt": {
+          "main": "Оливковая ткань юбки",
+          "decor_1": "Тыквы и стебли",
+          "decor_2": "Коричневый нижний край"
+        },
+        "blouse": {
+          "main": "Светлая ткань блузки",
+          "decor_1": "Медальон",
+          "decor_2": "Обрамление медальона"
+        },
+        "belt": {
+          "main": "Кожа пояса",
+          "decor_1": "Пряжка / центральная вставка"
+        }
+      },
+      "palettes": {
+        "skirt/main": [
+          {
+            "label": "Песочный",
+            "rgb": "#B5AA87"
+          },
+          {
+            "label": "Шалфейный",
+            "rgb": "#899479"
+          },
+          {
+            "label": "Землистый",
+            "rgb": "#88705A"
+          },
+          {
+            "label": "Грифельный",
+            "rgb": "#79828A"
+          },
+          {
+            "label": "Терракотовый",
+            "rgb": "#A1765D"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ruby_sash",
+      "name": "Ruby Sash",
+      "gender": "male",
+      "source": "sources/male/Massivelooks-Ruby-Sash-on-planetminecraft-com.png",
+      "source_model": "classic",
+      "rules": [
+        {
+          "when": "r > g * 1.5 && b >= g * 0.8 && h > 330",
+          "piece": "sash",
+          "slot": "main"
+        },
+        {
+          "when": "r > 115 && g > 95 && b > 80",
+          "piece": "shirt",
+          "slot": "main"
+        },
+        {
+          "when": "max(r, g, b) - min(r, g, b) <= 3",
+          "piece": "trousers",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'arm'",
+          "piece": "shirt",
+          "slot": "decor_1",
+          "note": "cuffs"
+        },
+        {
+          "when": "group == 'leg' && (row >= 8 || face == 'bottom')",
+          "piece": "boots",
+          "slot": "main"
+        }
+      ],
+      "default": {
+        "piece": "vest",
+        "slot": "main"
+      },
+      "descriptions": {
+        "shirt": {
+          "main": "Светлая ткань рубахи",
+          "decor_1": "Манжеты"
+        },
+        "vest": {
+          "main": "Ткань жилета"
+        },
+        "sash": {
+          "main": "Ткань кушака"
+        }
+      }
+    },
+    {
+      "id": "northern_warmth",
+      "name": "Northern Warmth",
+      "gender": "male",
+      "source": "sources/male/Massivelooks-Northern-Warmth-on-planetminecraft-com.png",
+      "source_model": "classic",
+      "rules": [
+        {
+          "when": "max(r, g, b) - min(r, g, b) <= 12 && abs(g - b) <= 2",
+          "piece": "coat",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg' && (row >= 8 || face == 'bottom') && h < 32 && g < r * 0.8",
+          "piece": "boots",
+          "slot": "main"
+        },
+        {
+          "when": "g >= r * 0.77 && b >= r * 0.5",
+          "piece": "coat",
+          "slot": "decor_2",
+          "note": "edging"
+        },
+        {
+          "when": "group == 'body' && (row == 5 || row == 6)",
+          "piece": "coat",
+          "slot": "fixed",
+          "note": "leather strap"
+        },
+        {
+          "when": "r > g * 1.6 && b > g * 0.72",
+          "piece": "coat",
+          "slot": "decor_1",
+          "note": "lining"
+        },
+        {
+          "when": "group == 'leg' && (row >= 8 || face == 'bottom')",
+          "piece": "boots",
+          "slot": "main"
+        }
+      ],
+      "default": {
+        "piece": "coat",
+        "slot": "fixed"
+      },
+      "descriptions": {
+        "coat": {
+          "main": "Основная ткань кафтана",
+          "decor_1": "Красные вставки",
+          "decor_2": "Кайма и обшивка"
+        }
+      }
+    },
+    {
+      "id": "kingdom_commoner",
+      "name": "Kingdom Commoner",
+      "gender": "male",
+      "source": "sources/male/Massivelooks-Kingdom-Commoner-on-planetminecraft-com.png",
+      "source_model": "classic",
+      "rules": [
+        {
+          "when": "r >= 110 && g >= r * 0.48 && g <= r * 0.7 && b < r * 0.2",
+          "piece": "tunic",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg' && (row >= 8 || face == 'bottom')",
+          "piece": "boots",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg'",
+          "piece": "trousers",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'arm' && row >= 8",
+          "piece": "gloves",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'body' && row >= 6",
+          "piece": "belt",
+          "slot": "main"
+        }
+      ],
+      "default": {
+        "piece": "tunic",
+        "slot": "decor_1"
+      },
+      "descriptions": {
+        "tunic": {
+          "main": "Охристая ткань туники",
+          "decor_1": "Кокетка и плечи"
+        }
+      }
+    },
+    {
+      "id": "gambeson",
+      "name": "Gambeson",
+      "gender": "male",
+      "source": "sources/male/MassiveLooks-Gambeson-on-planetminecraft-com (1).png",
+      "source_model": "classic",
+      "rules": [
+        {
+          "when": "max(r, g, b) >= 100 && max(r, g, b) - min(r, g, b) <= 3 && group == 'leg'",
+          "piece": "boots",
+          "slot": "decor_1",
+          "note": "metal toes"
+        },
+        {
+          "when": "max(r, g, b) >= 100 && max(r, g, b) - min(r, g, b) <= 3",
+          "piece": "gambeson",
+          "slot": "fixed",
+          "note": "metal buttons"
+        },
+        {
+          "when": "b > r + 4 && r > g + 5",
+          "piece": "gambeson",
+          "slot": "decor_1",
+          "note": "purple panels"
+        },
+        {
+          "when": "group == 'arm' && row >= 6",
+          "piece": "gloves",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg' && (row >= 6 || face == 'bottom')",
+          "piece": "boots",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg' && row >= 3",
+          "piece": "trousers",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg'",
+          "piece": "gambeson",
+          "slot": "main"
+        },
+        {
+          "when": "r > g + 3 && g >= b && group == 'body' && row >= 8",
+          "piece": "belt",
+          "slot": "main"
+        },
+        {
+          "when": "r > g + 3 && g >= b",
+          "piece": "gambeson",
+          "slot": "fixed",
+          "note": "leather collar"
+        }
+      ],
+      "default": {
+        "piece": "gambeson",
+        "slot": "main"
+      },
+      "descriptions": {
+        "gambeson": {
+          "main": "Основные стёганые панели",
+          "decor_1": "Второй, фиолетовый цвет гамбезона"
+        },
+        "boots": {
+          "main": "Кожа обуви",
+          "decor_1": "Светлая отделка носков"
+        }
+      }
+    },
+    {
+      "id": "tunic_grey",
+      "name": "Tunic Grey",
+      "gender": "male",
+      "source": "sources/male/Medieval-Kingdoms-Tunic-Grey-on-planetminecraft-com.png",
+      "source_model": "classic",
+      "rules": [
+        {
+          "when": "group == 'leg' && (row >= 8 || face == 'bottom')",
+          "piece": "boots",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg' && !(r > g * 1.2 && g > b * 1.08) && (row <= 1 || face == 'top')",
+          "piece": "tunic",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'leg'",
+          "piece": "trousers",
+          "slot": "main"
+        },
+        {
+          "when": "!(r > g * 1.2 && g > b * 1.08)",
+          "piece": "tunic",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'body' && row >= 9",
+          "piece": "tunic",
+          "slot": "decor_2",
+          "note": "side leather"
+        },
+        {
+          "when": "group == 'body' && row == 8",
+          "piece": "belt",
+          "slot": "main"
+        }
+      ],
+      "default": {
+        "piece": "tunic",
+        "slot": "decor_1"
+      },
+      "descriptions": {
+        "tunic": {
+          "main": "Серая ткань туники",
+          "decor_1": "Шнуровка ворота",
+          "decor_2": "Боковая кожаная деталь"
+        }
+      }
+    },
+    {
+      "id": "striped_shirt",
+      "name": "Striped Shirt",
+      "gender": "male",
+      "source": "sources/male/Massivelooks-FTU-Striped-Shirt-on-planetminecraft-com.png",
+      "source_model": "slim",
+      "rules": [
+        {
+          "when": "group == 'leg' && (row >= 6 || face == 'bottom' || row == 5 && h > 15 && s > 0.3)",
+          "piece": "boots",
+          "slot": "main",
+          "note": "legs first: boot shadows share a hue with the light stripes"
+        },
+        {
+          "when": "group == 'leg'",
+          "piece": "trousers",
+          "slot": "main"
+        },
+        {
+          "when": "r > g * 2 && abs(g - b) <= 4",
+          "piece": "shirt",
+          "slot": "main"
+        },
+        {
+          "when": "r > g && g > b && h > 7 && h < 19 && s > 0.3",
+          "piece": "shirt",
+          "slot": "decor_1"
+        },
+        {
+          "when": "max(r, g, b) - min(r, g, b) <= 15 && group == 'body' && row >= 7",
+          "piece": "trousers",
+          "slot": "main"
+        },
+        {
+          "when": "group == 'arm'",
+          "piece": "shirt",
+          "slot": "decor_2",
+          "note": "sleeve bands"
+        },
+        {
+          "when": "group == 'body' && row >= 5",
+          "piece": "belt",
+          "slot": "main"
+        }
+      ],
+      "default": {
+        "piece": "shirt",
+        "slot": "decor_2"
+      },
+      "descriptions": {
+        "shirt": {
+          "main": "Красные полосы",
+          "decor_1": "Светлые полосы",
+          "decor_2": "Ворот и ремешки рукавов"
+        }
+      }
+    }
+  ]
+}

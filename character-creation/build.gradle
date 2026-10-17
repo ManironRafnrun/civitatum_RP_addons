@@ -1,0 +1,41 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+}
+
+dependencies {
+    testImplementation 'com.google.code.gson:gson:2.10.1'
+    testImplementation 'com.mojang:datafixerupper:8.0.16'
+}
+
+// Generators for the mod's textures; not part of the mod jar. They read input/ and write src/main/resources.
+sourceSets {
+    tools
+}
+
+dependencies {
+    toolsImplementation 'com.google.code.gson:gson:2.10.1'
+}
+
+def generator(String name, String mainClassName, String text) {
+    tasks.register(name, JavaExec) {
+        group = 'tools'
+        description = text
+        classpath = sourceSets.tools.runtimeClasspath
+        mainClass = 'team.civitatum.charactercreation.tools.' + mainClassName
+        workingDir = projectDir
+    }
+}
+
+generator('generateSkin', 'SkinTexturesGenerator', 'Regenerates the base skin, textures/character/skin, from input/skin.')
+generator('generateEyes', 'EyeTexturesGenerator', 'Regenerates the eyes, textures/character/eyes, from input/eyes.')
+generator('generateClothing', 'ClothingGenerator', 'Regenerates the clothing, textures/character/clothing and appearance/clothing.json, from input/clothing.')
+generator('generateHaircuts', 'HaircutsGenerator', 'Regenerates the haircuts, textures/character/haircuts and appearance/haircuts.json, from input/haircuts.')
+
+generator('generateFacialHair', 'FacialHairTexturesGenerator', 'Regenerates the beard and mustache textures, textures/character/facial_hair.')
+
+tasks.register('generateTextures') {
+    group = 'tools'
+    description = 'Runs every generator: skin, eyes, haircuts, clothing and facial hair.'
+    dependsOn 'generateSkin', 'generateEyes', 'generateHaircuts', 'generateClothing', 'generateFacialHair'
+}

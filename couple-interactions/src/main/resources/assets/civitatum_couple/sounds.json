@@ -1,0 +1,11 @@
+{
+  "kiss": {
+    "subtitle": "subtitles.civitatum_couple.kiss",
+    "sounds": [
+      {
+        "name": "civitatum_couple:kiss",
+        "attenuation_distance": 12
+      }
+    ]
+  }
+}
