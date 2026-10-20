@@ -82,7 +82,8 @@ public final class BookScreen extends Screen {
         lectern = packet.lectern();
         editable = packet.editable();
         administrative = packet.administrative();
-        reading = true;
+        reading = !administrative;
+        expanded = administrative;
         editor = new BookEditor(BookDocument.parse(packet.document()));
         drafts = new DraftStore(Minecraft.getInstance().gameDirectory.toPath(), book);
         try {
@@ -193,7 +194,7 @@ public final class BookScreen extends Screen {
         control(598, 554, 36, Component.literal("›"), () -> selectPage(spread() + 2), spread() + 2 < editor.document.pages.size(), false);
         if (!reading && editable) {
             button(756, 554, 104, "save", () -> save(false, false), dirty);
-            button(870, 554, 112, "sign", this::confirmSign, true);
+            if (!editor.document.signed) button(870, 554, 112, "sign", this::confirmSign, true);
         } else if (lectern) {
             button(870, 554, 112, "take", this::takeBook, !dirty);
         }
@@ -214,12 +215,12 @@ public final class BookScreen extends Screen {
         graphics.pose().translate(originX, originY, 0);
         graphics.pose().scale(scale, scale, 1);
         if (expanded) {
-        graphics.fill(0, 0, 1000, 600, 0xff2a211b);
-        graphics.fill(5, 5, 995, 595, 0xff49382b);
-        graphics.fill(8, 48, 992, 549, 0xff30281f);
-        graphics.drawString(font, "CIVITATUM  /  BOOKS", 18, 24, 0xffe3cd9e, false);
-        graphics.drawString(font, text("pages"), 18, 66, 0xffc7ae7f, false);
-        drawSidebar(graphics);
+            graphics.fill(0, 0, 1000, 600, 0xff2a211b);
+            graphics.fill(5, 5, 995, 595, 0xff49382b);
+            graphics.fill(8, 48, 992, 549, 0xff30281f);
+            graphics.drawString(font, "CIVITATUM  /  BOOKS", 18, 24, 0xffe3cd9e, false);
+            graphics.drawString(font, text("pages"), 18, 66, 0xffc7ae7f, false);
+            drawSidebar(graphics);
         } else {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
@@ -229,10 +230,10 @@ public final class BookScreen extends Screen {
         drawPage(graphics, spread(), PAGE_LEFT);
         drawPage(graphics, spread() + 1, PAGE_LEFT + PAGE_WIDTH + 8);
         if (expanded) {
-        graphics.fill(564, PAGE_TOP + 1, 572, PAGE_TOP + PAGE_HEIGHT - 1, 0xff9c835f);
-        graphics.drawCenteredString(font, Component.translatable("books.page_count", editor.page + 1, editor.document.pages.size()), 526, 563, 0xffe3cd9e);
-        Component visibleStatus = status;
-        graphics.drawString(font, font.plainSubstrByWidth(visibleStatus.getString(), 382), 20, 564, saveFailed ? 0xffffb0a0 : 0xffd6c09a, false);
+            graphics.fill(564, PAGE_TOP + 1, 572, PAGE_TOP + PAGE_HEIGHT - 1, 0xff9c835f);
+            graphics.drawCenteredString(font, Component.translatable("books.page_count", editor.page + 1, editor.document.pages.size()), 526, 563, 0xffe3cd9e);
+            Component visibleStatus = status;
+            graphics.drawString(font, font.plainSubstrByWidth(visibleStatus.getString(), 382), 20, 564, saveFailed ? 0xffffb0a0 : 0xffd6c09a, false);
         }
         buildControls();
         float localMouseX = localX(mouseX);
@@ -271,9 +272,9 @@ public final class BookScreen extends Screen {
 
     private void drawPage(GuiGraphics graphics, int index, int x) {
         if (expanded) {
-        graphics.fill(x + 3, PAGE_TOP + 4, x + PAGE_WIDTH + 3, PAGE_TOP + PAGE_HEIGHT + 4, 0xff17120d);
-        graphics.fill(x, PAGE_TOP, x + PAGE_WIDTH, PAGE_TOP + PAGE_HEIGHT, 0xffb69e73);
-        graphics.fill(x + 2, PAGE_TOP + 2, x + PAGE_WIDTH - 2, PAGE_TOP + PAGE_HEIGHT - 2, 0xffeee1c2);
+            graphics.fill(x + 3, PAGE_TOP + 4, x + PAGE_WIDTH + 3, PAGE_TOP + PAGE_HEIGHT + 4, 0xff17120d);
+            graphics.fill(x, PAGE_TOP, x + PAGE_WIDTH, PAGE_TOP + PAGE_HEIGHT, 0xffb69e73);
+            graphics.fill(x + 2, PAGE_TOP + 2, x + PAGE_WIDTH - 2, PAGE_TOP + PAGE_HEIGHT - 2, 0xffeee1c2);
         }
         if (index >= editor.document.pages.size()) return;
         BookPage page = editor.document.pages.get(index);
@@ -420,7 +421,7 @@ public final class BookScreen extends Screen {
                 return true;
             }
         }
-        if (x >= 16 && x <= 146 && y >= 105 && y < 375) {
+        if (expanded && x >= 16 && x <= 146 && y >= 105 && y < 375) {
             int index = sidebarStart + (int) ((y - 105) / 54);
             if (index < editor.document.pages.size()) selectPage(index);
             return true;
@@ -484,7 +485,7 @@ public final class BookScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontal, double vertical) {
         if (busy || vertical == 0) return false;
-        if (localX(mouseX) < 154) sidebarStart += vertical < 0 ? 1 : -1;
+        if (expanded && localX(mouseX) < 154) sidebarStart += vertical < 0 ? 1 : -1;
         else selectPage(spread() + (vertical < 0 ? 2 : -2));
         return true;
     }

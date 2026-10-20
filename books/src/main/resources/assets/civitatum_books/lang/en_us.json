@@ -53,5 +53,21 @@
   "books.error.timeout": "Server did not reply. A local draft has been saved.",
   "books.error.failed": "Operation failed. A local draft has been saved.",
   "books.undo": "Undo",
-  "books.redo": "Redo"
+  "books.redo": "Redo",
+  "books.close": "Close",
+  "books.expand": "Extended view · F6",
+  "books.author": "Author signature",
+  "books.import_book": "Import book",
+  "books.export_book": "Export book",
+  "books.archive_hint": ".cbook — text, formatting and PNGs in one file",
+  "books.overwrite": "Replace the existing file?",
+  "books.replace_warning": "Import replaces this book’s contents. You can undo it.",
+  "books.file_working": "Preparing file…",
+  "books.exported": "Book exported: %s",
+  "books.imported": "Book imported. Save or sign it.",
+  "books.error.archive_format": "Cannot read or write this .cbook file. Check its path and contents.",
+  "books.error.archive_size": "Book archive exceeds 20 MiB.",
+  "books.error.archive_images": "The archive is missing required images.",
+  "books.error.author": "Signature must be at most 80 characters without line breaks.",
+  "books.error.permission": "This action requires operator permission level 2."
 }
