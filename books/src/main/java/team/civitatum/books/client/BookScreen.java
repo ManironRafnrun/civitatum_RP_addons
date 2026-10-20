@@ -19,6 +19,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 import team.civitatum.books.CivitatumBooks;
 import team.civitatum.books.document.BookDocument;
+import team.civitatum.books.document.BookArchive;
+import net.minecraft.resources.ResourceLocation;
 import team.civitatum.books.document.BookPage;
 import team.civitatum.books.document.TextLayout;
 import team.civitatum.books.network.BookNetwork;
@@ -37,6 +39,8 @@ public final class BookScreen extends Screen {
     private final UUID session;
     private final UUID book;
     private final boolean lectern;
+    private final boolean administrative;
+    private static final ResourceLocation OPEN_BOOK = CivitatumBooks.resource("textures/gui/open_book.png");
     private final BookImages images = new BookImages();
     private final DraftStore drafts;
     private final Set<String> requestedImages = new HashSet<>();
@@ -45,6 +49,8 @@ public final class BookScreen extends Screen {
     private final BookEditor editor;
     private boolean editable;
     private boolean reading;
+    private boolean expanded;
+    private BookImport pendingImport;
     private boolean dirty;
     private boolean busy;
     private boolean saveFailed;
@@ -75,7 +81,8 @@ public final class BookScreen extends Screen {
         book = packet.book();
         lectern = packet.lectern();
         editable = packet.editable();
-        reading = !editable;
+        administrative = packet.administrative();
+        reading = true;
         editor = new BookEditor(BookDocument.parse(packet.document()));
         drafts = new DraftStore(Minecraft.getInstance().gameDirectory.toPath(), book);
         try {
@@ -88,9 +95,7 @@ public final class BookScreen extends Screen {
 
     @Override
     protected void init() {
-        scale = Math.min((width - 8f) / CANVAS_WIDTH, (height - 8f) / CANVAS_HEIGHT);
-        originX = (width - CANVAS_WIDTH * scale) / 2;
-        originY = (height - CANVAS_HEIGHT * scale) / 2;
+        updateGeometry();
         if (firstLayout) {
             firstLayout = false;
             String original = editor.document.json();
@@ -105,6 +110,21 @@ public final class BookScreen extends Screen {
             }
             editor.clearHistory();
         }
+    }
+
+    private void updateGeometry() {
+        float canvasWidth = expanded ? CANVAS_WIDTH : 912;
+        float canvasHeight = expanded ? CANVAS_HEIGHT : 540;
+        scale = Math.min((width - 16f) / canvasWidth, (height - 16f) / canvasHeight);
+        originX = (width - canvasWidth * scale) / 2 - (expanded ? 0 : 112 * scale);
+        originY = (height - canvasHeight * scale) / 2 - (expanded ? 0 : 72 * scale);
+    }
+
+    private void changeView(boolean readOnly, boolean expandedView) {
+        reading = readOnly;
+        expanded = expandedView;
+        imageSelected = false;
+        updateGeometry();
     }
 
     private boolean editing() { return editable && !reading && !busy; }
@@ -130,10 +150,18 @@ public final class BookScreen extends Screen {
 
     private void buildControls() {
         controls.clear();
+        if (!expanded) {
+            control(954, 79, 28, Component.literal("+"), () -> changeView(true, true), true, false);
+            if (lectern) button(174, 529, 136, "take", this::takeBook, !dirty);
+            control(438, 529, 64, Component.literal("‹"), () -> selectPage(spread() - 2), spread() > 0, false);
+            control(622, 529, 64, Component.literal("›"), () -> selectPage(spread() + 2), spread() + 2 < editor.document.pages.size(), false);
+            button(824, 529, 132, "close", this::onClose, true);
+            return;
+        }
         String title = editor.document.title.isBlank() ? text("untitled").getString() : editor.document.title;
         control(288, 14, 382, Component.literal(title), this::editTitle, editing(), false);
-        control(705, 14, 105, text("read"), () -> reading = true, true, reading);
-        control(818, 14, 124, text("edit"), () -> reading = false, editable, !reading);
+        control(705, 14, 105, text("read"), () -> changeView(true, false), true, reading);
+        control(818, 14, 124, text("edit"), () -> changeView(false, true), editable, !reading);
         control(952, 14, 30, Component.literal("×"), this::onClose, true, false);
         if (!reading && editable) {
             control(174, 61, 34, Component.literal("B").withStyle(Style.EMPTY.withBold(true)), () -> format(BookPage.BOLD, null), true, false);
@@ -150,6 +178,9 @@ public final class BookScreen extends Screen {
             if (recovery != null) button(872, 61, 108, "recover", this::recover, true);
         }
         button(770, 61, 93, "search", this::searchDialog, true);
+        button(16, 383, 130, "export_book", () -> minecraft.setScreen(new BookExchangeScreen(this, true)), exportReady());
+        button(16, 414, 130, "import_book", () -> confirmImport(() -> minecraft.setScreen(new BookExchangeScreen(this, false))), editing());
+        if (administrative) button(16, 514, 130, "author", this::editAuthor, editing());
         button(16, 445, 130, "add_page", () -> mutate(() -> {
             if (editor.document.pages.size() >= BookDocument.MAX_PAGES) throw new IllegalArgumentException("pages");
             editor.document.pages.add(editor.page + 1, new BookPage());
@@ -164,10 +195,7 @@ public final class BookScreen extends Screen {
             button(756, 554, 104, "save", () -> save(false, false), dirty);
             button(870, 554, 112, "sign", this::confirmSign, true);
         } else if (lectern) {
-            button(870, 554, 112, "take", () -> {
-                if (dirty) save(false, false);
-                else PacketDistributor.sendToServer(new BookNetwork.Request(session, BookNetwork.Command.TAKE_FROM_LECTERN, ""));
-            }, !dirty);
+            button(870, 554, 112, "take", this::takeBook, !dirty);
         }
         if (imageSelected && editing()) {
             button(174, 529, 140, editor.currentPage().imageBottom ? "image_top" : "image_bottom",
@@ -185,22 +213,39 @@ public final class BookScreen extends Screen {
         graphics.pose().pushPose();
         graphics.pose().translate(originX, originY, 0);
         graphics.pose().scale(scale, scale, 1);
+        if (expanded) {
         graphics.fill(0, 0, 1000, 600, 0xff2a211b);
         graphics.fill(5, 5, 995, 595, 0xff49382b);
         graphics.fill(8, 48, 992, 549, 0xff30281f);
         graphics.drawString(font, "CIVITATUM  /  BOOKS", 18, 24, 0xffe3cd9e, false);
         graphics.drawString(font, text("pages"), 18, 66, 0xffc7ae7f, false);
         drawSidebar(graphics);
+        } else {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            graphics.blit(OPEN_BOOK, 112, 72, 912, 540, 0, 0, 1650, 953, 1650, 953);
+            RenderSystem.disableBlend();
+        }
         drawPage(graphics, spread(), PAGE_LEFT);
         drawPage(graphics, spread() + 1, PAGE_LEFT + PAGE_WIDTH + 8);
+        if (expanded) {
         graphics.fill(564, PAGE_TOP + 1, 572, PAGE_TOP + PAGE_HEIGHT - 1, 0xff9c835f);
         graphics.drawCenteredString(font, Component.translatable("books.page_count", editor.page + 1, editor.document.pages.size()), 526, 563, 0xffe3cd9e);
         Component visibleStatus = status;
         graphics.drawString(font, font.plainSubstrByWidth(visibleStatus.getString(), 382), 20, 564, saveFailed ? 0xffffb0a0 : 0xffd6c09a, false);
+        }
         buildControls();
         float localMouseX = localX(mouseX);
         float localMouseY = localY(mouseY);
         for (Control control : controls) {
+            if (!expanded) {
+                int color = control.enabled && control.contains(localMouseX, localMouseY) ? 0xff884626 : control.enabled ? 0xff493321 : 0xffb39b75;
+                graphics.drawCenteredString(font, control.label, control.x + control.width / 2, control.y + 9, color);
+                if (control.x == 954 && control.contains(localMouseX, localMouseY)) {
+                    graphics.drawString(font, text("expand"), 785, 91, 0xff493321, false);
+                }
+                continue;
+            }
             int background = control.selected ? 0xff6c7154 : control.enabled && control.contains(localMouseX, localMouseY) ? 0xff756048 : 0xff514132;
             graphics.fill(control.x, control.y, control.x + control.width, control.y + 27, background);
             graphics.fill(control.x, control.y + 26, control.x + control.width, control.y + 27, 0xffa08760);
@@ -211,8 +256,8 @@ public final class BookScreen extends Screen {
     }
 
     private void drawSidebar(GuiGraphics graphics) {
-        sidebarStart = Math.clamp(sidebarStart, 0, Math.max(0, editor.document.pages.size() - 6));
-        for (int row = 0; row < 6 && sidebarStart + row < editor.document.pages.size(); row++) {
+        sidebarStart = Math.clamp(sidebarStart, 0, Math.max(0, editor.document.pages.size() - 5));
+        for (int row = 0; row < 5 && sidebarStart + row < editor.document.pages.size(); row++) {
             int index = sidebarStart + row;
             int y = 105 + row * 54;
             graphics.fill(16, y, 146, y + 47, index == editor.page ? 0xff756448 : 0xff473a2e);
@@ -225,9 +270,11 @@ public final class BookScreen extends Screen {
     }
 
     private void drawPage(GuiGraphics graphics, int index, int x) {
+        if (expanded) {
         graphics.fill(x + 3, PAGE_TOP + 4, x + PAGE_WIDTH + 3, PAGE_TOP + PAGE_HEIGHT + 4, 0xff17120d);
         graphics.fill(x, PAGE_TOP, x + PAGE_WIDTH, PAGE_TOP + PAGE_HEIGHT, 0xffb69e73);
         graphics.fill(x + 2, PAGE_TOP + 2, x + PAGE_WIDTH - 2, PAGE_TOP + PAGE_HEIGHT - 2, 0xffeee1c2);
+        }
         if (index >= editor.document.pages.size()) return;
         BookPage page = editor.document.pages.get(index);
         if (!page.image.isEmpty()) drawImage(graphics, page, x, index == editor.page && imageSelected);
@@ -373,7 +420,7 @@ public final class BookScreen extends Screen {
                 return true;
             }
         }
-        if (x >= 16 && x <= 146 && y >= 105 && y < 429) {
+        if (x >= 16 && x <= 146 && y >= 105 && y < 375) {
             int index = sidebarStart + (int) ((y - 105) / 54);
             if (index < editor.document.pages.size()) selectPage(index);
             return true;
@@ -445,7 +492,7 @@ public final class BookScreen extends Screen {
     private void selectPage(int index) {
         editor.selectPage(index);
         imageSelected = false;
-        if (editor.page < sidebarStart || editor.page >= sidebarStart + 6) sidebarStart = editor.page;
+        if (editor.page < sidebarStart || editor.page >= sidebarStart + 5) sidebarStart = editor.page;
     }
 
     @Override
@@ -457,6 +504,10 @@ public final class BookScreen extends Screen {
 
     @Override
     public boolean keyPressed(int key, int scanCode, int modifiers) {
+        if (key == GLFW.GLFW_KEY_F6 && !busy) {
+            changeView(true, !expanded);
+            return true;
+        }
         if (key == GLFW.GLFW_KEY_ESCAPE) {
             onClose();
             return true;
@@ -662,6 +713,15 @@ public final class BookScreen extends Screen {
     @Override
     public void onFilesDrop(List<Path> paths) {
         if (!editing() || paths.isEmpty()) return;
+        if (paths.getFirst().getFileName().toString().toLowerCase(java.util.Locale.ROOT).endsWith(".cbook")) {
+            Path archive = paths.getFirst();
+            confirmImport(() -> {
+                BookExchangeScreen screen = new BookExchangeScreen(this, false);
+                minecraft.setScreen(screen);
+                screen.onFilesDrop(List.of(archive));
+            });
+            return;
+        }
         uploadPage = editor.page;
         BookDialog dialog = new BookDialog(this);
         minecraft.setScreen(dialog);
@@ -698,6 +758,7 @@ public final class BookScreen extends Screen {
         if (!session.equals(packet.session())) return;
         busy = false;
         if (!packet.success()) {
+            pendingImport = null;
             saveFailed = true;
             closeAfterSave = false;
             status = error(packet.message());
@@ -705,6 +766,11 @@ public final class BookScreen extends Screen {
             return;
         }
         if (packet.result() == BookNetwork.Result.IMAGE) {
+            if (pendingImport != null) {
+                pendingImport.accepted(packet.message());
+                continueImport();
+                return;
+            }
             saveFailed = false;
             editor.selectPage(Math.min(uploadPage, editor.document.pages.size() - 1));
             mutate(() -> {
@@ -722,11 +788,11 @@ public final class BookScreen extends Screen {
         }
         boolean unchanged = editor.document.json().equals(sentDocument);
         editor.document.revision = packet.revision();
+        editor.document.author = packet.author();
         if (packet.result() == BookNetwork.Result.SIGN) {
             editor.document.signed = true;
-            editor.document.author = minecraft.getUser().getName();
-            editable = false;
-            reading = true;
+            editable = administrative;
+            changeView(true, false);
             editor.clearHistory();
         }
         dirty = !unchanged;
@@ -734,6 +800,63 @@ public final class BookScreen extends Screen {
         status = dirty ? text("changed") : text("saved");
         backup();
         if (closeAfterSave && !dirty) closeNow();
+    }
+
+    private void takeBook() {
+        PacketDistributor.sendToServer(new BookNetwork.Request(session, BookNetwork.Command.TAKE_FROM_LECTERN, ""));
+    }
+
+    private void editAuthor() {
+        if (editing() && administrative) minecraft.setScreen(new BookDialog(this, "books.author", editor.document.author, 80,
+                value -> mutate(() -> editor.document.author = value, false)));
+    }
+
+    private boolean exportReady() {
+        return !busy && editor.document.images().stream().allMatch(hash -> images.get(hash) != null);
+    }
+
+    Path defaultArchivePath() {
+        String name = editor.document.title.isBlank() ? "book" : editor.document.title;
+        name = name.replaceAll("[^\\p{L}\\p{N} _-]", "_").strip();
+        return minecraft.gameDirectory.toPath().resolve("civitatum_books/exports").resolve(name + ".cbook").toAbsolutePath();
+    }
+
+    BookArchive.Contents archiveSnapshot() {
+        return new BookArchive.Contents(editor.document.copy(), images.snapshot());
+    }
+
+    void exported(Path path) {
+        status = Component.translatable("books.exported", path.getFileName().toString());
+    }
+
+    private void confirmImport(Runnable action) {
+        if (!editing()) return;
+        minecraft.setScreen(new ConfirmScreen(confirmed -> {
+            minecraft.setScreen(this);
+            if (confirmed) action.run();
+        }, text("import_book"), text("replace_warning")));
+    }
+
+    void importArchive(BookArchive.Contents archive) {
+        if (!editing()) return;
+        pendingImport = new BookImport(archive, editor.document, administrative);
+        continueImport();
+    }
+
+    private void continueImport() {
+        byte[] image = pendingImport.next();
+        if (image != null) {
+            uploadImage(image);
+            return;
+        }
+        BookDocument imported = pendingImport.document;
+        pendingImport = null;
+        mutate(() -> {
+            editor.document = imported;
+            editor.selectPage(0);
+        }, true);
+        requestImages();
+        status = text("imported");
     }
 
     private void changed() {
@@ -803,6 +926,7 @@ public final class BookScreen extends Screen {
         if (dirty && editable && !busy && !saveFailed && now - changedAt >= 5000) save(false, false);
         if (busy && now - requestAt >= 30000) {
             busy = false;
+            pendingImport = null;
             closeAfterSave = false;
             saveFailed = true;
             status = error("timeout");

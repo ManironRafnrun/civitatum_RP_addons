@@ -15,7 +15,7 @@ import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import team.civitatum.books.document.PngImage;
 
 /** Small text/search dialog, or PNG import by native file picker, path or drag-and-drop. */
-final class BookDialog extends Screen {
+final class BookDialog extends Screen implements BookChildScreen {
     private final BookScreen book;
     private final String initial;
     private final int limit;
@@ -43,7 +43,7 @@ final class BookDialog extends Screen {
         imageImport = true;
     }
 
-    BookScreen book() { return book; }
+    @Override public BookScreen book() { return book; }
 
     @Override
     protected void init() {

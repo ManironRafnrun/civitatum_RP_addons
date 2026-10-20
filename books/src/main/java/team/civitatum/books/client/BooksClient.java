@@ -36,7 +36,7 @@ public final class BooksClient {
     private static BookScreen currentBook() {
         Screen current = Minecraft.getInstance().screen;
         if (current instanceof BookScreen book) return book;
-        if (current instanceof BookDialog dialog) return dialog.book();
+        if (current instanceof BookChildScreen dialog) return dialog.book();
         return null;
     }
 }

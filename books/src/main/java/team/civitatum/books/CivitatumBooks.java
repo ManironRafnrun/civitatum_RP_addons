@@ -8,6 +8,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
 import team.civitatum.books.network.BookNetwork;
 import team.civitatum.books.server.BookServer;
+import team.civitatum.books.server.BookCommands;
 
 @Mod(CivitatumBooks.ID)
 public final class CivitatumBooks {
@@ -17,6 +18,7 @@ public final class CivitatumBooks {
     public CivitatumBooks(IEventBus bus) {
         bus.addListener(BookNetwork::register);
         NeoForge.EVENT_BUS.register(BookServer.class);
+        NeoForge.EVENT_BUS.register(BookCommands.class);
     }
 
     public static ResourceLocation resource(String path) {

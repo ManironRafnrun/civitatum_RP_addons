@@ -23,7 +23,7 @@ public final class BookNetwork {
     public static Consumer<Reply> onReply = packet -> {};
     public static Consumer<Image> onImage = packet -> {};
 
-    public record OpenBook(UUID session, UUID book, byte[] document, boolean editable, boolean lectern)
+    public record OpenBook(UUID session, UUID book, byte[] document, boolean editable, boolean lectern, boolean administrative)
             implements CustomPacketPayload {
         public static final Type<OpenBook> TYPE = new Type<>(CivitatumBooks.resource("open"));
         public static final StreamCodec<RegistryFriendlyByteBuf, OpenBook> CODEC = StreamCodec.of(
@@ -33,8 +33,9 @@ public final class BookNetwork {
                     buffer.writeByteArray(packet.document);
                     buffer.writeBoolean(packet.editable);
                     buffer.writeBoolean(packet.lectern);
+                    buffer.writeBoolean(packet.administrative);
                 }, buffer -> new OpenBook(buffer.readUUID(), buffer.readUUID(),
-                        buffer.readByteArray(BookDocument.MAX_BYTES), buffer.readBoolean(), buffer.readBoolean()));
+                        buffer.readByteArray(BookDocument.MAX_BYTES), buffer.readBoolean(), buffer.readBoolean(), buffer.readBoolean()));
         public Type<OpenBook> type() { return TYPE; }
     }
 
@@ -65,7 +66,7 @@ public final class BookNetwork {
         public Type<Request> type() { return TYPE; }
     }
 
-    public record Reply(UUID session, Result result, int revision, boolean success, String message)
+    public record Reply(UUID session, Result result, int revision, boolean success, String message, String author)
             implements CustomPacketPayload {
         public static final Type<Reply> TYPE = new Type<>(CivitatumBooks.resource("reply"));
         public static final StreamCodec<RegistryFriendlyByteBuf, Reply> CODEC = StreamCodec.of(
@@ -75,8 +76,9 @@ public final class BookNetwork {
                     buffer.writeVarInt(packet.revision);
                     buffer.writeBoolean(packet.success);
                     buffer.writeUtf(packet.message, 128);
+                    buffer.writeUtf(packet.author, 80);
                 }, buffer -> new Reply(buffer.readUUID(), buffer.readEnum(Result.class), buffer.readVarInt(),
-                        buffer.readBoolean(), buffer.readUtf(128)));
+                        buffer.readBoolean(), buffer.readUtf(128), buffer.readUtf(80)));
         public Type<Reply> type() { return TYPE; }
     }
 
@@ -92,7 +94,7 @@ public final class BookNetwork {
     }
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("1");
+        var registrar = event.registrar("2");
         registrar.playToClient(OpenBook.TYPE, OpenBook.CODEC, (packet, context) -> onOpen.accept(packet));
         registrar.playToClient(Reply.TYPE, Reply.CODEC, (packet, context) -> onReply.accept(packet));
         registrar.playToClient(Image.TYPE, Image.CODEC, (packet, context) -> onImage.accept(packet));

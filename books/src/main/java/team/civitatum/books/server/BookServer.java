@@ -86,7 +86,12 @@ public final class BookServer {
     }
 
     public static void open(ServerPlayer player, int slot, BlockPos lecternPosition) {
+        open(player, slot, lecternPosition, false);
+    }
+
+    public static void open(ServerPlayer player, int slot, BlockPos lecternPosition, boolean administrative) {
         try {
+            if (administrative && !player.hasPermissions(2)) throw new IllegalArgumentException("permission");
             BookStore storage = storage(player.server);
             BookSession previous = SESSIONS.get(player.getUUID());
             if (previous != null && previous.processingImage) return;
@@ -94,26 +99,56 @@ public final class BookServer {
                     || player.distanceToSqr(lecternPosition.getCenter()) > 64)) return;
             ItemStack stack = stack(player, slot, lecternPosition);
             if (!BookItems.supported(stack)) return;
-            UUID id = BookItems.id(stack);
-            BookDocument document;
-            if (id == null) {
-                id = UUID.randomUUID();
-                document = BookItems.importVanilla(stack, player);
-                storage.write(id, document);
-                BookItems.identify(stack, id);
-                markChanged(player, lecternPosition);
-            } else {
-                document = storage.read(id);
-            }
+            UUID id = identify(player, stack, storage, lecternPosition);
+            BookDocument document = storage.read(id);
             BookSession session = new BookSession(id, slot, lecternPosition == null ? null : lecternPosition.immutable(),
-                    player.level().dimension(), document);
+                    player.level().dimension(), document, administrative);
             SESSIONS.put(player.getUUID(), session);
             PacketDistributor.sendToPlayer(player, new BookNetwork.OpenBook(session.token, id, document.bytes(),
-                    !document.signed && stack.is(Items.WRITABLE_BOOK), lecternPosition != null));
+                    administrative || (!document.signed && stack.is(Items.WRITABLE_BOOK)), lecternPosition != null, administrative));
         } catch (Exception exception) {
             CivitatumBooks.LOG.warn("Cannot open book for {}", player.getGameProfile().getName(), exception);
             player.displayClientMessage(Component.translatable("books.error.open"), false);
         }
+    }
+
+    private static UUID identify(ServerPlayer player, ItemStack stack, BookStore storage, BlockPos position) throws IOException {
+        UUID id = BookItems.id(stack);
+        if (id == null) {
+            id = UUID.randomUUID();
+            storage.write(id, BookItems.importVanilla(stack, player));
+            BookItems.identify(stack, id);
+            markChanged(player, position);
+        }
+        return id;
+    }
+
+    public static void changeAuthor(ServerPlayer player, String author) {
+        try {
+            if (!player.hasPermissions(2)) throw new IllegalArgumentException("permission");
+            String name = BookSigning.clean(author);
+            if (name.isEmpty()) throw new IllegalArgumentException("author");
+            BookSession previous = SESSIONS.get(player.getUUID());
+            if (previous != null && previous.processingImage) throw new IllegalArgumentException("session");
+            ItemStack held = player.getMainHandItem();
+            if (!BookItems.supported(held)) throw new IllegalArgumentException("session");
+            BookStore storage = storage(player.server);
+            UUID id = identify(player, held, storage, null);
+            BookDocument document = storage.read(id);
+            document.author = name;
+            document.revision++;
+            storage.write(id, document);
+            if (document.signed) player.getInventory().setItem(player.getInventory().selected, BookItems.sign(held, id, document));
+            markChanged(player, null);
+            open(player, player.getInventory().selected, null, true);
+        } catch (Exception exception) {
+            player.displayClientMessage(Component.translatable("books.error." + reason(exception)), false);
+        }
+    }
+
+    private static boolean canEdit(ServerPlayer player, BookSession session) {
+        if (session.administrative) return player.hasPermissions(2);
+        return !session.document.signed && stack(player, session.slot, session.lectern).is(Items.WRITABLE_BOOK);
     }
 
     private static ItemStack stack(ServerPlayer player, int slot, BlockPos position) {
@@ -138,8 +173,7 @@ public final class BookServer {
         if (session == null || !session.token.equals(packet.session())) return;
         BookNetwork.Result result = BookNetwork.Result.valueOf(packet.kind().name());
         try {
-            if (!valid(player, session) || session.document.signed || session.processingImage
-                    || !stack(player, session.slot, session.lectern).is(Items.WRITABLE_BOOK)) {
+            if (!valid(player, session) || !canEdit(player, session) || session.processingImage) {
                 throw new IllegalArgumentException("session");
             }
             long now = System.currentTimeMillis();
@@ -160,7 +194,7 @@ public final class BookServer {
     }
 
     private static void processImage(ServerPlayer player, BookSession session, byte[] bytes) {
-        if (session.uploadedImages.size() >= BookDocument.MAX_IMAGES) throw new IllegalArgumentException("images");
+        if (session.uploadedImages.size() >= BookDocument.MAX_IMAGES * 2) throw new IllegalArgumentException("images");
         session.processingImage = true;
         BookStore destination = store;
         try {
@@ -197,7 +231,7 @@ public final class BookServer {
     private static void save(ServerPlayer player, BookSession session, byte[] bytes, boolean sign) throws IOException {
         BookDocument next = BookDocument.parse(bytes);
         BookDocument existing = store.read(session.book);
-        if (existing.signed || existing.revision != next.revision || session.document.revision != next.revision) {
+        if ((existing.signed && !session.administrative) || existing.revision != next.revision || session.document.revision != next.revision) {
             throw new IllegalArgumentException("conflict");
         }
         for (String hash : next.images()) {
@@ -206,13 +240,14 @@ public final class BookServer {
             }
         }
         next.title = next.title.strip();
-        if (sign && next.title.isEmpty()) throw new IllegalArgumentException("title");
-        next.signed = sign;
-        next.author = sign ? player.getGameProfile().getName() : "";
+        if ((sign || existing.signed) && next.title.isEmpty()) throw new IllegalArgumentException("title");
+        next.signed = existing.signed || sign;
+        next.author = BookSigning.author(existing.author, next.author, player.getGameProfile().getName(),
+                session.administrative && player.hasPermissions(2), next.signed);
         next.revision = existing.revision + 1;
         store.write(session.book, next);
         session.document = next;
-        if (sign) {
+        if (next.signed) {
             ItemStack signed = BookItems.sign(stack(player, session.slot, session.lectern), session.book, next);
             if (session.lectern == null) player.getInventory().setItem(session.slot, signed);
             else ((LecternBlockEntity) player.level().getBlockEntity(session.lectern)).setBook(signed);
@@ -270,7 +305,7 @@ public final class BookServer {
     }
 
     private static void reply(ServerPlayer player, BookSession session, BookNetwork.Result result, boolean success, String message) {
-        PacketDistributor.sendToPlayer(player, new BookNetwork.Reply(session.token, result, session.document.revision, success, message));
+        PacketDistributor.sendToPlayer(player, new BookNetwork.Reply(session.token, result, session.document.revision, success, message, session.document.author));
     }
 
     private static String reason(Exception exception) {

@@ -12,7 +12,7 @@ import team.civitatum.books.document.PngImage;
 import team.civitatum.books.network.BookNetwork;
 
 final class BookImages {
-    record Image(ResourceLocation texture, int width, int height) {}
+    record Image(ResourceLocation texture, int width, int height, byte[] png) {}
     private final Map<String, Image> images = new HashMap<>();
 
     Image get(String hash) {
@@ -31,7 +31,13 @@ final class BookImages {
         int width = pixels.getWidth();
         int height = pixels.getHeight();
         ResourceLocation texture = Minecraft.getInstance().getTextureManager().register("civitatum_book", new DynamicTexture(pixels));
-        images.put(packet.hash(), new Image(texture, width, height));
+        images.put(packet.hash(), new Image(texture, width, height, packet.data().clone()));
+    }
+
+    Map<String, byte[]> snapshot() {
+        Map<String, byte[]> result = new HashMap<>();
+        images.forEach((hash, image) -> result.put(hash, image.png.clone()));
+        return Map.copyOf(result);
     }
 
     void close() {
