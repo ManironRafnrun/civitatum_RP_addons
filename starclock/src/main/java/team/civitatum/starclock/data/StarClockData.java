@@ -31,7 +31,7 @@ public final class StarClockData extends SavedData {
                 new SavedData.Factory<>(StarClockData::new, StarClockData::load), "civitatum_starclock");
     }
 
-    private static StarClockData load(CompoundTag tag, HolderLookup.Provider registries) {
+    public static StarClockData load(CompoundTag tag, HolderLookup.Provider registries) {
         StarClockData data = new StarClockData();
         data.lastRitual = tag.contains("LastRitual") ? tag.getLong("LastRitual") : -1L;
         data.read(tag, "Pending", PendingPrediction.class).forEach(value -> data.pending.put(value.id(), value));

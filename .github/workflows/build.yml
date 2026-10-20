@@ -24,6 +24,10 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
+      - name: Проверить Starclock на тестовом сервере NeoForge
+        if: hashFiles('starclock/src/gameTest/**/*.java') != ''
+        run: ./gradlew :starclock:runGameTestServer
+
       - name: Сохранить Starclock и результаты проверки
         if: success() && hashFiles('starclock/build/libs/*.jar') != ''
         uses: actions/upload-artifact@v4
@@ -34,5 +38,6 @@ jobs:
             starclock/build/generated/starclockResources/
             starclock/build/reports/tests/test/
             starclock/build/test-results/test/
+            starclock/build/gameTestRun/logs/
           if-no-files-found: error
           retention-days: 30

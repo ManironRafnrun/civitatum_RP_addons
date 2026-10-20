@@ -16,10 +16,22 @@ dependencies {
 // Скрипты доступны отдельному набору tools и не включаются в jar мода.
 sourceSets {
     tools { resources.srcDirs = ['tools'] }
+    gameTest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
 }
 
 neoForge {
+    mods {
+        civitatum_starclock { sourceSet sourceSets.gameTest }
+    }
     runs {
+        gameTestServer {
+            type = 'gameTestServer'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'civitatum_starclock'
+            gameDirectory = layout.buildDirectory.dir('gameTestRun')
+        }
         client { client() }
         server { server(); programArgument '--nogui' }
     }
@@ -72,3 +84,15 @@ tasks.named('test') {
     systemProperty 'starclock.projectDir', projectDir.absolutePath
     systemProperty 'starclock.generatedResources', generatedResources.get().asFile.absolutePath
 }
+
+
+def generatedGameTestResources = layout.buildDirectory.dir('generated/starclockGameTestResources')
+tasks.register('generateGameTestResources', Exec) {
+    dependsOn 'createTextureEnvironment'
+    inputs.file('tools/generate_test_structure.py')
+    outputs.dir(generatedGameTestResources)
+    commandLine venvPython.get().asFile.absolutePath, file('tools/generate_test_structure.py').absolutePath,
+            '--output', generatedGameTestResources.get().asFile.absolutePath
+}
+sourceSets.gameTest.resources.srcDir(generatedGameTestResources)
+tasks.named('processGameTestResources') { dependsOn 'generateGameTestResources' }
