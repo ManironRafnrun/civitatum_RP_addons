@@ -29,17 +29,24 @@ def pythonHome = layout.buildDirectory.dir('texture-python')
 def generatedResources = layout.buildDirectory.dir('generated/starclockResources')
 def venvPython = pythonHome.map { it.file(windows ? 'Scripts/python.exe' : 'bin/python') }
 
-tasks.register('prepareTextureTools') {
+tasks.register('createTextureEnvironment', Exec) {
     group = 'tools'
-    description = 'Подготавливает Python и Pillow для генерации текстур.'
+    description = 'Создаёт отдельное окружение Python для генераторов.'
+    outputs.file(venvPython)
+    commandLine pythonCommand, '-m', 'venv', pythonHome.get().asFile.absolutePath
+}
+
+tasks.register('prepareTextureTools', Exec) {
+    group = 'tools'
+    description = 'Устанавливает закреплённую версию Pillow в окружение генераторов.'
+    dependsOn 'createTextureEnvironment'
     inputs.file('tools/requirements.txt')
-    outputs.dir(pythonHome)
+    def marker = pythonHome.map { it.file('pillow.ready') }
+    outputs.file(marker)
+    commandLine venvPython.get().asFile.absolutePath, '-m', 'pip', 'install',
+            '--disable-pip-version-check', '-r', file('tools/requirements.txt').absolutePath
     doLast {
-        exec { commandLine pythonCommand, '-m', 'venv', pythonHome.get().asFile.absolutePath }
-        exec {
-            commandLine venvPython.get().asFile.absolutePath, '-m', 'pip', 'install',
-                    '--disable-pip-version-check', '-r', file('tools/requirements.txt').absolutePath
-        }
+        marker.get().asFile.text = file('tools/requirements.txt').getText('UTF-8')
     }
 }
 
