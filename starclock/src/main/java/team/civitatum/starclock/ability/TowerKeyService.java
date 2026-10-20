@@ -35,8 +35,10 @@ public final class TowerKeyService {
     }
 
     public static void sync(ServerPlayer player) {
-        PacketDistributor.sendToPlayer(player, new TowerKeyStatePayload(
-                StarClockData.get(player.server).towerKeyCharges(player.getUUID())));
+        if (player.connection != null && player.connection.hasChannel(TowerKeyStatePayload.TYPE)) {
+            PacketDistributor.sendToPlayer(player, new TowerKeyStatePayload(
+                    StarClockData.get(player.server).towerKeyCharges(player.getUUID())));
+        }
     }
 
     public static void cast(ServerPlayer player) {
@@ -65,8 +67,8 @@ public final class TowerKeyService {
             failed(player);
             return;
         }
-        if (!player.mayBuild() || !level.mayInteract(player, pos)
-                || !player.mayUseItemAt(pos, hit.getDirection(), player.getMainHandItem())) {
+        // Открывание двери разрешено и в приключенческом режиме; права проверяются как взаимодействие.
+        if (!level.mayInteract(player, pos)) {
             failed(player);
             return;
         }

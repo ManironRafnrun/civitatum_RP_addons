@@ -110,5 +110,55 @@ public final class StarclockGameTests {
         });
     }
 
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void towerKeyOpensExactlyFiveTimes(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var player = FakePlayerFactory.get(level,
+                new com.mojang.authlib.GameProfile(UUID.randomUUID(), "StarclockKeyTest"));
+        player.setGameMode(net.minecraft.world.level.GameType.ADVENTURE);
+        var pos = helper.absolutePos(new net.minecraft.core.BlockPos(2, 1, 3));
+        level.setBlock(pos.below(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 3);
+        var lower = net.minecraft.world.level.block.Blocks.IRON_DOOR.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.DoorBlock.FACING, net.minecraft.core.Direction.NORTH)
+                .setValue(net.minecraft.world.level.block.DoorBlock.HALF,
+                        net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER);
+        level.setBlock(pos, lower, 2);
+        level.setBlock(pos.above(), lower.setValue(net.minecraft.world.level.block.DoorBlock.HALF,
+                net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER), 2);
+        player.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() - 2.5, 180, 0);
+        var data = StarClockData.get(level.getServer());
+        data.grantTowerKey(player.getUUID());
+        team.civitatum.starclock.ability.TowerKeyService.cast(player);
+        helper.assertTrue(data.towerKeyCharges(player.getUUID()) == 5, "Промах израсходовал заряд");
+        player.setYRot(0);
+        helper.runAfterDelay(6, () -> {
+            var door = (net.minecraft.world.level.block.DoorBlock) level.getBlockState(pos).getBlock();
+            door.setOpen(player, level, level.getBlockState(pos), pos, true);
+            team.civitatum.starclock.ability.TowerKeyService.cast(player);
+            helper.assertTrue(data.towerKeyCharges(player.getUUID()) == 5, "Открытая дверь израсходовала заряд");
+            door.setOpen(player, level, level.getBlockState(pos), pos, false);
+        });
+        for (int i = 0; i < 5; i++) {
+            int completed = i + 1;
+            helper.runAfterDelay(12 + i * 6, () -> {
+                team.civitatum.starclock.ability.TowerKeyService.cast(player);
+                helper.assertTrue(level.getBlockState(pos).getValue(net.minecraft.world.level.block.DoorBlock.OPEN),
+                        "Способность не открыла дверь");
+                helper.assertTrue(data.towerKeyCharges(player.getUUID()) == 5 - completed,
+                        "Заряд израсходован неверно");
+                ((net.minecraft.world.level.block.DoorBlock) level.getBlockState(pos).getBlock())
+                        .setOpen(player, level, level.getBlockState(pos), pos, false);
+            });
+        }
+        helper.runAfterDelay(42, () -> {
+            team.civitatum.starclock.ability.TowerKeyService.cast(player);
+            helper.assertTrue(!level.getBlockState(pos).getValue(net.minecraft.world.level.block.DoorBlock.OPEN),
+                    "Исчерпанная способность открыла дверь");
+            helper.assertTrue(data.towerKeyCharges(player.getUUID()) == 0, "Запас восстановился сам");
+            helper.succeed();
+        });
+    }
+
     private StarclockGameTests() {}
 }
