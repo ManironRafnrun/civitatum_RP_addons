@@ -16,6 +16,7 @@ final class RitualState {
     final long preparationStartedAt;
     boolean preparationFinished;
     long drawingStartedAt = -1L;
+    long readingSeed;
 
     RitualState(UUID player, InteractionHand hand, ItemStack stack, ToolKind kind, ToolTier tier, long now) {
         this.player = player;

@@ -55,6 +55,34 @@ public final class StarclockGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
+    public static void drawingPacketsRoundTrip(GameTestHelper helper) {
+        var session = UUID.randomUUID();
+        var hand = net.minecraft.world.InteractionHand.OFF_HAND;
+        var kind = team.civitatum.starclock.item.ToolKind.DECK;
+        var tier = team.civitatum.starclock.item.ToolTier.III;
+        var preparation = new team.civitatum.starclock.network.RitualStatePayload(
+                session, hand, kind, tier, false, 123, null);
+        var packets = new java.util.ArrayList<team.civitatum.starclock.network.RitualStatePayload>();
+        packets.add(preparation);
+        for (var sign : Constellation.values()) packets.add(
+                new team.civitatum.starclock.network.RitualStatePayload(session, hand, kind, tier, true, 163, sign));
+        for (var packet : packets) {
+            var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(
+                    io.netty.buffer.Unpooled.buffer(), helper.getLevel().registryAccess());
+            try {
+                team.civitatum.starclock.network.RitualStatePayload.CODEC.encode(buffer, packet);
+                var decoded = team.civitatum.starclock.network.RitualStatePayload.CODEC.decode(buffer);
+                helper.assertTrue(decoded.equals(packet), "Пакет фазы изменился в сети");
+                helper.assertTrue(buffer.readableBytes() == 0, "В пакете остались лишние данные");
+            } finally {
+                buffer.release();
+            }
+        }
+        helper.assertTrue(preparation.figure() == null, "Подготовка раскрыла фигуру");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
     public static void registriesAndOffers(GameTestHelper helper) {
         var player = FakePlayerFactory.getMinecraft(helper.getLevel());
         for (var sign : Constellation.values()) {

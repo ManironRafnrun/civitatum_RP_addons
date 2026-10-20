@@ -16,6 +16,10 @@ REPORTS = PROJECT / "build" / "clientCheckReports"
 
 
 def check(mode):
+    options = RUN / "options.txt"
+    content = options.read_text(encoding="utf-8")
+    options.write_text(content.replace("lang:ru_ru", "lang:en_us") if mode == "with-punchy"
+                       else content.replace("lang:en_us", "lang:ru_ru"), encoding="utf-8")
     report = RUN / "starclock-client-check.json"
     report.unlink(missing_ok=True)
     shutil.rmtree(RUN / "starclock-frames", ignore_errors=True)

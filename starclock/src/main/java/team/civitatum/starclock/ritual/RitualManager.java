@@ -89,7 +89,7 @@ public final class RitualManager {
         PacketDistributor.sendToPlayer(player, new RitualStatePayload(active.session, active.hand,
                 active.kind, active.tier, active.isDrawing(),
                 active.isDrawing() ? active.drawingStartedAt : active.preparationStartedAt,
-                active.isDrawing() ? Constellation.draw(new Random(StarClockData.get(player.server).readingSeed())) : null));
+                active.isDrawing() ? Constellation.draw(new Random(active.readingSeed)) : null));
     }
 
     private static void cancel(ServerPlayer player, String reason) {
@@ -121,6 +121,7 @@ public final class RitualManager {
                 return;
             }
             if (active.preparationFinished && now - active.preparationStartedAt >= RitualRules.PREPARATION_TICKS) {
+                active.readingSeed = StarClockData.get(server).readingSeed();
                 active.drawingStartedAt = now;
                 sendState(player);
             }
@@ -132,7 +133,7 @@ public final class RitualManager {
 
     private static void finish(ServerPlayer player, long now) {
         RitualState finished = active;
-        Random random = new Random(StarClockData.get(player.server).readingSeed());
+        Random random = new Random(finished.readingSeed);
         Constellation sign = Constellation.draw(random);
         var orientation = sign.drawOrientation(random);
         PredictionPlan plan;

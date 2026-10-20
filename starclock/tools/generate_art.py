@@ -57,7 +57,7 @@ def figure(source):
                     if 0 <= nx < small.width and 0 <= ny < small.height and pixels[nx, ny] and (nx, ny) not in visited:
                         visited.add((nx, ny))
                         todo.append((nx, ny))
-            if len(component) >= 35:
+            if len(component) >= 100:
                 regions.extend(component)
     if not regions:
         raise ValueError("В исходнике не найдена фигура")

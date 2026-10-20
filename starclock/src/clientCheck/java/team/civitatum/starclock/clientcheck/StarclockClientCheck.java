@@ -48,6 +48,7 @@ public final class StarclockClientCheck {
     private static int cancellationStage;
     private static long cancellationStarted;
     private static boolean cancellationPassed;
+    private static boolean serverCompletionPassed;
     private static UUID session;
     private static StarToolItem tool;
     private static InteractionHand hand;
@@ -114,6 +115,7 @@ public final class StarclockClientCheck {
                 completed.add(label());
                 CivitatumStarclock.LOG.info("CLIENT_CHECK_CASE_OK {}", label());
                 beginNext(mc);
+                return;
             }
             if (!captured && !drawing && mc.level.getGameTime() - phaseStart >= 18) {
                 captured = true;
@@ -227,7 +229,7 @@ public final class StarclockClientCheck {
 
     private static void checkCancellation(Minecraft mc) throws Exception {
         long elapsed = mc.level.getGameTime() - cancellationStarted;
-        require(elapsed < 60, "Сервер не подтвердил запуск/отмену настоящего обряда");
+        require(elapsed < (cancellationStage >= 4 ? 180 : 60), "Сервер не подтвердил фазу настоящего обряда");
         if (cancellationStage == 1 && RitualClientState.isActive()) {
             cancellationStage = 2;
             checkPunchy(false);
@@ -245,6 +247,21 @@ public final class StarclockClientCheck {
             checkPunchy(true);
             cancellationPassed = true;
             CivitatumStarclock.LOG.info("CLIENT_CHECK_CANCEL_OK: сервер подтвердил отпускание кнопки");
+            cancellationStarted = mc.level.getGameTime();
+            cancellationStage = 4;
+            mc.options.keyUse.setDown(true);
+            mc.gameMode.useItem(mc.player, hand);
+        } else if (cancellationStage == 4 && RitualClientState.isActive()) {
+            cancellationStage = 5;
+        } else if (cancellationStage == 5 && RitualClientState.current() != null
+                && RitualClientState.current().drawing()) {
+            require(mc.screen instanceof team.civitatum.starclock.client.ConstellationScreen,
+                    "Сервер не открыл экран фигуры");
+            cancellationStage = 6;
+        } else if (cancellationStage == 6 && !RitualClientState.isActive()
+                && mc.screen instanceof team.civitatum.starclock.client.CardScreen) {
+            serverCompletionPassed = true;
+            CivitatumStarclock.LOG.info("CLIENT_CHECK_SERVER_COMPLETE_OK: сервер прошёл подготовку, фигуру и карту");
             finish(mc);
         }
     }
@@ -280,9 +297,10 @@ public final class StarclockClientCheck {
             result.put("completed", completed);
             result.put("failures", failures);
             result.put("cancellation", cancellationPassed);
+            result.put("serverCompletion", serverCompletionPassed);
             result.put("audio", audioChecked);
             result.put("screens", screenCases);
-            result.put("success", failures.isEmpty() && completed.size() == 24 && cancellationPassed && audioChecked && screenCases == 24);
+            result.put("success", failures.isEmpty() && completed.size() == 24 && cancellationPassed && serverCompletionPassed && audioChecked && screenCases == 24);
             Files.writeString(report, new GsonBuilder().setPrettyPrinting().create().toJson(result) + "\n");
             CivitatumStarclock.LOG.info("CLIENT_CHECK_FINISHED {} проверок, {} ошибок", completed.size(), failures.size());
         } catch (Exception error) {
