@@ -1,5 +1,8 @@
 """Запускает настоящий клиент под Xvfb с Punchy и без него и проверяет отчёты."""
+import base64
+import io
 import json
+from PIL import Image
 import os
 import shutil
 import subprocess
@@ -36,6 +39,17 @@ def check(mode):
     if content["punchy"] != expected_punchy:
         raise RuntimeError(f"Неверный набор модов для {mode}")
     print(f"CLIENT_CHECK_OK {mode}: 24 инструмента/руки", flush=True)
+    if mode == "without-punchy":
+        sheet = Image.new("RGB", (640, 428), "#0B1020")
+        for index, case in enumerate((0, 6, 12, 18)):
+            source = RUN / "screenshots" / f"starclock-{case}.png"
+            with Image.open(source) as screenshot:
+                panel = screenshot.convert("RGB").resize((320, 214), Image.Resampling.NEAREST)
+                sheet.paste(panel, ((index % 2) * 320, (index // 2) * 214))
+        sheet.save(destination / "preview.png", compress_level=9)
+        payload = io.BytesIO()
+        sheet.save(payload, format="PNG", compress_level=9)
+        print("CLIENT_CHECK_PREVIEW_BASE64 " + base64.b64encode(payload.getvalue()).decode("ascii"), flush=True)
 
 
 def main():

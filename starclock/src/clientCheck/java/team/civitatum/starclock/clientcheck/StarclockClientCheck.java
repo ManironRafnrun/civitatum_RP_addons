@@ -41,6 +41,9 @@ public final class StarclockClientCheck {
     private static boolean drawing;
     private static boolean captured;
     private static boolean finished;
+    private static int cancellationStage;
+    private static long cancellationStarted;
+    private static boolean cancellationPassed;
     private static UUID session;
     private static StarToolItem tool;
     private static InteractionHand hand;
@@ -61,6 +64,10 @@ public final class StarclockClientCheck {
             if (waitTicks > 0) {
                 waitTicks--;
                 if (waitTicks == 0) startAnimation(mc);
+                return;
+            }
+            if (current == 24) {
+                checkCancellation(mc);
                 return;
             }
             if (!drawing && mc.level.getGameTime() - phaseStart >= 40) {
@@ -96,11 +103,11 @@ public final class StarclockClientCheck {
 
     private static void beginNext(Minecraft mc) {
         current++;
-        if (current >= ModItems.TOOLS.size() * 2) {
+        if (current > ModItems.TOOLS.size() * 2) {
             finish(mc);
             return;
         }
-        tool = ModItems.TOOLS.get(current / 2).get();
+        tool = ModItems.TOOLS.get(current == 24 ? 0 : current / 2).get();
         hand = current % 2 == 0 ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
         mc.options.mainHand().set(current / 4 % 2 == 0 ? HumanoidArm.RIGHT : HumanoidArm.LEFT);
         mc.player.setMainArm(mc.options.mainHand().get());
@@ -129,6 +136,7 @@ public final class StarclockClientCheck {
             player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
             player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
             player.setItemInHand(selectedHand, new ItemStack(next));
+            if (current == 24) team.civitatum.starclock.data.StarClockData.get(server).resetCooldown();
             server.overworld().setDayTime(15000);
             server.overworld().setWeatherParameters(12000, 0, false, false);
         });
@@ -137,6 +145,13 @@ public final class StarclockClientCheck {
     private static void startAnimation(Minecraft mc) throws Exception {
         require(mc.player.getItemInHand(hand).getItem() == tool, "Предмет не синхронизирован");
         checkPunchy(true);
+        if (current == 24) {
+            cancellationStarted = mc.level.getGameTime();
+            cancellationStage = 1;
+            mc.options.keyUse.setDown(true);
+            mc.gameMode.useItem(mc.player, hand);
+            return;
+        }
         session = UUID.randomUUID();
         phaseStart = mc.level.getGameTime();
         RitualClientState.accept(new RitualStatePayload(session, hand, tool.kind(), tool.tier(), false, phaseStart));
@@ -153,6 +168,30 @@ public final class StarclockClientCheck {
         scroll.setAccessible(true);
         scroll.invoke(mc.mouseHandler, mc.getWindow().getWindow(), 0.0, 1.0);
         require(selected == mc.player.getInventory().selected, "Колесо переключило слот");
+    }
+
+    private static void checkCancellation(Minecraft mc) throws Exception {
+        long elapsed = mc.level.getGameTime() - cancellationStarted;
+        require(elapsed < 60, "Сервер не подтвердил запуск/отмену настоящего обряда");
+        if (cancellationStage == 1 && RitualClientState.isActive()) {
+            cancellationStage = 2;
+            checkPunchy(false);
+        }
+        if (cancellationStage == 2 && elapsed >= 10) {
+            Method press = mc.mouseHandler.getClass().getDeclaredMethod("onPress",
+                    long.class, int.class, int.class, int.class);
+            press.setAccessible(true);
+            press.invoke(mc.mouseHandler, mc.getWindow().getWindow(),
+                    org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT, org.lwjgl.glfw.GLFW.GLFW_RELEASE, 0);
+            require(!mc.options.keyUse.isDown(), "Миксин поглотил отпускание кнопки");
+            cancellationStage = 3;
+        } else if (cancellationStage == 3 && !RitualClientState.isActive()) {
+            require(!mc.player.isUsingItem(), "После отмены предмет используется");
+            checkPunchy(true);
+            cancellationPassed = true;
+            CivitatumStarclock.LOG.info("CLIENT_CHECK_CANCEL_OK: сервер подтвердил отпускание кнопки");
+            finish(mc);
+        }
     }
 
     @SubscribeEvent
@@ -178,13 +217,15 @@ public final class StarclockClientCheck {
     private static void finish(Minecraft mc) {
         finished = true;
         RitualClientState.clear();
+        mc.options.keyUse.setDown(false);
         try {
             Path report = mc.gameDirectory.toPath().resolve("starclock-client-check.json");
             var result = new java.util.LinkedHashMap<String, Object>();
             result.put("punchy", ModList.get().isLoaded("punchy"));
             result.put("completed", completed);
             result.put("failures", failures);
-            result.put("success", failures.isEmpty() && completed.size() == 24);
+            result.put("cancellation", cancellationPassed);
+            result.put("success", failures.isEmpty() && completed.size() == 24 && cancellationPassed);
             Files.writeString(report, new GsonBuilder().setPrettyPrinting().create().toJson(result) + "\n");
             CivitatumStarclock.LOG.info("CLIENT_CHECK_FINISHED {} проверок, {} ошибок", completed.size(), failures.size());
         } catch (Exception error) {

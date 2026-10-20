@@ -2,7 +2,6 @@ package team.civitatum.starclock.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -51,7 +50,6 @@ public final class StarToolRenderer extends GeoItemRenderer<StarToolItem> {
                 RenderUtil.translateToPivotPoint(pose, bone);
                 // Нормальная матрица остаётся правильной и при левой основной руке.
                 // Кисть ванильной руки находится в 12 пикселях от плеча.
-                pose.mulPose(Axis.ZP.rotationDegrees(180));
                 pose.translate(right ? 0.375 : -0.375, -0.75, 0);
                 if (mirrored) pose.scale(-1, 1, 1);
                 boolean actualRight = right != mirrored;
@@ -60,7 +58,8 @@ public final class StarToolRenderer extends GeoItemRenderer<StarToolItem> {
                 pose.popPose();
             }
         }
+        int boneLight = bone.getName().equals("glint") ? 0xF000F0 : light;
         super.renderRecursively(pose, item, bone, renderType, buffers, buffer, rerender,
-                partialTick, light, overlay, colour);
+                partialTick, boneLight, overlay, colour);
     }
 }

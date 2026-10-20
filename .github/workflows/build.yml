@@ -35,7 +35,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libasound2t64
 
       - name: Проверить рендер и совместимость с Punchy
-        run: python3 starclock/tools/run_client_checks.py
+        run: starclock/build/texture-python/bin/python starclock/tools/run_client_checks.py
 
       - name: Сохранить Starclock и результаты проверки
         if: always() && hashFiles('starclock/build/libs/*.jar') != ''
