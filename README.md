@@ -7,7 +7,7 @@
 | [inventory](inventory/) | Civitatum Inventory | `civitatum_inventory` | 0.4.1 | `civitatum-inventory-0.4.1.jar` |
 | [character-creation](character-creation/) | Civitatum Character Creation | `civitatum` | 0.4.2 | `civitatum-character-creation-0.4.2.jar` |
 | [couple-interactions](couple-interactions/) | Civitatum Couple Interactions | `civitatum_couple` | 0.2.0-alpha.1 | `civitatum-couple-interactions-0.2.0-alpha.1.jar` |
-| [books](books/) | Civitatum Books | `civitatum_books` | 0.2.0 | `civitatum-books-0.2.0.jar` |
+| [books](books/) | Civitatum Books | `civitatum_books` | 0.2.0 | `civitatum-books-0.3.0.jar` |
 | [menu](menu/) | Civitatum Menu | `civitatum_menu` | 0.1.0 | `civitatum-menu-0.1.0.jar` |
 
 Описание, управление и сборка каждого мода — в README его модуля. Все моды распространяются под лицензией MIT ([LICENSE.txt](LICENSE.txt)).

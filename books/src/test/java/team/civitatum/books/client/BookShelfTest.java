@@ -26,7 +26,7 @@ class BookShelfTest {
         String hash = PngImage.hash(png);
         BookDocument document = document();
         document.pages.getFirst().image = hash;
-        document.pages.getFirst().setStyle(0, 4, BookPage.BOLD | BookPage.INK);
+        document.pages.getFirst().format(0, 4, BookPage.BOLD, null);
         BookShelf shelf = new BookShelf(directory, player, "server:one");
         shelf.remember(book, document);
         shelf.image(hash, png);
