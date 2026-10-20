@@ -3,6 +3,7 @@
 import argparse
 from pathlib import Path
 from PIL import Image, ImageDraw
+from generate_art import generate as generate_art
 
 NIGHT = "#0B1020"
 GOLD = "#E3C07B"
@@ -185,4 +186,6 @@ def generate(output):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Генерация оригинальных текстур Starclock")
     parser.add_argument("--output", required=True, type=Path)
-    generate(parser.parse_args().output)
+    args = parser.parse_args()
+    generate(args.output)
+    generate_art(args.output, Path(__file__).resolve().parents[1] / "starsigns.zip")

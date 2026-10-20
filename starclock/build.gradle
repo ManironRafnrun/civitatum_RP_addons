@@ -81,7 +81,7 @@ tasks.register('generateTextures', Exec) {
     group = 'tools'
     description = 'Детерминированно рисует спрайты и атласы моделей Starclock.'
     dependsOn 'prepareTextureTools'
-    inputs.file('tools/generate_textures.py')
+    inputs.files('tools/generate_textures.py', 'tools/generate_art.py', 'starsigns.zip')
     inputs.file('tools/requirements.txt')
     outputs.dir(generatedResources)
     doFirst {

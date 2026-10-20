@@ -5,6 +5,7 @@ on:
     paths:
       - 'starclock/starsigns.zip'
       - 'starclock/tools/inspect_constellations.py'
+      - 'starclock/tools/generate_art.py'
       - '.github/workflows/inspect-constellations.yml'
 
 jobs:
@@ -18,6 +19,8 @@ jobs:
           /tmp/starclock-art/bin/pip install Pillow==11.3.0
       - name: Просмотреть содержимое архива
         run: /tmp/starclock-art/bin/python starclock/tools/inspect_constellations.py --archive starclock/starsigns.zip --output starclock/build/artInspection
+      - name: Проверить подготовленные фигуры
+        run: /tmp/starclock-art/bin/python starclock/tools/generate_art.py --archive starclock/starsigns.zip --output starclock/build/artInspection/generated --preview starclock/build/artInspection/figures.png
       - uses: actions/upload-artifact@v4
         with:
           name: starclock-original-art
