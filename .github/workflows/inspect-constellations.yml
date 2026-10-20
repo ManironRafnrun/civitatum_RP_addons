@@ -1,0 +1,24 @@
+name: Inspect constellation originals
+
+on:
+  push:
+    paths:
+      - 'starclock/starsigns.zip'
+      - 'starclock/tools/inspect_constellations.py'
+      - '.github/workflows/inspect-constellations.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Подготовить просмотр оригиналов
+        run: |
+          python3 -m venv /tmp/starclock-art
+          /tmp/starclock-art/bin/pip install Pillow==11.3.0
+      - name: Просмотреть содержимое архива
+        run: /tmp/starclock-art/bin/python starclock/tools/inspect_constellations.py --archive starclock/starsigns.zip --output starclock/build/artInspection
+      - uses: actions/upload-artifact@v4
+        with:
+          name: starclock-original-art
+          path: starclock/build/artInspection/
