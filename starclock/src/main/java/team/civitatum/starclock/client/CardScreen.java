@@ -94,7 +94,9 @@ public final class CardScreen extends Screen {
             }
         }
         pose.popPose();
-        super.render(graphics, mouseX, mouseY, partialTick);
+        // Виджет остаётся зарегистрирован в Screen для ввода и навигации.
+        // Рисуем его после карты без позднего прохода фона базового экрана.
+        close.render(graphics, mouseX, mouseY, partialTick);
     }
 
     private int paragraph(GuiGraphics graphics, Component text, int x, int y, int availableWidth, int color) {
