@@ -3,6 +3,7 @@ package team.civitatum.starclock.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
@@ -24,11 +25,13 @@ public final class FirstPersonRitualRenderer {
                 : player.getMainArm().getOpposite()) == HumanoidArm.LEFT;
         renderer.setMirrored(left);
         pose.pushPose();
-        pose.translate(0, -0.38, -0.78);
+        pose.translate(0, -0.22, -0.78);
         pose.scale(left ? -0.9F : 0.9F, 0.9F, 0.9F);
+        // Магическое свечение сохраняет читаемость золота и рук в ясную ночь.
+        int ritualLight = LightTexture.pack(Math.max(10, LightTexture.block(light)), LightTexture.sky(light));
         try {
             renderer.renderByItem(stack, left ? ItemDisplayContext.FIRST_PERSON_LEFT_HAND
-                    : ItemDisplayContext.FIRST_PERSON_RIGHT_HAND, pose, buffers, light, OverlayTexture.NO_OVERLAY);
+                    : ItemDisplayContext.FIRST_PERSON_RIGHT_HAND, pose, buffers, ritualLight, OverlayTexture.NO_OVERLAY);
         } finally {
             pose.popPose();
         }

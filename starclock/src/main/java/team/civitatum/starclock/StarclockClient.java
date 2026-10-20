@@ -51,7 +51,7 @@ public final class StarclockClient {
         if (state == null || mc.player == null || mc.level == null) return;
         var graphics = event.getGuiGraphics();
         int center = graphics.guiWidth() / 2;
-        int top = graphics.guiHeight() - 82;
+        int top = 20;
         if (state.drawing()) graphics.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(), 0x990B1020);
         graphics.drawCenteredString(mc.font, Component.translatable(state.drawing()
                 ? "ui.civitatum_starclock.drawing" : "ui.civitatum_starclock.preparation"),

@@ -32,7 +32,7 @@ jobs:
         run: python3 starclock/tools/prepare_client_checks.py --project starclock
 
       - name: Подготовить графическое окружение
-        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libasound2t64
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libasound2t64 libflite1
 
       - name: Проверить рендер и совместимость с Punchy
         run: starclock/build/texture-python/bin/python starclock/tools/run_client_checks.py

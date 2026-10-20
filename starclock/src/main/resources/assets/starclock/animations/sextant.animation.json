@@ -250,6 +250,42 @@
               "easing": "easeInOutSine"
             }
           }
+        },
+        "alignment_ring": {
+          "rotation": {
+            "0.00": {
+              "vector": [
+                0,
+                0,
+                -30
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.75": {
+              "vector": [
+                0,
+                0,
+                -30
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.60": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
         }
       },
       "sound_effects": {

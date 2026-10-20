@@ -32,7 +32,7 @@ def prepare(root):
         shutil.rmtree(destination)
     shutil.copytree(world, destination)
     run.mkdir(parents=True, exist_ok=True)
-    (run / "options.txt").write_text("tutorialStep:none\nlang:ru_ru\nfov:0.0\nrenderDistance:2\nsimulationDistance:2\nmaxFps:60\n", encoding="utf-8")
+    (run / "options.txt").write_text("tutorialStep:none\nlang:ru_ru\nfov:0.0\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\n", encoding="utf-8")
     mods = run / "mods"
     mods.mkdir(exist_ok=True)
     manifest = []
