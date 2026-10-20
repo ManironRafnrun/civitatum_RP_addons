@@ -125,5 +125,13 @@
   "target.civitatum_starclock.nearby_undead": "Нежить рядом",
   "target.civitatum_starclock.nearby_wolf": "Ближайший волк",
   "target.civitatum_starclock.world": "Окружение",
-  "message.civitatum_starclock.configuration": "Неверные параметры Starclock. Сообщите администратору."
+  "message.civitatum_starclock.configuration": "Неверные параметры Starclock. Сообщите администратору.",
+  "subtitles.civitatum_starclock.shuffle": "Шорох карт",
+  "subtitles.civitatum_starclock.sextant_click": "Щелчок секстанта",
+  "subtitles.civitatum_starclock.water_pour": "Плеск воды",
+  "subtitles.civitatum_starclock.ring_hum": "Гул кольца",
+  "subtitles.civitatum_starclock.stars_reveal": "Звёздный перезвон",
+  "subtitles.civitatum_starclock.card_flip": "Переворот карты",
+  "subtitles.civitatum_starclock.omen_good": "Благоприятное предзнаменование",
+  "subtitles.civitatum_starclock.omen_bad": "Тревожное предзнаменование"
 }

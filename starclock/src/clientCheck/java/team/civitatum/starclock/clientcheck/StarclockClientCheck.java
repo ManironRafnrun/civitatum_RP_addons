@@ -41,6 +41,7 @@ public final class StarclockClientCheck {
     private static boolean drawing;
     private static boolean captured;
     private static boolean finished;
+    private static boolean audioChecked;
     private static int cancellationStage;
     private static long cancellationStarted;
     private static boolean cancellationPassed;
@@ -143,6 +144,15 @@ public final class StarclockClientCheck {
     }
 
     private static void startAnimation(Minecraft mc) throws Exception {
+        if (!audioChecked) {
+            for (var holder : team.civitatum.starclock.registry.ModSounds.ALL) {
+                var id = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.getKey(holder.get());
+                require(mc.getSoundManager().getSoundEvent(id) != null, "Не загружен звук: " + id);
+                team.civitatum.starclock.client.StarclockAudio.play(holder.get(), 0.15F);
+            }
+            audioChecked = true;
+            CivitatumStarclock.LOG.info("CLIENT_CHECK_AUDIO_OK: загружены восемь звуков");
+        }
         require(mc.player.getItemInHand(hand).getItem() == tool, "Предмет не синхронизирован");
         checkPunchy(true);
         if (current == 24) {
@@ -225,7 +235,8 @@ public final class StarclockClientCheck {
             result.put("completed", completed);
             result.put("failures", failures);
             result.put("cancellation", cancellationPassed);
-            result.put("success", failures.isEmpty() && completed.size() == 24 && cancellationPassed);
+            result.put("audio", audioChecked);
+            result.put("success", failures.isEmpty() && completed.size() == 24 && cancellationPassed && audioChecked);
             Files.writeString(report, new GsonBuilder().setPrettyPrinting().create().toJson(result) + "\n");
             CivitatumStarclock.LOG.info("CLIENT_CHECK_FINISHED {} проверок, {} ошибок", completed.size(), failures.size());
         } catch (Exception error) {

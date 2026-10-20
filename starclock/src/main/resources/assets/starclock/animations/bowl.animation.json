@@ -278,10 +278,10 @@
       },
       "sound_effects": {
         "0.30": {
-          "effect": "minecraft:item.bucket.empty"
+          "effect": "civitatum_starclock:water_pour"
         },
         "1.30": {
-          "effect": "minecraft:entity.fish.swim"
+          "effect": "civitatum_starclock:water_pour"
         }
       },
       "particle_effects": {

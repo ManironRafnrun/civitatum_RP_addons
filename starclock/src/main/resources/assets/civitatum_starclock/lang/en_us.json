@@ -125,5 +125,13 @@
   "target.civitatum_starclock.nearby_undead": "Nearby undead",
   "target.civitatum_starclock.nearby_wolf": "Nearest wolf",
   "target.civitatum_starclock.world": "Surroundings",
-  "message.civitatum_starclock.configuration": "Starclock settings are invalid. Contact the administrator."
+  "message.civitatum_starclock.configuration": "Starclock settings are invalid. Contact the administrator.",
+  "subtitles.civitatum_starclock.shuffle": "Cards shuffle",
+  "subtitles.civitatum_starclock.sextant_click": "Sextant clicks",
+  "subtitles.civitatum_starclock.water_pour": "Water pours",
+  "subtitles.civitatum_starclock.ring_hum": "Ring hums",
+  "subtitles.civitatum_starclock.stars_reveal": "Stars chime",
+  "subtitles.civitatum_starclock.card_flip": "Card turns",
+  "subtitles.civitatum_starclock.omen_good": "Favourable omen",
+  "subtitles.civitatum_starclock.omen_bad": "Ominous omen"
 }

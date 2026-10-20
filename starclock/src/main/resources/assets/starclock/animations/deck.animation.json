@@ -456,19 +456,19 @@
       },
       "sound_effects": {
         "0.25": {
-          "effect": "minecraft:item.book.page_turn"
+          "effect": "civitatum_starclock:shuffle"
         },
         "0.60": {
-          "effect": "minecraft:item.book.page_turn"
+          "effect": "civitatum_starclock:shuffle"
         },
         "1.00": {
-          "effect": "minecraft:item.book.page_turn"
+          "effect": "civitatum_starclock:shuffle"
         },
         "1.40": {
-          "effect": "minecraft:item.book.page_turn"
+          "effect": "civitatum_starclock:shuffle"
         },
         "1.70": {
-          "effect": "minecraft:item.book.put"
+          "effect": "civitatum_starclock:card_flip"
         }
       },
       "particle_effects": {

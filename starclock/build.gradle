@@ -65,7 +65,7 @@ tasks.register('createTextureEnvironment', Exec) {
 
 tasks.register('prepareTextureTools', Exec) {
     group = 'tools'
-    description = 'Устанавливает закреплённую версию Pillow в окружение генераторов.'
+    description = 'Устанавливает закреплённые зависимости генераторов.'
     dependsOn 'createTextureEnvironment'
     inputs.file('tools/requirements.txt')
     def marker = pythonHome.map { it.file('pillow.ready') }
@@ -109,3 +109,23 @@ tasks.register('generateGameTestResources', Exec) {
 }
 sourceSets.gameTest.resources.srcDir(generatedGameTestResources)
 tasks.named('processGameTestResources') { dependsOn 'generateGameTestResources' }
+
+def generatedAudio = layout.buildDirectory.dir('generated/starclockAudio')
+def audioReport = layout.buildDirectory.file('reports/starclock-audio.json')
+tasks.register('generateSounds', Exec) {
+    group = 'tools'
+    description = 'Синтезирует оригинальные звуки обряда и кодирует их в Ogg Vorbis.'
+    dependsOn 'prepareTextureTools'
+    inputs.file('tools/generate_sounds.py')
+    inputs.file('tools/requirements.txt')
+    outputs.dir(generatedAudio)
+    outputs.file(audioReport)
+    commandLine venvPython.get().asFile.absolutePath, file('tools/generate_sounds.py').absolutePath,
+            '--output', generatedAudio.get().asFile.absolutePath, '--report', audioReport.get().asFile.absolutePath
+}
+sourceSets.main.resources.srcDir(generatedAudio)
+tasks.named('processResources') { dependsOn 'generateSounds' }
+tasks.named('test') {
+    dependsOn 'generateSounds'
+    systemProperty 'starclock.generatedSounds', generatedAudio.get().asFile.absolutePath
+}

@@ -13,6 +13,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import team.civitatum.starclock.network.StarclockNetwork;
 import team.civitatum.starclock.registry.ModItems;
 import team.civitatum.starclock.registry.ModTabs;
+import team.civitatum.starclock.registry.ModSounds;
 import team.civitatum.starclock.ritual.RitualManager;
 
 @Mod(CivitatumStarclock.ID)
@@ -23,6 +24,7 @@ public final class CivitatumStarclock {
     public CivitatumStarclock(IEventBus bus, ModContainer container) {
         container.registerConfig(ModConfig.Type.SERVER, StarClockConfig.SPEC);
         ModItems.ITEMS.register(bus);
+        ModSounds.SOUNDS.register(bus);
         ModTabs.TABS.register(bus);
         bus.addListener(StarclockNetwork::register);
         NeoForge.EVENT_BUS.register(RitualManager.class);

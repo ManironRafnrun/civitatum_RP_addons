@@ -360,13 +360,13 @@
       },
       "sound_effects": {
         "0.40": {
-          "effect": "minecraft:block.amethyst_block.chime"
+          "effect": "civitatum_starclock:ring_hum"
         },
         "0.90": {
-          "effect": "minecraft:block.amethyst_block.chime"
+          "effect": "civitatum_starclock:ring_hum"
         },
         "1.40": {
-          "effect": "minecraft:block.amethyst_block.chime"
+          "effect": "civitatum_starclock:ring_hum"
         }
       },
       "particle_effects": {

@@ -290,13 +290,13 @@
       },
       "sound_effects": {
         "0.50": {
-          "effect": "minecraft:block.lever.click"
+          "effect": "civitatum_starclock:sextant_click"
         },
         "1.00": {
-          "effect": "minecraft:block.lever.click"
+          "effect": "civitatum_starclock:sextant_click"
         },
         "1.50": {
-          "effect": "minecraft:block.lever.click"
+          "effect": "civitatum_starclock:sextant_click"
         }
       },
       "particle_effects": {

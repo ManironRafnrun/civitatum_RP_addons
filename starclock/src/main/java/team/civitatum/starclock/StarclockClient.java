@@ -9,6 +9,7 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import team.civitatum.starclock.client.CardScreen;
 import team.civitatum.starclock.client.RitualClientState;
+import team.civitatum.starclock.client.StarclockAudio;
 import team.civitatum.starclock.network.CancelRitualPayload;
 import team.civitatum.starclock.network.RitualStatePayload;
 import team.civitatum.starclock.network.ShowCardPayload;
@@ -16,7 +17,11 @@ import team.civitatum.starclock.network.ShowCardPayload;
 @EventBusSubscriber(modid = CivitatumStarclock.ID, value = Dist.CLIENT)
 public final class StarclockClient {
     public static void state(RitualStatePayload packet) {
+        var previous = RitualClientState.current();
+        boolean firstDrawing = packet.drawing() && (previous == null
+                || !previous.session().equals(packet.session()) || !previous.drawing());
         RitualClientState.accept(packet);
+        if (firstDrawing) StarclockAudio.revealStars();
     }
 
     public static void card(ShowCardPayload packet) {
@@ -24,6 +29,7 @@ public final class StarclockClient {
         if (state == null || !state.session().equals(packet.session())) return;
         RitualClientState.clear();
         Minecraft.getInstance().setScreen(new CardScreen(packet));
+        StarclockAudio.revealCard(packet);
     }
 
     public static void cancel(CancelRitualPayload packet) {

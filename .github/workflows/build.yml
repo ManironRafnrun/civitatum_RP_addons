@@ -24,6 +24,9 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
+      - name: Проверить воспроизводимость и декодирование звуков
+        run: starclock/build/texture-python/bin/python starclock/tools/test_sounds.py
+
       - name: Проверить Starclock на тестовом сервере NeoForge
         if: hashFiles('starclock/src/gameTest/**/*.java') != ''
         run: ./gradlew :starclock:runGameTestServer
@@ -45,6 +48,8 @@ jobs:
           path: |
             starclock/build/libs/*.jar
             starclock/build/generated/starclockResources/
+            starclock/build/generated/starclockAudio/
+            starclock/build/reports/starclock-audio.json
             starclock/build/reports/tests/test/
             starclock/build/test-results/test/
             starclock/build/gameTestRun/logs/
