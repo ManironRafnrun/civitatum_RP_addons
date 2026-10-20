@@ -8,6 +8,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly project(':inventory')
     implementation 'software.bernie.geckolib:geckolib-neoforge-1.21.1:4.8.4'
     testImplementation 'com.google.code.gson:gson:2.10.1'
 }

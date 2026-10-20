@@ -1,0 +1,58 @@
+{
+  "id": "starclock:spear_upright",
+  "sign": "spear",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.spear_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:iron_golem",
+            "count": 1,
+            "distance": 6,
+            "mode": "ally",
+            "lifetime": 300
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/spear"
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:strength",
+                "seconds": 120,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

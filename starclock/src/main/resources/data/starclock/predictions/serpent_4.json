@@ -1,0 +1,41 @@
+{
+  "id": "starclock:serpent_4",
+  "sign": "serpent",
+  "orientation": "none",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.serpent_4",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "clear": "negative"
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "items": [
+              {
+                "id": "minecraft:spider_eye",
+                "count": 2
+              }
+            ],
+            "scale": true
+          }
+        }
+      ]
+    }
+  ]
+}

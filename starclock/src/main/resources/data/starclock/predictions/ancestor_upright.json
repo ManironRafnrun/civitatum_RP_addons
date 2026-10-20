@@ -1,0 +1,56 @@
+{
+  "id": "starclock:ancestor_upright",
+  "sign": "ancestor",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.ancestor_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "nearby_undead",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "target": "undead",
+            "radius": 16,
+            "effects": [
+              {
+                "id": "minecraft:slowness",
+                "seconds": 300,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/ancestor"
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "special": "ancestor_book"
+          }
+        }
+      ]
+    }
+  ]
+}

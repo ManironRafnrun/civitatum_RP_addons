@@ -1,0 +1,59 @@
+{
+  "id": "starclock:merchant_reversed",
+  "sign": "merchant",
+  "orientation": "reversed",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.merchant_reversed",
+  "variants": [
+    {
+      "id": "main",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "special": "take_emeralds",
+            "count": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:pillager",
+            "count": 3,
+            "distance": 10,
+            "mode": "hostile",
+            "lifetime": 300
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "items": [
+              {
+                "id": "minecraft:rotten_flesh",
+                "count": 3
+              }
+            ],
+            "scale": true
+          }
+        }
+      ]
+    }
+  ]
+}

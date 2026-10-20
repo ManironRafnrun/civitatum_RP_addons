@@ -1,0 +1,64 @@
+{
+  "id": "starclock:beast_upright",
+  "sign": "beast",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.beast_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:wolf",
+            "count": 2,
+            "distance": 8,
+            "mode": "tame",
+            "lifetime": 0
+          }
+        },
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:night_vision",
+                "seconds": 120,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/beast"
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "effect",
+      "target": "nearby_wolf",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "tameNearest": true
+          }
+        }
+      ]
+    }
+  ]
+}

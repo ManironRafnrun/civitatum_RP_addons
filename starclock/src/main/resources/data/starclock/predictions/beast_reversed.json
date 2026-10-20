@@ -1,0 +1,68 @@
+{
+  "id": "starclock:beast_reversed",
+  "sign": "beast",
+  "orientation": "reversed",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.beast_reversed",
+  "variants": [
+    {
+      "id": "main",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:wolf",
+            "count": 2,
+            "distance": 8,
+            "mode": "hostile",
+            "lifetime": 300
+          }
+        },
+        {
+          "type": "damage",
+          "params": {
+            "amount": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:weakness",
+                "seconds": 60,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:wolf",
+            "count": 1,
+            "distance": 8,
+            "mode": "bite_and_flee",
+            "lifetime": 300
+          }
+        }
+      ]
+    }
+  ]
+}

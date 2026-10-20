@@ -33,3 +33,11 @@ side="BOTH"
 
 [[mixins]]
 config="civitatum_starclock.mixins.json"
+
+
+[[dependencies.civitatum_starclock]]
+modId="civitatum_inventory"
+type="optional"
+versionRange="[0,)"
+ordering="AFTER"
+side="CLIENT"

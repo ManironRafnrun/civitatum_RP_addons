@@ -45,7 +45,18 @@ public final class CardScreen extends Screen {
             y += 12;
         }
         graphics.drawCenteredString(font, Component.translatable("tooltip.civitatum_starclock.tier",
-                card.tier().name()), cx, cy + 36, 0xFF8E6FB3);
+                card.tier().name()), cx, cy + 42, 0xFF8E6FB3);
+
+        if (!card.category().isEmpty()) {
+            graphics.drawCenteredString(font, Component.translatable("ui.civitatum_starclock.event_type",
+                    Component.translatable("event_type.civitatum_starclock." + card.category())),
+                    cx, cy + 10, 0xFFE3C07B);
+        }
+        if (!card.target().isEmpty()) {
+            graphics.drawCenteredString(font, Component.translatable("ui.civitatum_starclock.target",
+                    Component.translatable("target.civitatum_starclock." + card.target())),
+                    cx, cy + 24, 0xFFE8DCC0);
+        }
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 

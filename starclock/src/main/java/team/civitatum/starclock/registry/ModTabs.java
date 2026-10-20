@@ -16,7 +16,6 @@ public final class ModTabs {
                     .icon(() -> ModItems.TOOLS.get(0).get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         ModItems.TOOLS.forEach(item -> output.accept(item.get()));
-                        output.accept(ModItems.TOWER_KEY.get());
                     }).build());
 
     private ModTabs() {}

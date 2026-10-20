@@ -1,0 +1,68 @@
+{
+  "id": "starclock:smith_reversed",
+  "sign": "smith",
+  "orientation": "reversed",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.smith_reversed",
+  "variants": [
+    {
+      "id": "main",
+      "category": "durability",
+      "target": "held_item",
+      "actions": [
+        {
+          "type": "durability",
+          "params": {
+            "mode": "damage",
+            "fraction": 0.5
+          }
+        },
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:mining_fatigue",
+                "seconds": 60,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:mining_fatigue",
+                "seconds": 30,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "durability",
+      "target": "held_item",
+      "actions": [
+        {
+          "type": "durability",
+          "params": {
+            "mode": "remove_enchantment",
+            "fraction": 0.5
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id": "starclock:tower_reversed",
+  "sign": "tower",
+  "orientation": "reversed",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.tower_reversed",
+  "variants": [
+    {
+      "id": "main",
+      "category": "damage",
+      "target": "player",
+      "actions": [
+        {
+          "type": "damage",
+          "params": {
+            "amount": 4
+          }
+        },
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:slowness",
+                "seconds": 30,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:pillager",
+            "count": 3,
+            "distance": 10,
+            "mode": "hostile",
+            "lifetime": 300
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:slowness",
+                "seconds": 10,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

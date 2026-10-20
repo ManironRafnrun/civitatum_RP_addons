@@ -1,0 +1,49 @@
+{
+  "id": "starclock:serpent_2",
+  "sign": "serpent",
+  "orientation": "none",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.serpent_2",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "nearby_hostiles",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "target": "hostile",
+            "radius": 8,
+            "effects": [
+              {
+                "id": "minecraft:poison",
+                "seconds": 10,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:invisibility",
+                "seconds": 30,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

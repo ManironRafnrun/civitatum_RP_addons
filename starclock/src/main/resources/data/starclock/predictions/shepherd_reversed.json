@@ -1,0 +1,62 @@
+{
+  "id": "starclock:shepherd_reversed",
+  "sign": "shepherd",
+  "orientation": "reversed",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.shepherd_reversed",
+  "variants": [
+    {
+      "id": "main",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:zombie",
+            "count": 4,
+            "distance": 16,
+            "mode": "hostile",
+            "lifetime": 300
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:phantom",
+            "count": 2,
+            "distance": 16,
+            "mode": "hostile",
+            "lifetime": 300
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:weakness",
+                "seconds": 60,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

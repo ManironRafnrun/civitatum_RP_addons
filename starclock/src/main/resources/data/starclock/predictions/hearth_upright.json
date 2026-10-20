@@ -1,0 +1,72 @@
+{
+  "id": "starclock:hearth_upright",
+  "sign": "hearth",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.hearth_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:fire_resistance",
+                "seconds": 120,
+                "level": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "loot",
+          "params": {
+            "items": [
+              {
+                "id": "minecraft:campfire",
+                "count": 1
+              }
+            ],
+            "scale": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/hearth"
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:regeneration",
+                "seconds": 30,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

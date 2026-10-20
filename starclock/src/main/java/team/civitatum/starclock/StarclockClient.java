@@ -41,6 +41,7 @@ public final class StarclockClient {
     @SubscribeEvent
     public static void logout(ClientPlayerNetworkEvent.LoggingOut event) {
         RitualClientState.clear();
+        team.civitatum.starclock.client.TowerKeyClient.accept(0);
     }
 
     @SubscribeEvent

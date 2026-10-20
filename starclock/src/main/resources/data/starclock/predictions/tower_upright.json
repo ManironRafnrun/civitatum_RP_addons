@@ -1,0 +1,75 @@
+{
+  "id": "starclock:tower_upright",
+  "sign": "tower",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.tower_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:resistance",
+                "seconds": 120,
+                "level": 2
+              },
+              {
+                "id": "minecraft:absorption",
+                "seconds": 10,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "ability": "tower_key"
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "damage",
+      "target": "nearby_hostiles",
+      "actions": [
+        {
+          "type": "damage",
+          "params": {
+            "amount": 6,
+            "target": "hostile",
+            "radius": 8
+          }
+        },
+        {
+          "type": "effect",
+          "params": {
+            "target": "hostile",
+            "radius": 8,
+            "effects": [
+              {
+                "id": "minecraft:weakness",
+                "seconds": 30,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

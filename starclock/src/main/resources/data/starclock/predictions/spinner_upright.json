@@ -1,0 +1,66 @@
+{
+  "id": "starclock:spinner_upright",
+  "sign": "spinner",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.spinner_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "trader",
+      "target": "player",
+      "actions": [
+        {
+          "type": "trader",
+          "params": {
+            "sign": "spinner",
+            "discount": false
+          }
+        },
+        {
+          "type": "effect",
+          "params": {
+            "remove": [
+              "minecraft:poison",
+              "minecraft:wither",
+              "minecraft:blindness",
+              "minecraft:nausea"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:speed",
+                "seconds": 120,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/spinner"
+          }
+        }
+      ]
+    }
+  ]
+}

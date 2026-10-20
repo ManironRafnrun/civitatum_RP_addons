@@ -1,6 +1,13 @@
 package team.civitatum.starclock.ritual;
 
 import java.util.Random;
+import team.civitatum.starclock.config.StarClockConfig;
+import team.civitatum.starclock.prediction.PredictionPlan;
+import team.civitatum.starclock.prediction.PredictionRegistry;
+import team.civitatum.starclock.prediction.PredictionBonuses;
+import team.civitatum.starclock.prediction.PredictionTimer;
+import team.civitatum.starclock.data.PendingPrediction;
+import team.civitatum.starclock.CivitatumStarclock;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,6 +33,8 @@ public final class RitualManager {
 
     public static boolean start(ServerPlayer player, InteractionHand hand, ItemStack stack, StarToolItem tool) {
         String failure = conditionFailure(player);
+        try { StarClockConfig.validate(); }
+        catch (IllegalArgumentException error) { failure = "configuration"; }
         if (failure == null && active != null) failure = "busy";
         long remaining = StarClockData.get(player.server).remainingCooldown(player.server.overworld().getGameTime());
         if (failure == null && remaining > 0) {
@@ -65,6 +74,11 @@ public final class RitualManager {
         if (ownsRitual(player) && !active.isDrawing() && !active.preparationFinished) {
             cancel(player, "released");
         }
+    }
+
+
+    public static boolean isActive(java.util.UUID player) {
+        return active != null && active.player.equals(player);
     }
 
     private static boolean ownsRitual(ServerPlayer player) {
@@ -114,17 +128,38 @@ public final class RitualManager {
         }
     }
 
+
     private static void finish(ServerPlayer player, long now) {
         RitualState finished = active;
-        // Источник случайности существует только на логическом сервере.
         Random random = new Random(player.serverLevel().random.nextLong());
         Constellation sign = Constellation.draw(random);
         var orientation = sign.drawOrientation(random);
-        StarClockData.get(player.server).recordRitual(now);
+        PredictionPlan plan;
+        long delay;
+        try {
+            plan = PredictionRegistry.catalog().draw(sign, orientation, random);
+            if (finished.tier.strength() == 3) {
+                plan = PredictionBonuses.append(plan);
+            }
+            delay = PredictionTimer.choose(random, finished.tier.strength(),
+                    StarClockConfig.TIMER_MIN.get(),
+                    StarClockConfig.TIMER_MAX.get(),
+                    StarClockConfig.TIMER_THIRD_MAX.get());
+        } catch (RuntimeException error) {
+            CivitatumStarclock.LOG.error("Не удалось подготовить предсказание", error);
+            cancel(player, "configuration");
+            return;
+        }
+        var pos = player.blockPosition();
+        var pending = new PendingPrediction(finished.session, player.getUUID(),
+                player.level().dimension().location().toString(), pos.getX(), pos.getY(), pos.getZ(),
+                now + delay, finished.tier.strength(), plan, false, 0, 0, 0);
+        StarClockData.get(player.server).schedule(now, pending);
         active = null;
         player.stopUsingItem();
-        PacketDistributor.sendToPlayer(player,
-                new ShowCardPayload(finished.session, sign, orientation, finished.tier));
+        PacketDistributor.sendToPlayer(player, new ShowCardPayload(finished.session, sign, orientation, finished.tier,
+                finished.tier.strength() >= 2 ? plan.category() : "",
+                finished.tier.strength() >= 3 ? plan.target() : ""));
     }
 
     @SubscribeEvent

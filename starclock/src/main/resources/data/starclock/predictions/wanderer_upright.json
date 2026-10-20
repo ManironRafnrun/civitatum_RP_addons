@@ -1,0 +1,51 @@
+{
+  "id": "starclock:wanderer_upright",
+  "sign": "wanderer",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.wanderer_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "teleport",
+      "target": "player",
+      "actions": [
+        {
+          "type": "teleport",
+          "params": {
+            "distance": 32,
+            "minimum": 32,
+            "mode": "forward"
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/wanderer"
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "trader",
+      "target": "player",
+      "actions": [
+        {
+          "type": "trader",
+          "params": {
+            "sign": "wanderer",
+            "discount": false
+          }
+        }
+      ]
+    }
+  ]
+}

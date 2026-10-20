@@ -1,0 +1,47 @@
+{
+  "id": "starclock:serpent_3",
+  "sign": "serpent",
+  "orientation": "none",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.serpent_3",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:resistance",
+                "seconds": 60,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:speed",
+                "seconds": 60,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
