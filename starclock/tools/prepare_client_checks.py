@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import urllib.parse
 import urllib.request
-import zipfile
 from pathlib import Path
 
 API = "https://api.modrinth.com/v2/"
@@ -68,20 +67,18 @@ def prepare(root):
             install(candidate)
 
     choices = versions("punchy-fpa")
-    version = next((entry for entry in choices if entry["version_number"] == "2.6.2"), None)
+    version = next((entry for entry in choices if entry["id"] == "RYt48afN"), None)
     if version is None:
         raise RuntimeError("В Modrinth нет Punchy 2.6.2 для NeoForge 1.21.1")
     install(version)
     (run / "dependency-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     for jar in mods.glob("*punchy*.jar"):
-        with zipfile.ZipFile(jar) as archive:
-            classes = [name[:-6].replace("/", ".") for name in archive.namelist()
-                       if name.endswith("Config.class") and not name.startswith("META-INF/")]
-            print("PUNCHY_CLASSES", classes, flush=True)
-        for name in classes:
-            result = subprocess.run(["javap", "-classpath", str(jar), "-p", name],
-                                    text=True, capture_output=True, check=True)
-            print(result.stdout, flush=True)
+        result = subprocess.run(["javap", "-classpath", str(jar), "-p", "punchy.config.PunchyConfig"],
+                                text=True, capture_output=True, check=True)
+        signatures = [line.strip() for line in result.stdout.splitlines() if "isModEnabled" in line]
+        if signatures != ["public static boolean isModEnabled();"]:
+            raise RuntimeError("Изменился API PunchyConfig: " + repr(signatures))
+        print("PUNCHY_API", signatures, flush=True)
     print("CLIENT_CHECK_DEPENDENCIES", json.dumps(manifest), flush=True)
 
 

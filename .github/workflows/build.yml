@@ -31,8 +31,14 @@ jobs:
       - name: Подготовить проверку клиента
         run: python3 starclock/tools/prepare_client_checks.py --project starclock
 
+      - name: Подготовить графическое окружение
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libasound2t64
+
+      - name: Проверить рендер и совместимость с Punchy
+        run: python3 starclock/tools/run_client_checks.py
+
       - name: Сохранить Starclock и результаты проверки
-        if: success() && hashFiles('starclock/build/libs/*.jar') != ''
+        if: always() && hashFiles('starclock/build/libs/*.jar') != ''
         uses: actions/upload-artifact@v4
         with:
           name: civitatum-starclock-${{ github.sha }}
@@ -42,5 +48,7 @@ jobs:
             starclock/build/reports/tests/test/
             starclock/build/test-results/test/
             starclock/build/gameTestRun/logs/
+            starclock/build/clientCheckReports/
+            starclock/build/clientCheckRun/dependency-manifest.json
           if-no-files-found: error
           retention-days: 30

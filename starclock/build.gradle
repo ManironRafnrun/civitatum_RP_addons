@@ -16,6 +16,10 @@ dependencies {
 // Скрипты доступны отдельному набору tools и не включаются в jar мода.
 sourceSets {
     tools { resources.srcDirs = ['tools'] }
+    clientCheck {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
     gameTest {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
@@ -24,7 +28,10 @@ sourceSets {
 
 neoForge {
     mods {
-        civitatum_starclock { sourceSet sourceSets.gameTest }
+        civitatum_starclock {
+            sourceSet sourceSets.gameTest
+            if (providers.gradleProperty('starclockClientCheck').isPresent()) sourceSet sourceSets.clientCheck
+        }
     }
     runs {
         gameTestServer {
@@ -33,6 +40,12 @@ neoForge {
             gameDirectory = layout.buildDirectory.dir('gameTestRun')
         }
         client { client() }
+        clientCheck {
+            client()
+            systemProperty 'starclock.clientCheck', 'true'
+            gameDirectory = layout.buildDirectory.dir('clientCheckRun')
+            programArguments.addAll('--quickPlaySingleplayer', 'StarclockCheck', '--width', '960', '--height', '640')
+        }
         server { server(); programArgument '--nogui' }
     }
 }
