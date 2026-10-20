@@ -49,6 +49,7 @@ public final class ConstellationScreen extends Screen {
             graphics.drawCenteredString(font, Component.translatable(state.figure().translationKey()),
                     width / 2, height - 24, 0xFFE8DCC0);
         }
+        RitualArt.blit(graphics, "gui/timer", width / 2 - 65, height - 14, 10, 10, 16, 16);
         graphics.fill(width / 2 - 50, height - 9, width / 2 + 50, height - 7, 0xFF2A2118);
         graphics.fill(width / 2 - 50, height - 9, width / 2 - 50 + (int) (100 * progress),
                 height - 7, 0xFFE3C07B);

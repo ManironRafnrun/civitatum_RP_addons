@@ -46,7 +46,6 @@ def check(mode):
         raise RuntimeError(f"Неверный набор модов для {mode}")
     print(f"CLIENT_CHECK_OK {mode}: 24 инструмента/руки", flush=True)
     if mode == "without-punchy":
-        make_video(RUN / "starclock-frames", REPORTS / "video")
         sheet = Image.new("RGB", (640, 428), "#0B1020")
         for index, case in enumerate((0, 6, 12, 18)):
             source = RUN / "screenshots" / f"starclock-{case}.png"
@@ -65,6 +64,7 @@ def check(mode):
         payload = io.BytesIO()
         sheet.save(payload, format="PNG", compress_level=9)
         print("CLIENT_CHECK_PREVIEW_BASE64 " + base64.b64encode(payload.getvalue()).decode("ascii"), flush=True)
+        make_video(RUN / "starclock-frames", REPORTS / "video")
 
 
 def main():

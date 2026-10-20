@@ -26,7 +26,7 @@ def generate(frames, output):
         temp = Path(temporary)
         for kind, label in LABELS.items():
             sources = sorted((frames / kind).glob("*.png"))
-            if len(sources) < 100:
+            if len(sources) < 80:
                 raise ValueError(f"Недостаточно кадров {kind}: {len(sources)}")
             prepared = temp / kind
             prepared.mkdir()
