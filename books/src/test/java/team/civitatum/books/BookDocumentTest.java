@@ -51,7 +51,7 @@ class BookDocumentTest {
     @Test
     void invalidVersionImageAndLayoutAreRejected() {
         String json = new BookDocument().json();
-        assertThrows(RuntimeException.class, () -> BookDocument.parse(json.replace("\"version\":1", "\"version\":2")));
+        assertThrows(RuntimeException.class, () -> BookDocument.parse(json.replace("\"version\":2", "\"version\":99")));
         assertThrows(RuntimeException.class, () -> BookDocument.parse(json.replace("\"image\":\"\"", "\"image\":\"../secret\"")));
         assertThrows(RuntimeException.class, () -> BookDocument.parse(json.replace("\"fontSize\":10", "\"fontSize\":100")));
         assertThrows(RuntimeException.class, () -> BookDocument.parse(json.replace("\"imageWidth\":0.85", "\"imageWidth\":2.0")));

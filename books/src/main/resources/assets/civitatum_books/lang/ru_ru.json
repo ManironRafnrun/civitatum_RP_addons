@@ -84,5 +84,12 @@
   "books.library_load_failed": "Не удалось прочитать локальную библиотеку.",
   "books.library_save_failed": "Не удалось сохранить книгу в локальную библиотеку. Проверьте свободное место и доступ к папке игры.",
   "books.library_copy": "Локальная копия · только чтение",
-  "books.library_missing_image": "PNG не сохранён"
+  "books.library_missing_image": "PNG не сохранён",
+  "books.kind_book": "Книга",
+  "books.kind_scroll": "Свиток",
+  "books.kind_note": "Записка",
+  "books.characters": "Символы: %s / %s",
+  "books.scroll_hint": "Колесо · PgUp / PgDn",
+  "books.error.note_full": "Записка должна помещаться на одной странице. Содержимое сохранено без изменений.",
+  "books.error.mode_images": "На одном листе допускается один PNG. Уберите лишние рисунки перед сменой формата."
 }

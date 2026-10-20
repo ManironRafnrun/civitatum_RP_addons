@@ -84,5 +84,12 @@
   "books.library_load_failed": "Cannot read the local library.",
   "books.library_save_failed": "Cannot retain a local book copy. Check disk space and access to the game directory.",
   "books.library_copy": "Local copy · read only",
-  "books.library_missing_image": "PNG not retained"
+  "books.library_missing_image": "PNG not retained",
+  "books.kind_book": "Book",
+  "books.kind_scroll": "Scroll",
+  "books.kind_note": "Note",
+  "books.characters": "Characters: %s / %s",
+  "books.scroll_hint": "Wheel · PgUp / PgDn",
+  "books.error.note_full": "A note must fit on one page. Contents were left unchanged.",
+  "books.error.mode_images": "A single sheet supports one PNG. Remove extra illustrations before converting."
 }

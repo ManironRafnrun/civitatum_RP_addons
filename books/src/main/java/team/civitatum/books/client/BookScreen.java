@@ -20,6 +20,7 @@ import org.lwjgl.glfw.GLFW;
 import team.civitatum.books.CivitatumBooks;
 import team.civitatum.books.document.BookDocument;
 import team.civitatum.books.document.BookArchive;
+import team.civitatum.books.document.DocumentKind;
 import net.minecraft.resources.ResourceLocation;
 import team.civitatum.books.document.BookPage;
 import team.civitatum.books.document.TextLayout;
@@ -43,6 +44,11 @@ public final class BookScreen extends Screen {
     private final boolean localCopy;
     private final Screen returnTo;
     private final BookLibrary.Capture capture;
+    private static final int SHEET_LEFT = 368;
+    private static final ResourceLocation OPEN_SCROLL = CivitatumBooks.resource("textures/gui/open_scroll.png");
+    private static final ResourceLocation OPEN_NOTE = CivitatumBooks.resource("textures/gui/open_note.png");
+    private final Map<BookPage, List<TextLayout.Line>> lineCache = new java.util.IdentityHashMap<>();
+    private int scrollOffset;
     private static final ResourceLocation OPEN_BOOK = CivitatumBooks.resource("textures/gui/open_book.png");
     private final BookImages images = new BookImages();
     private final DraftStore drafts;
@@ -145,11 +151,11 @@ public final class BookScreen extends Screen {
     }
 
     private void updateGeometry() {
-        float canvasWidth = expanded ? CANVAS_WIDTH : 912;
-        float canvasHeight = expanded ? CANVAS_HEIGHT : 540;
+        float canvasWidth = expanded ? CANVAS_WIDTH : isBook() ? 912 : 560;
+        float canvasHeight = expanded ? CANVAS_HEIGHT : isBook() ? 540 : 560;
         scale = Math.min((width - 16f) / canvasWidth, (height - 16f) / canvasHeight);
-        originX = (width - canvasWidth * scale) / 2 - (expanded ? 0 : 112 * scale);
-        originY = (height - canvasHeight * scale) / 2 - (expanded ? 0 : 72 * scale);
+        originX = (width - canvasWidth * scale) / 2 - (expanded ? 0 : (isBook() ? 112 : 288) * scale);
+        originY = (height - canvasHeight * scale) / 2 - (expanded ? 0 : (isBook() ? 72 : 56) * scale);
     }
 
     private void changeView(boolean readOnly, boolean expandedView) {
@@ -160,7 +166,43 @@ public final class BookScreen extends Screen {
     }
 
     private boolean editing() { return editable && !reading && !busy; }
-    private int spread() { return editor.page / 2 * 2; }
+    private boolean isBook() { return editor.document.kind == DocumentKind.BOOK; }
+    private boolean isScroll() { return editor.document.kind == DocumentKind.SCROLL; }
+    private int spread() { return isBook() ? editor.page / 2 * 2 : 0; }
+    private int pageX() { return isBook() ? PAGE_LEFT + editor.page % 2 * (PAGE_WIDTH + 8) : SHEET_LEFT; }
+
+    private void changeKind(DocumentKind kind) {
+        if (!editing()) return;
+        try {
+            editor.changeKind(kind, this::glyphWidth);
+            scrollOffset = 0;
+            imageSelected = false;
+            changed();
+        } catch (RuntimeException exception) {
+            status = error(exception.getMessage().equals("mode_images") ? "mode_images" : "note_full");
+        }
+    }
+
+    private int scrollMaximum() {
+        if (!isScroll()) return 0;
+        BookPage page = editor.currentPage();
+        int height = lines(page).size() * BookEditor.lineHeight(page)
+                + (page.image.isEmpty() ? 0 : page.imageHeight + 16);
+        return Math.max(0, height - BookEditor.PAGE_HEIGHT);
+    }
+
+    private void scrollBy(int pixels) { scrollOffset = Math.clamp(scrollOffset + pixels, 0, scrollMaximum()); }
+
+    private void revealCursor() {
+        if (!isScroll()) return;
+        BookPage page = editor.currentPage();
+        int y = rowAt(lines(page), editor.cursor) * BookEditor.lineHeight(page)
+                + (!page.image.isEmpty() && !page.imageBottom ? page.imageHeight + 16 : 0);
+        if (y < scrollOffset) scrollOffset = y;
+        if (y + BookEditor.lineHeight(page) > scrollOffset + BookEditor.PAGE_HEIGHT)
+            scrollOffset = y + BookEditor.lineHeight(page) - BookEditor.PAGE_HEIGHT;
+        scrollOffset = Math.clamp(scrollOffset, 0, scrollMaximum());
+    }
     private float localX(double x) { return (float) ((x - originX) / scale); }
     private float localY(double y) { return (float) ((y - originY) / scale); }
     private static Component text(String key) { return Component.translatable("books." + key); }
@@ -183,8 +225,16 @@ public final class BookScreen extends Screen {
     private void buildControls() {
         controls.clear();
         if (!expanded) {
-            control(954, 79, 28, Component.literal("+"), () -> changeView(true, true), true, false);
-            if (lectern) button(174, 517, 136, "take", this::takeBook, !dirty);
+            control(isBook() ? 954 : 796, 79, 28, Component.literal("+"), () -> changeView(true, true), true, false);
+            if (lectern) button(isBook() ? 174 : 330, 517, 136, "take", this::takeBook, !dirty);
+            if (!isBook()) {
+                if (isScroll()) {
+                    control(478, 517, 60, Component.literal("↑"), () -> scrollBy(-BookEditor.PAGE_HEIGHT), scrollOffset > 0, false);
+                    control(552, 517, 60, Component.literal("↓"), () -> scrollBy(BookEditor.PAGE_HEIGHT), scrollOffset < scrollMaximum(), false);
+                }
+                button(650, 517, 130, "close", this::onClose, true);
+                return;
+            }
             control(438, 517, 64, text("previous"), () -> selectPage(spread() - 2), spread() > 0, false);
             control(622, 517, 64, text("next"), () -> selectPage(spread() + 2), spread() + 2 < editor.document.pages.size(), false);
             button(824, 517, 132, "close", this::onClose, true);
@@ -213,16 +263,24 @@ public final class BookScreen extends Screen {
         button(16, 383, 130, "export_book", () -> minecraft.setScreen(new BookExchangeScreen(this, true)), exportReady());
         button(16, 414, 130, "import_book", () -> confirmImport(() -> minecraft.setScreen(new BookExchangeScreen(this, false))), editing());
         if (administrative) button(16, 514, 130, "author", this::editAuthor, editing());
-        button(16, 445, 130, "add_page", () -> mutate(() -> {
-            if (editor.document.pages.size() >= BookDocument.MAX_PAGES) throw new IllegalArgumentException("pages");
-            editor.document.pages.add(editor.page + 1, new BookPage());
-            editor.selectPage(editor.page + 1);
-        }, false), editing());
-        control(16, 478, 38, Component.literal("↑"), () -> movePage(-1), editing() && editor.page > 0, false);
-        control(60, 478, 38, Component.literal("↓"), () -> movePage(1), editing() && editor.page + 1 < editor.document.pages.size(), false);
-        control(104, 478, 42, Component.literal("×"), this::deletePage, editing(), false);
-        control(418, 554, 36, Component.literal("‹"), () -> selectPage(spread() - 2), spread() > 0, false);
-        control(598, 554, 36, Component.literal("›"), () -> selectPage(spread() + 2), spread() + 2 < editor.document.pages.size(), false);
+        if (!reading && editable) {
+            for (DocumentKind kind : DocumentKind.values()) {
+                control(16, 277 + kind.ordinal() * 31, 130, text("kind_" + kind.id()),
+                        () -> changeKind(kind), editing(), editor.document.kind == kind);
+            }
+        }
+        if (isBook()) {
+            button(16, 445, 130, "add_page", () -> mutate(() -> {
+                if (editor.document.pages.size() >= BookDocument.MAX_PAGES) throw new IllegalArgumentException("pages");
+                editor.document.pages.add(editor.page + 1, new BookPage());
+                editor.selectPage(editor.page + 1);
+            }, false), editing());
+            control(16, 478, 38, Component.literal("↑"), () -> movePage(-1), editing() && editor.page > 0, false);
+            control(60, 478, 38, Component.literal("↓"), () -> movePage(1), editing() && editor.page + 1 < editor.document.pages.size(), false);
+            control(104, 478, 42, Component.literal("×"), this::deletePage, editing(), false);
+            control(418, 554, 36, Component.literal("‹"), () -> selectPage(spread() - 2), spread() > 0, false);
+            control(598, 554, 36, Component.literal("›"), () -> selectPage(spread() + 2), spread() + 2 < editor.document.pages.size(), false);
+            }
         if (!reading && editable) {
             button(756, 554, 104, "save", () -> save(false, false), dirty);
             if (!editor.document.signed) button(870, 554, 112, "sign", this::confirmSign, true);
@@ -250,19 +308,50 @@ public final class BookScreen extends Screen {
             graphics.fill(5, 5, 995, 595, 0xff49382b);
             graphics.fill(8, 48, 992, 549, 0xff30281f);
             graphics.drawString(font, "CIVITATUM  /  BOOKS", 18, 24, 0xffe3cd9e, false);
-            graphics.drawString(font, text("pages"), 18, 66, 0xffc7ae7f, false);
-            drawSidebar(graphics);
-        } else {
+            graphics.drawString(font, text(isBook() ? "pages" : "kind_" + editor.document.kind.id()), 18, 66, 0xffc7ae7f, false);
+            if (isBook()) drawSidebar(graphics);
+            else {
+                graphics.drawString(font, Component.translatable("books.characters", editor.document.characterCount(), editor.document.kind.textLimit()), 18, 108, 0xffc7ae7f, false);
+                if (isScroll()) graphics.drawString(font, text("scroll_hint"), 18, 135, 0xffc7ae7f, false);
+            }
+        } else if (isBook()) {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             graphics.blit(OPEN_BOOK, 112, 72, 912, 540, 0, 0, 1650, 953, 1650, 953);
             RenderSystem.disableBlend();
         }
-        drawPage(graphics, spread(), PAGE_LEFT);
-        drawPage(graphics, spread() + 1, PAGE_LEFT + PAGE_WIDTH + 8);
+        if (isBook()) {
+            drawPage(graphics, spread(), PAGE_LEFT);
+            drawPage(graphics, spread() + 1, PAGE_LEFT + PAGE_WIDTH + 8);
+        } else {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            graphics.blit(isScroll() ? OPEN_SCROLL : OPEN_NOTE, 288, 56, 560, 560, 0, 0, 1086, 1448, 1086, 1448);
+            RenderSystem.disableBlend();
+            scrollOffset = Math.clamp(scrollOffset, 0, scrollMaximum());
+            // Scissor uses screen GUI coordinates; reset the pose while defining its bounds.
+            graphics.pose().pushPose();
+            graphics.pose().last().pose().identity();
+            graphics.enableScissor(Math.round(originX + (SHEET_LEFT + MARGIN) * scale),
+                    Math.round(originY + (PAGE_TOP + MARGIN) * scale),
+                    Math.round(originX + (SHEET_LEFT + PAGE_WIDTH - MARGIN) * scale),
+                    Math.round(originY + (PAGE_TOP + PAGE_HEIGHT - MARGIN) * scale));
+            graphics.pose().popPose();
+            drawPage(graphics, 0, SHEET_LEFT);
+            graphics.disableScissor();
+            if (editor.document.signed) graphics.drawString(font, font.plainSubstrByWidth(editor.document.author, 300), SHEET_LEFT + MARGIN, 505, 0xff8b7555, false);
+            if (isScroll() && scrollMaximum() > 0) {
+                int thumb = Math.max(16, BookEditor.PAGE_HEIGHT * BookEditor.PAGE_HEIGHT / (scrollMaximum() + BookEditor.PAGE_HEIGHT));
+                int top = PAGE_TOP + MARGIN + scrollOffset * (BookEditor.PAGE_HEIGHT - thumb) / scrollMaximum();
+                graphics.fill(760, PAGE_TOP + MARGIN, 764, PAGE_TOP + MARGIN + BookEditor.PAGE_HEIGHT, 0x40563e24);
+                graphics.fill(760, top, 764, top + thumb, 0xff927044);
+            }
+        }
         if (expanded) {
-            graphics.fill(564, PAGE_TOP + 1, 572, PAGE_TOP + PAGE_HEIGHT - 1, 0xff9c835f);
-            graphics.drawCenteredString(font, Component.translatable("books.page_count", editor.page + 1, editor.document.pages.size()), 526, 563, 0xffe3cd9e);
+            if (isBook()) {
+                graphics.fill(564, PAGE_TOP + 1, 572, PAGE_TOP + PAGE_HEIGHT - 1, 0xff9c835f);
+                graphics.drawCenteredString(font, Component.translatable("books.page_count", editor.page + 1, editor.document.pages.size()), 526, 563, 0xffe3cd9e);
+            }
             Component visibleStatus = status;
             graphics.drawString(font, font.plainSubstrByWidth(visibleStatus.getString(), 382), 20, 564, saveFailed ? 0xffffb0a0 : 0xffd6c09a, false);
         }
@@ -271,14 +360,14 @@ public final class BookScreen extends Screen {
         float localMouseY = localY(mouseY);
         for (Control control : controls) {
             if (!expanded) {
-                if (control.x == 954) {
+                if (control.label.getString().equals("+")) {
                     graphics.fill(control.x, control.y, control.x + control.width, control.y + 27, 0xffd8c18b);
                     graphics.renderOutline(control.x, control.y, control.width, 27, 0xff7c5935);
                 }
                 int color = control.enabled && control.contains(localMouseX, localMouseY) ? 0xff884626 : control.enabled ? 0xff493321 : 0xffb39b75;
                 graphics.drawString(font, control.label, control.x + (control.width - font.width(control.label)) / 2, control.y + 9, color, false);
-                if (control.x == 954 && control.contains(localMouseX, localMouseY)) {
-                    graphics.drawString(font, text("expand"), 785, 91, 0xff493321, false);
+                if (control.label.getString().equals("+") && control.contains(localMouseX, localMouseY)) {
+                    graphics.drawString(font, text("expand"), isBook() ? 785 : 600, 91, 0xff493321, false);
                 }
                 continue;
             }
@@ -291,9 +380,11 @@ public final class BookScreen extends Screen {
         graphics.pose().popPose();
     }
 
+    private int sidebarRows() { return !reading && editable ? 3 : 5; }
+
     private void drawSidebar(GuiGraphics graphics) {
-        sidebarStart = Math.clamp(sidebarStart, 0, Math.max(0, editor.document.pages.size() - 5));
-        for (int row = 0; row < 5 && sidebarStart + row < editor.document.pages.size(); row++) {
+        sidebarStart = Math.clamp(sidebarStart, 0, Math.max(0, editor.document.pages.size() - sidebarRows()));
+        for (int row = 0; row < sidebarRows() && sidebarStart + row < editor.document.pages.size(); row++) {
             int index = sidebarStart + row;
             int y = 105 + row * 54;
             graphics.fill(16, y, 146, y + 47, index == editor.page ? 0xff756448 : 0xff473a2e);
@@ -306,7 +397,7 @@ public final class BookScreen extends Screen {
     }
 
     private void drawPage(GuiGraphics graphics, int index, int x) {
-        if (expanded) {
+        if (expanded && isBook()) {
             graphics.fill(x + 3, PAGE_TOP + 4, x + PAGE_WIDTH + 3, PAGE_TOP + PAGE_HEIGHT + 4, 0xff17120d);
             graphics.fill(x, PAGE_TOP, x + PAGE_WIDTH, PAGE_TOP + PAGE_HEIGHT, 0xffb69e73);
             graphics.fill(x + 2, PAGE_TOP + 2, x + PAGE_WIDTH - 2, PAGE_TOP + PAGE_HEIGHT - 2, 0xffeee1c2);
@@ -317,8 +408,11 @@ public final class BookScreen extends Screen {
         var lines = lines(page);
         int cursorLine = rowAt(lines, editor.cursor);
         int y = textY(page);
-        int capacity = Math.max(1, BookEditor.textHeight(page) / BookEditor.lineHeight(page));
-        for (int row = 0; row < Math.min(lines.size(), capacity); row++) {
+        int capacity = isScroll() ? lines.size() : Math.max(1, BookEditor.textHeight(page) / BookEditor.lineHeight(page));
+        int firstRow = isScroll() ? Math.max(0, (PAGE_TOP + MARGIN - y) / BookEditor.lineHeight(page)) : 0;
+        y += firstRow * BookEditor.lineHeight(page);
+        for (int row = firstRow; row < Math.min(lines.size(), capacity); row++) {
+            if (isScroll() && y >= PAGE_TOP + PAGE_HEIGHT - MARGIN) break;
             TextLayout.Line line = lines.get(row);
             float runX = lineX(page, line, x);
             float glyphX = runX;
@@ -351,8 +445,8 @@ public final class BookScreen extends Screen {
             }
             y += BookEditor.lineHeight(page);
         }
-        graphics.drawCenteredString(font, Integer.toString(index + 1), x + PAGE_WIDTH / 2, PAGE_TOP + PAGE_HEIGHT - 18, 0xff8b7555);
-        if (editor.document.signed && index == 0) {
+        if (isBook()) graphics.drawCenteredString(font, Integer.toString(index + 1), x + PAGE_WIDTH / 2, PAGE_TOP + PAGE_HEIGHT - 18, 0xff8b7555);
+        if (isBook() && editor.document.signed && index == 0) {
             graphics.drawString(font, font.plainSubstrByWidth(editor.document.author, 175), x + 16, PAGE_TOP + PAGE_HEIGHT - 18, 0xff8b7555, false);
         }
     }
@@ -365,7 +459,9 @@ public final class BookScreen extends Screen {
 
     private ImageBox imageBox(BookPage page, int pageX) {
         int imageWidth = (int) (BookEditor.PAGE_WIDTH * page.imageWidth);
-        int y = page.imageBottom ? PAGE_TOP + PAGE_HEIGHT - MARGIN - page.imageHeight : PAGE_TOP + MARGIN;
+        int y = page.imageBottom ? isScroll() ? PAGE_TOP + MARGIN + lines(page).size() * BookEditor.lineHeight(page) + 16
+                : PAGE_TOP + PAGE_HEIGHT - MARGIN - page.imageHeight : PAGE_TOP + MARGIN;
+        if (isScroll()) y -= scrollOffset;
         return new ImageBox(pageX + (PAGE_WIDTH - imageWidth) / 2, y, imageWidth, page.imageHeight);
     }
 
@@ -404,11 +500,11 @@ public final class BookScreen extends Screen {
     }
 
     private List<TextLayout.Line> lines(BookPage page) {
-        return TextLayout.wrap(page, BookEditor.PAGE_WIDTH, (codePoint, encoded) -> advance(page, codePoint, encoded));
+        return lineCache.computeIfAbsent(page, value -> TextLayout.wrap(value, BookEditor.PAGE_WIDTH, (codePoint, encoded) -> advance(value, codePoint, encoded)));
     }
 
     private int textY(BookPage page) {
-        return PAGE_TOP + MARGIN + (!page.image.isEmpty() && !page.imageBottom ? page.imageHeight + 16 : 0);
+        return PAGE_TOP + MARGIN + (!page.image.isEmpty() && !page.imageBottom ? page.imageHeight + 16 : 0) - (isScroll() ? scrollOffset : 0);
     }
 
     private float lineX(BookPage page, TextLayout.Line line, int pageX) {
@@ -425,10 +521,13 @@ public final class BookScreen extends Screen {
     }
 
     private static int rowAt(List<TextLayout.Line> lines, int cursor) {
-        for (int row = 0; row + 1 < lines.size(); row++) {
-            if (cursor < lines.get(row + 1).start()) return row;
+        int low = 0, high = lines.size() - 1;
+        while (low < high) {
+            int middle = (low + high + 1) / 2;
+            if (lines.get(middle).start() <= cursor) low = middle;
+            else high = middle - 1;
         }
-        return lines.size() - 1;
+        return low;
     }
 
     private int hit(BookPage page, int pageX, float mouseX, float mouseY) {
@@ -456,13 +555,13 @@ public final class BookScreen extends Screen {
                 return true;
             }
         }
-        if (expanded && x >= 16 && x <= 146 && y >= 105 && y < 375) {
+        if (expanded && isBook() && x >= 16 && x <= 146 && y >= 105 && y < 105 + sidebarRows() * 54) {
             int index = sidebarStart + (int) ((y - 105) / 54);
             if (index < editor.document.pages.size()) selectPage(index);
             return true;
         }
-        int index = x < PAGE_LEFT + PAGE_WIDTH ? spread() : spread() + 1;
-        int pageX = PAGE_LEFT + (index % 2) * (PAGE_WIDTH + 8);
+        int index = isBook() ? x < PAGE_LEFT + PAGE_WIDTH ? spread() : spread() + 1 : 0;
+        int pageX = isBook() ? PAGE_LEFT + (index % 2) * (PAGE_WIDTH + 8) : SHEET_LEFT;
         if (x < pageX || x > pageX + PAGE_WIDTH || y < PAGE_TOP || y > PAGE_TOP + PAGE_HEIGHT
                 || index >= editor.document.pages.size()) return false;
         if (index != editor.page) editor.selectPage(index);
@@ -487,7 +586,7 @@ public final class BookScreen extends Screen {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (busy || button != 0) return false;
         BookPage page = editor.currentPage();
-        int pageX = PAGE_LEFT + editor.page % 2 * (PAGE_WIDTH + 8);
+        int pageX = pageX();
         if (resizingImage && editing()) {
             ImageBox box = resizeOrigin;
             page.imageWidth = Math.clamp((localX(mouseX) - box.x) / BookEditor.PAGE_WIDTH, 0.25f, 1f);
@@ -495,6 +594,8 @@ public final class BookScreen extends Screen {
             return true;
         }
         if (draggingText) {
+            if (isScroll() && localY(mouseY) < PAGE_TOP + MARGIN) scrollBy(-BookEditor.lineHeight(page));
+            if (isScroll() && localY(mouseY) > PAGE_TOP + PAGE_HEIGHT - MARGIN) scrollBy(BookEditor.lineHeight(page));
             editor.cursor = hit(page, pageX, localX(mouseX), localY(mouseY));
             return true;
         }
@@ -520,7 +621,9 @@ public final class BookScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontal, double vertical) {
         if (busy || vertical == 0) return false;
-        if (expanded && localX(mouseX) < 154) sidebarStart += vertical < 0 ? 1 : -1;
+        if (isScroll()) scrollBy((int) (-vertical * BookEditor.lineHeight(editor.currentPage()) * 3));
+        else if (!isBook()) return false;
+        else if (expanded && localX(mouseX) < 154) sidebarStart += vertical < 0 ? 1 : -1;
         else selectPage(spread() + (vertical < 0 ? 2 : -2));
         return true;
     }
@@ -528,7 +631,7 @@ public final class BookScreen extends Screen {
     private void selectPage(int index) {
         editor.selectPage(index);
         imageSelected = false;
-        if (editor.page < sidebarStart || editor.page >= sidebarStart + 5) sidebarStart = editor.page;
+        if (editor.page < sidebarStart || editor.page >= sidebarStart + sidebarRows()) sidebarStart = editor.page;
     }
 
     @Override
@@ -565,6 +668,12 @@ public final class BookScreen extends Screen {
         if (control && key == GLFW.GLFW_KEY_A) {
             editor.anchor = 0;
             editor.cursor = editor.currentPage().text().length();
+            return true;
+        }
+        if (isScroll() && (key == GLFW.GLFW_KEY_PAGE_UP || key == GLFW.GLFW_KEY_PAGE_DOWN
+                || !editing() && (key == GLFW.GLFW_KEY_UP || key == GLFW.GLFW_KEY_DOWN))) {
+            int direction = key == GLFW.GLFW_KEY_PAGE_UP || key == GLFW.GLFW_KEY_UP ? -1 : 1;
+            scrollBy(direction * (key == GLFW.GLFW_KEY_UP || key == GLFW.GLFW_KEY_DOWN ? BookEditor.lineHeight(editor.currentPage()) : BookEditor.PAGE_HEIGHT));
             return true;
         }
         if (!editing()) {
@@ -616,6 +725,7 @@ public final class BookScreen extends Screen {
     private void moveCursor(int offset) {
         editor.cursor = offset;
         if (!hasShiftDown()) editor.anchor = offset;
+        revealCursor();
     }
 
     private void verticalCursor(int direction) {
@@ -623,7 +733,7 @@ public final class BookScreen extends Screen {
         var lines = lines(page);
         int row = rowAt(lines, editor.cursor);
         int target = Math.clamp(row + direction, 0, lines.size() - 1);
-        int pageX = PAGE_LEFT + editor.page % 2 * (PAGE_WIDTH + 8);
+        int pageX = pageX();
         float x = lineX(page, lines.get(row), pageX) + widthBetween(page, lines.get(row).start(), editor.cursor);
         moveCursor(hit(page, pageX, x, textY(page) + target * BookEditor.lineHeight(page) + 1));
     }
@@ -634,7 +744,7 @@ public final class BookScreen extends Screen {
             imageSelected = false;
             changed();
         } catch (RuntimeException exception) {
-            status = error("text");
+            status = error(editor.document.kind == DocumentKind.NOTE ? "note_full" : "text");
         }
     }
 
@@ -656,7 +766,8 @@ public final class BookScreen extends Screen {
             editor.page = previousPage;
             editor.cursor = previousCursor;
             editor.anchor = previousCursor;
-            status = error("pages");
+            lineCache.clear();
+            status = error(editor.document.kind == DocumentKind.NOTE ? "note_full" : "pages");
             return false;
         }
     }
@@ -735,6 +846,7 @@ public final class BookScreen extends Screen {
                     selectPage(index);
                     editor.anchor = offset;
                     editor.cursor = offset + search.length();
+                    revealCursor();
                     return;
                 }
             }
@@ -909,6 +1021,9 @@ public final class BookScreen extends Screen {
     }
 
     private void changed() {
+        lineCache.clear();
+        updateGeometry();
+        revealCursor();
         dirty = true;
         saveFailed = false;
         changedAt = System.currentTimeMillis();

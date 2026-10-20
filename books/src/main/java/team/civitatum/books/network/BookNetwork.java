@@ -94,7 +94,7 @@ public final class BookNetwork {
     }
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("2");
+        var registrar = event.registrar("3");
         registrar.playToClient(OpenBook.TYPE, OpenBook.CODEC, (packet, context) -> onOpen.accept(packet));
         registrar.playToClient(Reply.TYPE, Reply.CODEC, (packet, context) -> onReply.accept(packet));
         registrar.playToClient(Image.TYPE, Image.CODEC, (packet, context) -> onImage.accept(packet));

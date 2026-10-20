@@ -12,11 +12,12 @@ import java.util.UUID;
 import team.civitatum.books.document.BookArchive;
 import team.civitatum.books.document.BookDocument;
 import team.civitatum.books.document.PngImage;
+import team.civitatum.books.document.DocumentKind;
 import team.civitatum.books.server.BookStore;
 
 /** Durable client copies, isolated by player and server/world. No server access is needed to read them. */
 final class BookShelf {
-    record Entry(UUID id, String title, String author, int pages, long openedAt, boolean complete) {}
+    record Entry(UUID id, String title, String author, int pages, DocumentKind kind, int characters, long openedAt, boolean complete) {}
     private final Path directory;
 
     BookShelf(Path gameDirectory, UUID player, String world) {
@@ -47,7 +48,7 @@ final class BookShelf {
                     UUID id = UUID.fromString(name.substring(0, name.length() - 5));
                     BookDocument document = document(id);
                     boolean complete = document.images().stream().allMatch(hash -> Files.isRegularFile(imagePath(hash)));
-                    entries.add(new Entry(id, document.title, document.author, document.pages.size(),
+                    entries.add(new Entry(id, document.title, document.author, document.pages.size(), document.kind, document.characterCount(),
                             Files.getLastModifiedTime(file).toMillis(), complete));
                 } catch (IOException | RuntimeException ignored) {
                     // One damaged local copy must not hide the remaining library.

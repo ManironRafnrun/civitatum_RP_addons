@@ -19,6 +19,7 @@ public final class BookDocument {
     public static final int MAX_IMAGES = 32;
     private static final Gson GSON = new Gson();
 
+    public DocumentKind kind = DocumentKind.BOOK;
     public String title = "";
     public String author = "";
     public boolean signed;
@@ -47,7 +48,8 @@ public final class BookDocument {
 
     public String json() {
         JsonObject root = new JsonObject();
-        root.addProperty("version", 1);
+        root.addProperty("version", 2);
+        root.addProperty("kind", kind.id());
         root.addProperty("title", title);
         root.addProperty("author", author);
         root.addProperty("signed", signed);
@@ -92,8 +94,10 @@ public final class BookDocument {
         require(json.length() <= MAX_BYTES, "document_size");
         require(json.getBytes(StandardCharsets.UTF_8).length <= MAX_BYTES, "document_size");
         JsonObject root = JsonParser.parseString(json).getAsJsonObject();
-        require(root.get("version").getAsInt() == 1, "version");
+        int version = root.get("version").getAsInt();
+        require(version == 1 || version == 2, "version");
         BookDocument document = new BookDocument();
+        document.kind = version == 1 ? DocumentKind.BOOK : DocumentKind.parse(root.get("kind").getAsString());
         document.title = root.get("title").getAsString();
         document.author = root.get("author").getAsString();
         document.signed = root.get("signed").getAsBoolean();
@@ -102,12 +106,13 @@ public final class BookDocument {
         require(document.revision >= 0 && document.revision < Integer.MAX_VALUE, "revision");
         JsonArray pages = root.getAsJsonArray("pages");
         require(!pages.isEmpty() && pages.size() <= MAX_PAGES, "pages");
+        require(document.kind == DocumentKind.BOOK || pages.size() == 1, "pages");
         document.pages.clear();
         for (var element : pages) {
             JsonObject value = element.getAsJsonObject();
             BookPage page = new BookPage();
             page.setText(value.get("text").getAsString());
-            require(page.text().length() <= MAX_PAGE_CHARACTERS && page.text().indexOf('\0') < 0, "text");
+            require(page.text().length() <= document.kind.textLimit() && page.text().indexOf('\0') < 0, "text");
             page.image = value.get("image").getAsString();
             require(page.image.isEmpty() || page.image.matches("[0-9a-f]{64}"), "image");
             page.imageWidth = value.get("imageWidth").getAsFloat();

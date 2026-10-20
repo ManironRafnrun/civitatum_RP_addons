@@ -96,9 +96,9 @@ final class BookLibraryScreen extends Screen {
                 String name = entry.title().isBlank() ? Component.translatable("books.untitled").getString() : entry.title();
                 String author = entry.author().isBlank() ? "" : " · " + entry.author();
                 String incomplete = entry.complete() ? "" : " · " + Component.translatable("books.library_partial").getString();
-                button.setMessage(Component.literal(font.plainSubstrByWidth(name + author + incomplete, button.getWidth() - 16)));
+                button.setMessage(Component.literal(font.plainSubstrByWidth(Component.translatable("books.kind_" + entry.kind().id()).getString() + ": " + name + author + incomplete, button.getWidth() - 16)));
                 button.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
-                        Component.literal(name + author).append("\n").append(Component.translatable("books.library_pages", entry.pages()))
+                        Component.literal(name + author).append("\n").append(entry.kind() == team.civitatum.books.document.DocumentKind.BOOK ? Component.translatable("books.library_pages", entry.pages()) : Component.translatable("books.characters", entry.characters(), entry.kind().textLimit()))
                                 .append(incomplete)));
             }
         }

@@ -4,6 +4,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import team.civitatum.books.document.BookDocument;
 import team.civitatum.books.document.BookPage;
+import team.civitatum.books.document.DocumentKind;
+import team.civitatum.books.document.DocumentFormats;
 import team.civitatum.books.document.TextLayout;
 
 /** Editing and history are independent of Minecraft screens and network acknowledgements. */
@@ -78,7 +80,7 @@ public final class BookEditor {
         String insertion = value.replace("\r\n", "\n").replace('\r', '\n').replace("\t", "    ")
                 .replace("\0", "").replace("§", "");
         int length = currentPage().text().length() - selection().length() + insertion.length();
-        if (length > BookDocument.MAX_PAGE_CHARACTERS
+        if (length > document.kind.textLimit()
                 || document.characterCount() - selection().length() + insertion.length() > BookDocument.MAX_CHARACTERS) {
             throw new IllegalArgumentException("text");
         }
@@ -103,14 +105,32 @@ public final class BookEditor {
         }
     }
 
+    public void changeKind(DocumentKind kind, TextLayout.GlyphWidth measure) {
+        String before = document.json();
+        int oldPage = page, oldCursor = cursor, oldAnchor = anchor;
+        remember();
+        try {
+            DocumentFormats.change(document, kind);
+            selectPage(0);
+            paginate(measure);
+            BookDocument.parse(document.bytes());
+        } catch (RuntimeException exception) {
+            document = BookDocument.parse(before);
+            page = oldPage; cursor = oldCursor; anchor = oldAnchor;
+            throw exception;
+        }
+    }
+
     /** Overflow moves forward without deleting page boundaries deliberately added by the author. */
     public void paginate(TextLayout.GlyphWidth measure) {
+        if (document.kind == DocumentKind.SCROLL) return;
         for (int index = 0; index < document.pages.size(); index++) {
             BookPage current = document.pages.get(index);
             var lines = TextLayout.wrap(current, PAGE_WIDTH, (codePoint, style) ->
                     measure.width(codePoint, style) * current.fontSize / 9f);
             int capacity = Math.max(1, textHeight(current) / lineHeight(current));
             if (lines.size() <= capacity) continue;
+            if (document.kind == DocumentKind.NOTE) throw new IllegalArgumentException("note_full");
             if (index + 1 == document.pages.size()) {
                 if (document.pages.size() >= BookDocument.MAX_PAGES) throw new IllegalArgumentException("pages");
                 BookPage continuation = new BookPage();

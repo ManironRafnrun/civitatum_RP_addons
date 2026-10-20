@@ -242,7 +242,7 @@ public final class BookServer {
         next.title = next.title.strip();
         if ((sign || existing.signed) && next.title.isEmpty()) throw new IllegalArgumentException("title");
         next.signed = existing.signed || sign;
-        next.author = BookSigning.author(existing.author, next.author, player.getGameProfile().getName(),
+        next.author = BookSigning.author(existing.author, next.author, CharacterNames.author(player),
                 session.administrative && player.hasPermissions(2), next.signed);
         next.revision = existing.revision + 1;
         store.write(session.book, next);
