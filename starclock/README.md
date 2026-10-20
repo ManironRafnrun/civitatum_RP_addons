@@ -28,7 +28,8 @@
 
 ## Сборка
 
-Нужны Java 21, Python 3.10+ с venv и доступ к Maven/PyPI при первой сборке.
+Нужны Java 21, Python 3.12 или 3.13 с venv и доступ к Maven/PyPI при первой сборке.
+В CI используется Python 3.12. Если системный Python другой версии, укажите интерпретатор через `starclockPython`.
 Gradle создаёт отдельное Python-окружение в `starclock/build`, устанавливает Pillow 11.3.0
 и imageio-ffmpeg 0.6.0. FFmpeg для генерации звуков поставляется Python-пакетом.
 
