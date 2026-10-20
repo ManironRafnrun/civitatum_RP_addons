@@ -1,6 +1,7 @@
 package team.civitatum.starclock.mixin;
 
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,12 +13,13 @@ import team.civitatum.starclock.client.RitualClientState;
 public abstract class MouseHandlerMixin {
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
     private void starclock$blockScroll(long window, double horizontal, double vertical, CallbackInfo callback) {
-        if (RitualClientState.isActive()) callback.cancel();
+        if (RitualClientState.isActive() && Minecraft.getInstance().screen == null) callback.cancel();
     }
 
     @Inject(method = "onPress", at = @At("HEAD"), cancellable = true)
     private void starclock$blockPress(long window, int button, int action, int modifiers, CallbackInfo callback) {
-        if (RitualClientState.isActive() && action != GLFW.GLFW_RELEASE
+        if (RitualClientState.isActive() && Minecraft.getInstance().screen == null
+                && action != GLFW.GLFW_RELEASE
                 && (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT)) {
             callback.cancel();
         }
