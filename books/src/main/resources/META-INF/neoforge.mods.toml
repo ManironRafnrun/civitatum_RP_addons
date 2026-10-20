@@ -4,7 +4,7 @@ license="MIT"
 
 [[mods]]
 modId="civitatum_books"
-version="0.1.0"
+version="0.1.1"
 displayName="Civitatum Books"
 authors="Civitatum Team"
 description='''An expanded book reader and editor with rich text, PNG illustrations and server-side storage.'''

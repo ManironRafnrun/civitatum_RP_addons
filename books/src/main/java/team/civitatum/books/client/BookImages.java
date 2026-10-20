@@ -1,6 +1,7 @@
 package team.civitatum.books.client;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +21,9 @@ final class BookImages {
 
     void accept(BookNetwork.Image packet) throws IOException {
         if (images.containsKey(packet.hash()) || !PngImage.hash(packet.data()).equals(packet.hash())) return;
-        NativeImage pixels = NativeImage.read(packet.data());
+        // The byte[] overload copies the whole PNG onto LWJGL's small thread-local stack.
+        // Stream decoding uses a growable native buffer and supports the full upload limit.
+        NativeImage pixels = NativeImage.read(new ByteArrayInputStream(packet.data()));
         if (pixels.getWidth() > PngImage.MAX_DIMENSION || pixels.getHeight() > PngImage.MAX_DIMENSION) {
             pixels.close();
             throw new IOException("png_dimensions");
