@@ -28,6 +28,9 @@ jobs:
         if: hashFiles('starclock/src/gameTest/**/*.java') != ''
         run: ./gradlew :starclock:runGameTestServer
 
+      - name: Подготовить проверку клиента
+        run: python3 starclock/tools/prepare_client_checks.py --project starclock
+
       - name: Сохранить Starclock и результаты проверки
         if: success() && hashFiles('starclock/build/libs/*.jar') != ''
         uses: actions/upload-artifact@v4
