@@ -9,6 +9,7 @@ repositories {
 
 dependencies {
     implementation 'software.bernie.geckolib:geckolib-neoforge-1.21.1:4.8.4'
+    testImplementation 'com.google.code.gson:gson:2.10.1'
 }
 
 // Скрипты доступны отдельному набору tools и не включаются в jar мода.
