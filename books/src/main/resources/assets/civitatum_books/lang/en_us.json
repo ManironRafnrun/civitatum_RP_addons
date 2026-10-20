@@ -71,5 +71,18 @@
   "books.error.author": "Signature must be at most 80 characters without line breaks.",
   "books.error.permission": "This action requires operator permission level 2.",
   "books.previous": "Previous",
-  "books.next": "Next"
+  "books.next": "Next",
+  "books.library_button": "Books",
+  "books.library_title": "Read books",
+  "books.library_search": "Search title or author",
+  "books.library_hint": "Local copies · no inventory item required",
+  "books.library_loading": "Loading library…",
+  "books.library_partial": "missing PNGs",
+  "books.library_pages": "Pages: %s",
+  "books.library_empty": "Books you open will appear here.",
+  "books.library_count": "Books found: %s",
+  "books.library_load_failed": "Cannot read the local library.",
+  "books.library_save_failed": "Cannot retain a local book copy. Check disk space and access to the game directory.",
+  "books.library_copy": "Local copy · read only",
+  "books.library_missing_image": "PNG not retained"
 }

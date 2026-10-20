@@ -40,6 +40,9 @@ public final class BookScreen extends Screen {
     private final UUID book;
     private final boolean lectern;
     private final boolean administrative;
+    private final boolean localCopy;
+    private final Screen returnTo;
+    private final BookLibrary.Capture capture;
     private static final ResourceLocation OPEN_BOOK = CivitatumBooks.resource("textures/gui/open_book.png");
     private final BookImages images = new BookImages();
     private final DraftStore drafts;
@@ -77,6 +80,9 @@ public final class BookScreen extends Screen {
 
     public BookScreen(BookNetwork.OpenBook packet) {
         super(Component.literal("Civitatum Books"));
+        localCopy = false;
+        returnTo = null;
+        capture = BookLibrary.opened(packet);
         session = packet.session();
         book = packet.book();
         lectern = packet.lectern();
@@ -92,6 +98,31 @@ public final class BookScreen extends Screen {
             CivitatumBooks.LOG.warn("Cannot read local book draft {}", book, exception);
         }
         requestImages();
+    }
+
+    /** A retained copy is strictly read-only and never opens a network session. */
+    BookScreen(UUID id, BookArchive.Contents saved, Screen parent) {
+        super(Component.literal("Civitatum Books"));
+        session = UUID.randomUUID();
+        book = id;
+        lectern = false;
+        administrative = false;
+        localCopy = true;
+        returnTo = parent;
+        capture = null;
+        drafts = null;
+        editable = false;
+        reading = true;
+        expanded = false;
+        editor = new BookEditor(saved.document().copy());
+        status = text("library_copy");
+        for (var image : saved.images().entrySet()) {
+            try {
+                images.accept(new BookNetwork.Image(session, image.getKey(), image.getValue()));
+            } catch (Exception exception) {
+                CivitatumBooks.LOG.warn("Cannot decode retained book illustration {}", image.getKey(), exception);
+            }
+        }
     }
 
     @Override
@@ -342,7 +373,7 @@ public final class BookScreen extends Screen {
         ImageBox box = imageBox(page, pageX);
         BookImages.Image image = images.get(page.image);
         graphics.fill(box.x, box.y, box.x + box.width, box.y + box.height, 0x12816c4d);
-        if (image == null) graphics.drawCenteredString(font, "PNG…", box.x + box.width / 2, box.y + box.height / 2, 0xff867152);
+        if (image == null) graphics.drawCenteredString(font, localCopy ? text("library_missing_image").getString() : "PNG…", box.x + box.width / 2, box.y + box.height / 2, 0xff867152);
         else {
             float fit = Math.min(box.width / (float) image.width(), box.height / (float) image.height());
             int drawWidth = Math.round(image.width() * fit);
@@ -744,6 +775,7 @@ public final class BookScreen extends Screen {
     }
 
     private void requestImages() {
+        if (localCopy) return;
         for (String hash : editor.document.images()) {
             if (images.get(hash) == null && requestedImages.add(hash)) {
                 PacketDistributor.sendToServer(new BookNetwork.Request(session, BookNetwork.Command.IMAGE, hash));
@@ -792,6 +824,14 @@ public final class BookScreen extends Screen {
         if (packet.result() == BookNetwork.Result.TAKE_FROM_LECTERN) {
             closeNow();
             return;
+        }
+        // Retain the acknowledged payload, never later unsaved edits in the editor.
+        if (capture != null) {
+            BookDocument confirmed = BookDocument.parse(sentDocument);
+            confirmed.revision = packet.revision();
+            confirmed.author = packet.author();
+            if (packet.result() == BookNetwork.Result.SIGN) confirmed.signed = true;
+            capture.remember(confirmed);
         }
         boolean unchanged = editor.document.json().equals(sentDocument);
         editor.document.revision = packet.revision();
@@ -909,6 +949,7 @@ public final class BookScreen extends Screen {
     }
 
     private void backup() {
+        if (localCopy) return;
         try {
             drafts.write(editor.document);
             backupAt = System.currentTimeMillis();
@@ -962,9 +1003,9 @@ public final class BookScreen extends Screen {
     }
 
     private void closeNow() {
-        PacketDistributor.sendToServer(new BookNetwork.Request(session, BookNetwork.Command.CLOSE, ""));
+        if (!localCopy) PacketDistributor.sendToServer(new BookNetwork.Request(session, BookNetwork.Command.CLOSE, ""));
         images.close();
-        minecraft.setScreen(null);
+        minecraft.setScreen(returnTo);
     }
 
     @Override

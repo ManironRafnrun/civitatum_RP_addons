@@ -71,5 +71,18 @@
   "books.error.author": "Подпись должна содержать не более 80 символов без переносов строк.",
   "books.error.permission": "Для этого действия нужны права оператора уровня 2.",
   "books.previous": "Назад",
-  "books.next": "Далее"
+  "books.next": "Далее",
+  "books.library_button": "Книги",
+  "books.library_title": "Прочитанные книги",
+  "books.library_search": "Поиск по названию или автору",
+  "books.library_hint": "Локальные копии · предмет в инвентаре не нужен",
+  "books.library_loading": "Загрузка библиотеки…",
+  "books.library_partial": "не все PNG",
+  "books.library_pages": "Страниц: %s",
+  "books.library_empty": "Здесь появятся книги, которые вы откроете.",
+  "books.library_count": "Найдено книг: %s",
+  "books.library_load_failed": "Не удалось прочитать локальную библиотеку.",
+  "books.library_save_failed": "Не удалось сохранить книгу в локальную библиотеку. Проверьте свободное место и доступ к папке игры.",
+  "books.library_copy": "Локальная копия · только чтение",
+  "books.library_missing_image": "PNG не сохранён"
 }

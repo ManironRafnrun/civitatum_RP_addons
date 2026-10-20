@@ -14,20 +14,25 @@ public final class BooksClient {
     private BookScreen activeBook;
 
     public BooksClient() {
+        new InventoryLibraryButton().register();
         BookNetwork.onOpen = packet -> {
             if (activeBook != null) activeBook.releaseImages();
             activeBook = new BookScreen(packet);
             Minecraft.getInstance().setScreen(activeBook);
         };
         NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut event) -> {
+            BookScreen visible = currentBook();
+            if (visible != null && visible != activeBook) visible.releaseImages();
             if (activeBook != null) activeBook.releaseImages();
             activeBook = null;
+            BookLibrary.logout();
         });
         BookNetwork.onReply = packet -> {
             BookScreen screen = currentBook();
             if (screen != null) screen.receive(packet);
         };
         BookNetwork.onImage = packet -> {
+            BookLibrary.image(packet);
             BookScreen screen = currentBook();
             if (screen != null) screen.receive(packet);
         };
