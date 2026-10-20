@@ -153,10 +153,10 @@ public final class BookScreen extends Screen {
         controls.clear();
         if (!expanded) {
             control(954, 79, 28, Component.literal("+"), () -> changeView(true, true), true, false);
-            if (lectern) button(174, 529, 136, "take", this::takeBook, !dirty);
-            control(438, 529, 64, Component.literal("‹"), () -> selectPage(spread() - 2), spread() > 0, false);
-            control(622, 529, 64, Component.literal("›"), () -> selectPage(spread() + 2), spread() + 2 < editor.document.pages.size(), false);
-            button(824, 529, 132, "close", this::onClose, true);
+            if (lectern) button(174, 517, 136, "take", this::takeBook, !dirty);
+            control(438, 517, 64, text("previous"), () -> selectPage(spread() - 2), spread() > 0, false);
+            control(622, 517, 64, text("next"), () -> selectPage(spread() + 2), spread() + 2 < editor.document.pages.size(), false);
+            button(824, 517, 132, "close", this::onClose, true);
             return;
         }
         String title = editor.document.title.isBlank() ? text("untitled").getString() : editor.document.title;
@@ -240,8 +240,12 @@ public final class BookScreen extends Screen {
         float localMouseY = localY(mouseY);
         for (Control control : controls) {
             if (!expanded) {
+                if (control.x == 954) {
+                    graphics.fill(control.x, control.y, control.x + control.width, control.y + 27, 0xffd8c18b);
+                    graphics.renderOutline(control.x, control.y, control.width, 27, 0xff7c5935);
+                }
                 int color = control.enabled && control.contains(localMouseX, localMouseY) ? 0xff884626 : control.enabled ? 0xff493321 : 0xffb39b75;
-                graphics.drawCenteredString(font, control.label, control.x + control.width / 2, control.y + 9, color);
+                graphics.drawString(font, control.label, control.x + (control.width - font.width(control.label)) / 2, control.y + 9, color, false);
                 if (control.x == 954 && control.contains(localMouseX, localMouseY)) {
                     graphics.drawString(font, text("expand"), 785, 91, 0xff493321, false);
                 }
@@ -604,8 +608,8 @@ public final class BookScreen extends Screen {
     }
 
     /** A layout failure restores the entire change, including its image and formatting. */
-    private void mutate(Runnable action, boolean paginate) {
-        if (!editing()) return;
+    private boolean mutate(Runnable action, boolean paginate) {
+        if (!editing()) return false;
         String before = editor.document.json();
         int previousPage = editor.page;
         int previousCursor = editor.cursor;
@@ -615,12 +619,14 @@ public final class BookScreen extends Screen {
             if (paginate) editor.paginate(this::glyphWidth);
             BookDocument.parse(editor.document.bytes());
             changed();
+            return true;
         } catch (RuntimeException exception) {
             editor.document = BookDocument.parse(before);
             editor.page = previousPage;
             editor.cursor = previousCursor;
             editor.anchor = previousCursor;
             status = error("pages");
+            return false;
         }
     }
 
@@ -852,12 +858,14 @@ public final class BookScreen extends Screen {
         }
         BookDocument imported = pendingImport.document;
         pendingImport = null;
-        mutate(() -> {
+        boolean applied = mutate(() -> {
             editor.document = imported;
             editor.selectPage(0);
         }, true);
-        requestImages();
-        status = text("imported");
+        if (applied) {
+            requestImages();
+            status = text("imported");
+        }
     }
 
     private void changed() {

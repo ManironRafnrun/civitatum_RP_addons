@@ -69,5 +69,7 @@
   "books.error.archive_size": "Book archive exceeds 20 MiB.",
   "books.error.archive_images": "The archive is missing required images.",
   "books.error.author": "Signature must be at most 80 characters without line breaks.",
-  "books.error.permission": "This action requires operator permission level 2."
+  "books.error.permission": "This action requires operator permission level 2.",
+  "books.previous": "Previous",
+  "books.next": "Next"
 }
