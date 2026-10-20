@@ -3,6 +3,13 @@
   "minVersion": "0.8",
   "package": "team.civitatum.starclock.mixin",
   "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ItemInHandRendererMixin",
+    "CameraMixin",
+    "MouseHandlerMixin",
+    "MinecraftMixin",
+    "PunchyConfigMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

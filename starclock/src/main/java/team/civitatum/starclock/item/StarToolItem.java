@@ -1,6 +1,13 @@
 package team.civitatum.starclock.item;
 
 import java.util.List;
+import java.util.function.Consumer;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.client.GeoRenderProvider;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.util.GeckoLibUtil;
+import team.civitatum.starclock.animation.RitualAnimationController;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -14,7 +21,8 @@ import net.minecraft.world.level.Level;
 import team.civitatum.starclock.ritual.RitualManager;
 import team.civitatum.starclock.ritual.RitualRules;
 
-public final class StarToolItem extends Item {
+public final class StarToolItem extends Item implements GeoItem {
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final ToolKind kind;
     private final ToolTier tier;
 
@@ -22,6 +30,29 @@ public final class StarToolItem extends Item {
         super(properties);
         this.kind = kind;
         this.tier = tier;
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new RitualAnimationController(this));
+    }
+
+    @Override
+    public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
+        consumer.accept(new GeoRenderProvider() {
+            private team.civitatum.starclock.client.render.StarToolRenderer renderer;
+
+            @Override
+            public net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer getGeoItemRenderer() {
+                if (renderer == null) renderer = new team.civitatum.starclock.client.render.StarToolRenderer();
+                return renderer;
+            }
+        });
     }
 
     public ToolKind kind() {

@@ -66,7 +66,7 @@ tasks.register('prepareTextureTools', Exec) {
 
 tasks.register('generateTextures', Exec) {
     group = 'tools'
-    description = 'Детерминированно рисует спрайты инструментов и ключа Башни.'
+    description = 'Детерминированно рисует спрайты и атласы моделей Starclock.'
     dependsOn 'prepareTextureTools'
     inputs.file('tools/generate_textures.py')
     inputs.file('tools/requirements.txt')

@@ -1,0 +1,274 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.sextant.ritual": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 2,
+      "bones": {
+        "hand": {
+          "position": {
+            "0.00": {
+              "vector": [
+                0,
+                -13,
+                4
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.40": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.90": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                -15,
+                5
+              ],
+              "easing": "easeInOutSine"
+            }
+          },
+          "rotation": {
+            "0.00": {
+              "vector": [
+                -18,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.40": {
+              "vector": [
+                0,
+                -4,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.90": {
+              "vector": [
+                0,
+                4,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                -20,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        },
+        "arc": {
+          "rotation": {
+            "0.00": {
+              "vector": [
+                0,
+                0,
+                -18
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.40": {
+              "vector": [
+                0,
+                0,
+                -18
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.75": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        },
+        "index": {
+          "rotation": {
+            "0.00": {
+              "vector": [
+                0,
+                0,
+                -20
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.75": {
+              "vector": [
+                0,
+                0,
+                -20
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.00": {
+              "vector": [
+                0,
+                0,
+                -5
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.25": {
+              "vector": [
+                0,
+                0,
+                10
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.50": {
+              "vector": [
+                0,
+                0,
+                18
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.60": {
+              "vector": [
+                0,
+                0,
+                15
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                0,
+                15
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        },
+        "lens": {
+          "rotation": {
+            "0.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.75": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.60": {
+              "vector": [
+                0,
+                18,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                18,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        },
+        "glint": {
+          "scale": {
+            "0.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.55": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.70": {
+              "vector": [
+                1.6,
+                1.6,
+                1.6
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.90": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        }
+      },
+      "sound_effects": {
+        "0.50": {
+          "effect": "minecraft:block.lever.click"
+        },
+        "1.00": {
+          "effect": "minecraft:block.lever.click"
+        },
+        "1.50": {
+          "effect": "minecraft:block.lever.click"
+        }
+      },
+      "particle_effects": {
+        "1.70": {
+          "effect": "starclock:gold",
+          "locator": "lens"
+        }
+      }
+    }
+  }
+}

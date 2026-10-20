@@ -1,0 +1,295 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.bowl.ritual": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 2,
+      "bones": {
+        "hand": {
+          "position": {
+            "0.00": {
+              "vector": [
+                0,
+                -13,
+                4
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.40": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.80": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                -15,
+                5
+              ],
+              "easing": "easeInOutSine"
+            }
+          },
+          "rotation": {
+            "0.00": {
+              "vector": [
+                4,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.40": {
+              "vector": [
+                22,
+                -4,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.80": {
+              "vector": [
+                22,
+                4,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                2,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        },
+        "bowl": {
+          "rotation": {
+            "0.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.40": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.90": {
+              "vector": [
+                0,
+                0,
+                8
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.30": {
+              "vector": [
+                0,
+                0,
+                -5
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.50": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        },
+        "water": {
+          "rotation": {
+            "0.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.40": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.90": {
+              "vector": [
+                0,
+                0,
+                -8
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.30": {
+              "vector": [
+                0,
+                0,
+                5
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.50": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        },
+        "ripple": {
+          "scale": {
+            "0.00": {
+              "vector": [
+                0,
+                1,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "0.90": {
+              "vector": [
+                0.1,
+                1,
+                0.1
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.20": {
+              "vector": [
+                1,
+                1,
+                1
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.40": {
+              "vector": [
+                1.5,
+                1,
+                1.5
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.50": {
+              "vector": [
+                0,
+                1,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                1,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        },
+        "glint": {
+          "scale": {
+            "0.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.45": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.65": {
+              "vector": [
+                1.6,
+                1.6,
+                1.6
+              ],
+              "easing": "easeInOutSine"
+            },
+            "1.80": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            },
+            "2.00": {
+              "vector": [
+                0,
+                0,
+                0
+              ],
+              "easing": "easeInOutSine"
+            }
+          }
+        }
+      },
+      "sound_effects": {
+        "0.30": {
+          "effect": "minecraft:item.bucket.empty"
+        },
+        "1.30": {
+          "effect": "minecraft:entity.fish.swim"
+        }
+      },
+      "particle_effects": {
+        "1.60": {
+          "effect": "starclock:amethyst",
+          "locator": "water"
+        }
+      }
+    }
+  }
+}
