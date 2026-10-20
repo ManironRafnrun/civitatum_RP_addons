@@ -21,3 +21,6 @@ include 'character-creation'
 include 'couple-interactions'
 include 'menu'
 include 'books'
+
+// Звёздный счёт: общий серверный и клиентский мод.
+include 'starclock'

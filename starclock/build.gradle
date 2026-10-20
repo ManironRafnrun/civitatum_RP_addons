@@ -1,0 +1,65 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+}
+
+repositories {
+    maven { url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
+}
+
+dependencies {
+    implementation 'software.bernie.geckolib:geckolib-neoforge-1.21.1:4.8.4'
+}
+
+// Скрипты доступны отдельному набору tools и не включаются в jar мода.
+sourceSets {
+    tools { resources.srcDirs = ['tools'] }
+}
+
+neoForge {
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+    }
+}
+
+def windows = System.getProperty('os.name').toLowerCase(java.util.Locale.ROOT).contains('win')
+def pythonCommand = providers.gradleProperty('starclockPython').getOrElse(windows ? 'python' : 'python3')
+def pythonHome = layout.buildDirectory.dir('texture-python')
+def generatedResources = layout.buildDirectory.dir('generated/starclockResources')
+def venvPython = pythonHome.map { it.file(windows ? 'Scripts/python.exe' : 'bin/python') }
+
+tasks.register('prepareTextureTools') {
+    group = 'tools'
+    description = 'Подготавливает Python и Pillow для генерации текстур.'
+    inputs.file('tools/requirements.txt')
+    outputs.dir(pythonHome)
+    doLast {
+        exec { commandLine pythonCommand, '-m', 'venv', pythonHome.get().asFile.absolutePath }
+        exec {
+            commandLine venvPython.get().asFile.absolutePath, '-m', 'pip', 'install',
+                    '--disable-pip-version-check', '-r', file('tools/requirements.txt').absolutePath
+        }
+    }
+}
+
+tasks.register('generateTextures', Exec) {
+    group = 'tools'
+    description = 'Детерминированно рисует спрайты инструментов и ключа Башни.'
+    dependsOn 'prepareTextureTools'
+    inputs.file('tools/generate_textures.py')
+    inputs.file('tools/requirements.txt')
+    outputs.dir(generatedResources)
+    doFirst {
+        commandLine venvPython.get().asFile.absolutePath, file('tools/generate_textures.py').absolutePath,
+                '--output', generatedResources.get().asFile.absolutePath
+    }
+}
+
+sourceSets.main.resources.srcDir(generatedResources)
+tasks.named('processResources') { dependsOn 'generateTextures' }
+tasks.named('test') {
+    dependsOn 'generateTextures'
+    systemProperty 'starclock.projectDir', projectDir.absolutePath
+    systemProperty 'starclock.generatedResources', generatedResources.get().asFile.absolutePath
+}

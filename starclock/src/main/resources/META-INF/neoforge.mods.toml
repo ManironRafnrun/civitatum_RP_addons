@@ -1,0 +1,35 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="civitatum_starclock"
+version="0.1.0"
+displayName="Civitatum Starclock"
+authors="Civitatum Team"
+displayTest="IGNORE_ALL_VERSION"
+description='''Звёздный счёт: инструменты, чтение неба и карты предсказаний.'''
+
+[[dependencies.civitatum_starclock]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.256,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.civitatum_starclock]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.civitatum_starclock]]
+modId="geckolib"
+type="required"
+versionRange="[4.8.4,)"
+ordering="NONE"
+side="BOTH"
+
+[[mixins]]
+config="civitatum_starclock.mixins.json"

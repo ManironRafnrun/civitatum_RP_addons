@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": {
+    "item": "minecraft:echo_shard"
+  },
+  "base": {
+    "item": "civitatum_starclock:bowl_2"
+  },
+  "addition": {
+    "item": "minecraft:netherite_ingot"
+  },
+  "result": {
+    "id": "civitatum_starclock:bowl_3",
+    "count": 1
+  }
+}
