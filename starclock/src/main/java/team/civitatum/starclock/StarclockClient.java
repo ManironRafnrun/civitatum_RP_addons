@@ -8,6 +8,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import team.civitatum.starclock.client.CardScreen;
+import team.civitatum.starclock.client.ConstellationScreen;
+import team.civitatum.starclock.client.RitualArt;
 import team.civitatum.starclock.client.RitualClientState;
 import team.civitatum.starclock.client.StarclockAudio;
 import team.civitatum.starclock.network.CancelRitualPayload;
@@ -21,7 +23,10 @@ public final class StarclockClient {
         boolean firstDrawing = packet.drawing() && (previous == null
                 || !previous.session().equals(packet.session()) || !previous.drawing());
         RitualClientState.accept(packet);
-        if (firstDrawing) StarclockAudio.revealStars();
+        if (firstDrawing) {
+            StarclockAudio.revealStars();
+            Minecraft.getInstance().setScreen(new ConstellationScreen(packet.session()));
+        }
     }
 
     public static void card(ShowCardPayload packet) {
@@ -29,13 +34,13 @@ public final class StarclockClient {
         if (state == null || !state.session().equals(packet.session())) return;
         RitualClientState.clear();
         Minecraft.getInstance().setScreen(new CardScreen(packet));
-        StarclockAudio.revealCard(packet);
     }
 
     public static void cancel(CancelRitualPayload packet) {
         var state = RitualClientState.current();
         if (state == null || !state.session().equals(packet.session())) return;
         RitualClientState.clear();
+        if (Minecraft.getInstance().screen instanceof ConstellationScreen) Minecraft.getInstance().setScreen(null);
         var player = Minecraft.getInstance().player;
         if (player != null) {
             player.stopUsingItem();
@@ -54,11 +59,11 @@ public final class StarclockClient {
     public static void overlay(RenderGuiEvent.Post event) {
         var state = RitualClientState.current();
         var mc = Minecraft.getInstance();
-        if (state == null || mc.player == null || mc.level == null) return;
+        if (state == null || state.drawing() || mc.player == null || mc.level == null) return;
         var graphics = event.getGuiGraphics();
         int center = graphics.guiWidth() / 2;
         int top = 20;
-        if (state.drawing()) graphics.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(), 0x990B1020);
+        RitualArt.blit(graphics, "gui/sky", center - 80, top + 12, 12, 12, 16, 16);
         graphics.drawCenteredString(mc.font, Component.translatable(state.drawing()
                 ? "ui.civitatum_starclock.drawing" : "ui.civitatum_starclock.preparation"),
                 center, top, 0xFFE3C07B);

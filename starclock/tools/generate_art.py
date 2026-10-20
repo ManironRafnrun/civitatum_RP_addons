@@ -8,7 +8,7 @@ import json
 import math
 import zipfile
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 NIGHT = (11, 16, 32)
 GOLD = (227, 192, 123)
@@ -34,8 +34,8 @@ def figure(source):
     mask = Image.new("L", source.size)
     values = []
     for red, green, blue in source.getdata():
-        cyan = min(green - red, green * 1.5 - blue)
-        values.append(round(max(0, min(255, (cyan - 16) * 5))))
+        cyan = min(green - red, (blue - red) * 0.8)
+        values.append(round(max(0, min(255, (cyan - 4) * 5))))
     mask.putdata(values)
     # Объединяем близкие штрихи в компоненты на уменьшенной сетке.
     small = mask.resize((222, 111), Image.Resampling.BOX)
@@ -66,6 +66,11 @@ def figure(source):
               max(0, math.floor(min(y for x, y in regions) * sy)),
               min(source.width, math.ceil((max(x for x, y in regions)+1) * sx)),
               min(source.height, math.ceil((max(y for x, y in regions)+1) * sy)))
+    region_mask = Image.new("L", small.size)
+    region_draw = ImageDraw.Draw(region_mask)
+    for point in regions:
+        region_draw.point(point, fill=255)
+    mask = ImageChops.multiply(mask, region_mask.resize(source.size, Image.Resampling.NEAREST))
     mask = mask.crop(bounds)
     mask.thumbnail((432, 432), Image.Resampling.LANCZOS)
     alpha = Image.new("L", (512, 512))

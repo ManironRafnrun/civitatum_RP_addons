@@ -39,6 +39,9 @@ public final class StarclockClientCheck {
     private static float highest;
     private static long phaseStart;
     private static boolean drawing;
+    private static boolean showingCard;
+    private static int videoFrame;
+    private static int screenCases;
     private static boolean captured;
     private static boolean finished;
     private static boolean audioChecked;
@@ -71,14 +74,41 @@ public final class StarclockClientCheck {
                 checkCancellation(mc);
                 return;
             }
+            captureVideoFrame(mc);
             if (!drawing && mc.level.getGameTime() - phaseStart >= 40) {
                 require(frames > 10, "Нет проходов GeoItemRenderer: " + label());
                 require(highest - lowest > 0.5F, "Ключевые кадры не изменили модель: " + label());
                 drawing = true;
                 phaseStart = mc.level.getGameTime();
-                RitualClientState.accept(new RitualStatePayload(session, hand, tool.kind(), tool.tier(), true, phaseStart));
-            } else if (drawing && mc.level.getGameTime() - phaseStart >= 6) {
-                require(RitualClientState.animationTicks(0) > 39, "Не удержана конечная поза");
+                team.civitatum.starclock.StarclockClient.state(new RitualStatePayload(session, hand,
+                        tool.kind(), tool.tier(), true, phaseStart, figure()));
+            } else if (drawing && !showingCard && mc.level.getGameTime() - phaseStart >= 40) {
+                require(mc.screen instanceof team.civitatum.starclock.client.ConstellationScreen,
+                        "Не открыт экран прорисовки");
+                require(!mc.screen.shouldCloseOnEsc() && !mc.screen.isPauseScreen(),
+                        "Экран прорисовки допускает закрытие или останавливает мир");
+                var sign = figure();
+                var orientation = sign == team.civitatum.starclock.prediction.Constellation.SERPENT
+                        ? team.civitatum.starclock.prediction.Orientation.NONE
+                        : current % 2 == 0 ? team.civitatum.starclock.prediction.Orientation.UPRIGHT
+                        : team.civitatum.starclock.prediction.Orientation.REVERSED;
+                team.civitatum.starclock.StarclockClient.card(new team.civitatum.starclock.network.ShowCardPayload(
+                        session, sign, orientation, tool.tier(), tool.tier().strength() >= 2 ? "effect" : "",
+                        tool.tier().strength() >= 3 ? "player" : ""));
+                // Проверяем пересоздание интерфейса при смене размера окна.
+                mc.screen.resize(mc, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+                showingCard = true;
+                phaseStart = mc.level.getGameTime();
+            } else if (showingCard && mc.level.getGameTime() - phaseStart >= 24) {
+                require(mc.screen instanceof team.civitatum.starclock.client.CardScreen,
+                        "Не открыт экран карты");
+                require(!mc.screen.isPauseScreen(), "Карта останавливает мир");
+                require(!RitualClientState.isActive(), "После карты сохранена блокировка управления");
+                screenCases++;
+                Screenshot.grab(mc.gameDirectory, "starclock-card-" + current + ".png",
+                        mc.getMainRenderTarget(), message -> {});
+                mc.setScreen(null);
+
                 RitualClientState.clear();
                 checkPunchy(true);
                 completed.add(label());
@@ -94,6 +124,19 @@ public final class StarclockClientCheck {
             failures.add(error.toString());
             CivitatumStarclock.LOG.error("CLIENT_CHECK_FAILURE", error);
             finish(mc);
+        }
+    }
+
+    private static team.civitatum.starclock.prediction.Constellation figure() {
+        return team.civitatum.starclock.prediction.Constellation.values()[current % 13];
+    }
+
+    private static void captureVideoFrame(Minecraft mc) throws Exception {
+        if (current % 6 != 0 || current >= 24) return;
+        Path directory = mc.gameDirectory.toPath().resolve("starclock-frames").resolve(tool.kind().id());
+        Files.createDirectories(directory);
+        try (var frame = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
+            frame.writeToFile(directory.resolve(String.format(java.util.Locale.ROOT, "%04d.png", videoFrame++)));
         }
     }
 
@@ -118,6 +161,8 @@ public final class StarclockClientCheck {
         lowest = Float.POSITIVE_INFINITY;
         highest = Float.NEGATIVE_INFINITY;
         drawing = false;
+        showingCard = false;
+        videoFrame = 0;
         captured = false;
         waitTicks = 24;
         var id = mc.player.getUUID();
@@ -164,7 +209,7 @@ public final class StarclockClientCheck {
         }
         session = UUID.randomUUID();
         phaseStart = mc.level.getGameTime();
-        RitualClientState.accept(new RitualStatePayload(session, hand, tool.kind(), tool.tier(), false, phaseStart));
+        RitualClientState.accept(new RitualStatePayload(session, hand, tool.kind(), tool.tier(), false, phaseStart, null));
         checkPunchy(false);
         Method attack = Minecraft.class.getDeclaredMethod("startAttack");
         attack.setAccessible(true);
@@ -236,7 +281,8 @@ public final class StarclockClientCheck {
             result.put("failures", failures);
             result.put("cancellation", cancellationPassed);
             result.put("audio", audioChecked);
-            result.put("success", failures.isEmpty() && completed.size() == 24 && cancellationPassed && audioChecked);
+            result.put("screens", screenCases);
+            result.put("success", failures.isEmpty() && completed.size() == 24 && cancellationPassed && audioChecked && screenCases == 24);
             Files.writeString(report, new GsonBuilder().setPrettyPrinting().create().toJson(result) + "\n");
             CivitatumStarclock.LOG.info("CLIENT_CHECK_FINISHED {} проверок, {} ошибок", completed.size(), failures.size());
         } catch (Exception error) {

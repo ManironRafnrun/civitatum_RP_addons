@@ -5,7 +5,7 @@ import team.civitatum.starclock.StarclockClient;
 
 public final class StarclockNetwork {
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("2");
+        var registrar = event.registrar("3");
 
         registrar.playToClient(TowerKeyStatePayload.TYPE, TowerKeyStatePayload.CODEC,
                 (packet, context) -> context.enqueueWork(() ->

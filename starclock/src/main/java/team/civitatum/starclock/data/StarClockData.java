@@ -19,6 +19,7 @@ import team.civitatum.starclock.config.StarClockConfig;
 public final class StarClockData extends SavedData {
     private static final Gson JSON = new Gson();
     private long lastRitual = -1L;
+    private Long readingSeed;
     private final Map<UUID, PendingPrediction> pending = new LinkedHashMap<>();
     private final Map<UUID, TimedSpawn> spawns = new LinkedHashMap<>();
     private final Map<String, TimedBlock> blocks = new LinkedHashMap<>();
@@ -34,6 +35,7 @@ public final class StarClockData extends SavedData {
     public static StarClockData load(CompoundTag tag, HolderLookup.Provider registries) {
         StarClockData data = new StarClockData();
         data.lastRitual = tag.contains("LastRitual") ? tag.getLong("LastRitual") : -1L;
+        if (tag.contains("ReadingSeed", Tag.TAG_LONG)) data.readingSeed = tag.getLong("ReadingSeed");
         data.read(tag, "Pending", PendingPrediction.class).forEach(value -> data.pending.put(value.id(), value));
         data.read(tag, "Spawns", TimedSpawn.class).forEach(value -> data.spawns.put(value.entity(), value));
         data.read(tag, "Blocks", TimedBlock.class).forEach(value -> data.blocks.put(value.key(), value));
@@ -69,8 +71,9 @@ public final class StarClockData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
-        tag.putInt("SchemaVersion", 2);
+        tag.putInt("SchemaVersion", 3);
         tag.putLong("LastRitual", lastRitual);
+        if (readingSeed != null) tag.putLong("ReadingSeed", readingSeed);
         tag.put("Pending", write(pending.values()));
         tag.put("Spawns", write(spawns.values()));
         tag.put("Blocks", write(blocks.values()));
@@ -80,6 +83,15 @@ public final class StarClockData extends SavedData {
         quarantine.forEach(value -> damaged.add(StringTag.valueOf(value)));
         tag.put("Quarantine", damaged);
         return tag;
+    }
+
+    // До завершения обряда сохраняется один выбор для всего мира, включая перезапуски.
+    public long readingSeed() {
+        if (readingSeed == null) {
+            readingSeed = UUID.randomUUID().getMostSignificantBits();
+            setDirty();
+        }
+        return readingSeed;
     }
 
     public long remainingCooldown(long gameTime) {
@@ -92,6 +104,7 @@ public final class StarClockData extends SavedData {
         if (pending.containsKey(prediction.id())) throw new IllegalArgumentException("Повтор предсказания");
         pending.put(prediction.id(), prediction);
         lastRitual = gameTime;
+        readingSeed = null;
         setDirty();
     }
 

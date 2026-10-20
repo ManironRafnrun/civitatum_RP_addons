@@ -1,4 +1,5 @@
 """Запускает настоящий клиент под Xvfb с Punchy и без него и проверяет отчёты."""
+from make_preview_video import generate as make_video
 import base64
 import io
 import json
@@ -17,6 +18,7 @@ REPORTS = PROJECT / "build" / "clientCheckReports"
 def check(mode):
     report = RUN / "starclock-client-check.json"
     report.unlink(missing_ok=True)
+    shutil.rmtree(RUN / "starclock-frames", ignore_errors=True)
     result = subprocess.run(["xvfb-run", "-a", "./gradlew", ":starclock:runClientCheck",
                              "-PstarclockClientCheck", "--console=plain"],
                             cwd=ROOT, env={**os.environ, "LIBGL_ALWAYS_SOFTWARE": "1",
@@ -33,13 +35,14 @@ def check(mode):
     if not report.exists():
         raise RuntimeError(f"Клиент {mode} не завершил проверку")
     content = json.loads(report.read_text(encoding="utf-8"))
-    if not content["success"] or len(content["completed"]) != 24 or content["failures"]:
+    if not content["success"] or len(content["completed"]) != 24 or content["screens"] != 24 or content["failures"]:
         raise RuntimeError(f"Проверка {mode} не прошла: {content}")
     expected_punchy = mode == "with-punchy"
     if content["punchy"] != expected_punchy:
         raise RuntimeError(f"Неверный набор модов для {mode}")
     print(f"CLIENT_CHECK_OK {mode}: 24 инструмента/руки", flush=True)
     if mode == "without-punchy":
+        make_video(RUN / "starclock-frames", REPORTS / "video")
         sheet = Image.new("RGB", (640, 428), "#0B1020")
         for index, case in enumerate((0, 6, 12, 18)):
             source = RUN / "screenshots" / f"starclock-{case}.png"
@@ -47,6 +50,14 @@ def check(mode):
                 panel = screenshot.convert("RGB").resize((320, 214), Image.Resampling.NEAREST)
                 sheet.paste(panel, ((index % 2) * 320, (index // 2) * 214))
         sheet.save(destination / "preview.png", compress_level=9)
+        cards = Image.new("RGB", (960, 640), "#0B1020")
+        for index, case in enumerate((0, 1, 12, 22)):
+            with Image.open(RUN / "screenshots" / f"starclock-card-{case}.png") as screenshot:
+                cards.paste(screenshot.convert("RGB").resize((480,320)),((index%2)*480,(index//2)*320))
+        cards.save(destination / "cards.png",compress_level=9)
+        encoded = io.BytesIO()
+        cards.save(encoded,format="PNG",compress_level=9)
+        print("CLIENT_CARD_PREVIEW_BASE64 "+base64.b64encode(encoded.getvalue()).decode(),flush=True)
         payload = io.BytesIO()
         sheet.save(payload, format="PNG", compress_level=9)
         print("CLIENT_CHECK_PREVIEW_BASE64 " + base64.b64encode(payload.getvalue()).decode("ascii"), flush=True)

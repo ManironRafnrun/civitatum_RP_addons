@@ -34,6 +34,7 @@ public final class StarclockGameTests {
         var pending = new PendingPrediction(UUID.randomUUID(), player, "minecraft:overworld",
                 1, 70, 3, now + 6000, 3, plan, true, 1, 0, 0);
         data.schedule(now, pending);
+        long sealed = data.readingSeed();
         data.grantTowerKey(player);
         data.consumeTowerKey(player);
         data.consumeTowerKey(player);
@@ -42,6 +43,7 @@ public final class StarclockGameTests {
         var nbt = NbtIo.readCompressed(new ByteArrayInputStream(buffer.toByteArray()), NbtAccounter.unlimitedHeap());
         var restored = StarClockData.load(nbt, helper.getLevel().registryAccess());
         helper.assertTrue(restored.pending().equals(java.util.List.of(pending)), "Очередь изменилась при сохранении");
+        helper.assertTrue(restored.readingSeed() == sealed, "Отмена/перезапуск меняет неисполненный выбор");
         helper.assertTrue(restored.towerKeyCharges(player) == 3, "Потерян запас Ключа Башни");
         helper.assertTrue(restored.remainingCooldown(now) > 0, "Потерян кулдаун");
         var old = new CompoundTag();
