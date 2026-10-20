@@ -160,5 +160,21 @@ public final class StarclockGameTests {
         });
     }
 
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void safePositionsRejectFire(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var player = FakePlayerFactory.getMinecraft(level);
+        var pos = helper.absolutePos(new net.minecraft.core.BlockPos(2, 1, 2));
+        level.setBlock(pos.below(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 3);
+        level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+        level.setBlock(pos.above(), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+        var feet = new net.minecraft.world.phys.Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        helper.assertTrue(WorldSafety.free(level, player, feet, true), "Свободная площадка отклонена");
+        level.setBlock(pos, net.minecraft.world.level.block.Blocks.FIRE.defaultBlockState(), 2);
+        helper.assertTrue(!WorldSafety.free(level, player, feet, true), "Телепорт допускает попадание в огонь");
+        helper.succeed();
+    }
+
     private StarclockGameTests() {}
 }

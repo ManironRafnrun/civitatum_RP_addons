@@ -35,6 +35,7 @@ public final class TowerKeyService {
     }
 
     public static void sync(ServerPlayer player) {
+        if (player instanceof net.neoforged.neoforge.common.util.FakePlayer) return;
         if (player.connection != null && player.connection.hasChannel(TowerKeyStatePayload.TYPE)) {
             PacketDistributor.sendToPlayer(player, new TowerKeyStatePayload(
                     StarClockData.get(player.server).towerKeyCharges(player.getUUID())));

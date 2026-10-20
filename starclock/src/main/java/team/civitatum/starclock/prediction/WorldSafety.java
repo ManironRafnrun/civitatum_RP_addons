@@ -11,7 +11,21 @@ public final class WorldSafety {
         if (pos.getY() < level.getMinBuildHeight() + 1 || pos.getY() + entity.getBbHeight() >= level.getMaxBuildHeight()
                 || !level.getWorldBorder().isWithinBounds(pos) || !level.hasChunkAt(pos)) return false;
         var offset = feet.subtract(entity.position());
-        if (!level.noCollision(entity, entity.getBoundingBox().move(offset))) return false;
+        var bounds = entity.getBoundingBox().move(offset);
+        if (!level.hasChunkAt(BlockPos.containing(bounds.minX, feet.y, bounds.minZ))
+                || !level.hasChunkAt(BlockPos.containing(Math.nextDown(bounds.maxX), feet.y, Math.nextDown(bounds.maxZ)))
+                || !level.noCollision(entity, bounds)) return false;
+        for (int dy = 0; dy < Math.ceil(entity.getBbHeight()); dy++) {
+            var state = level.getBlockState(pos.above(dy));
+            if (state.is(net.minecraft.tags.BlockTags.FIRE)
+                    || state.is(net.minecraft.world.level.block.Blocks.WITHER_ROSE)
+                    || state.is(net.minecraft.world.level.block.Blocks.SWEET_BERRY_BUSH)
+                    || state.is(net.minecraft.world.level.block.Blocks.POWDER_SNOW)
+                    || state.is(net.minecraft.world.level.block.Blocks.NETHER_PORTAL)
+                    || state.is(net.minecraft.world.level.block.Blocks.END_PORTAL)
+                    || state.is(net.minecraft.world.level.block.Blocks.END_GATEWAY)
+                    || state.is(net.minecraft.world.level.block.Blocks.COBWEB)) return false;
+        }
         if (!level.getFluidState(pos).isEmpty() || !level.getFluidState(pos.above()).isEmpty()) return false;
         if (!requireFloor) return true;
         var floor = level.getBlockState(pos.below());
