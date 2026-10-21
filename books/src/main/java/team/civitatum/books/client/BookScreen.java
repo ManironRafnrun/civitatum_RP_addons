@@ -326,7 +326,7 @@ public final class BookScreen extends Screen {
         } else {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            graphics.blit(isScroll() ? OPEN_SCROLL : OPEN_NOTE, 288, 56, 560, 560, 0, 0, 1086, 1448, 1086, 1448);
+            graphics.blit(isScroll() ? OPEN_SCROLL : OPEN_NOTE, 288, 56, 560, 560, 0, 0, 1254, 1254, 1254, 1254);
             RenderSystem.disableBlend();
             scrollOffset = Math.clamp(scrollOffset, 0, scrollMaximum());
             // Scissor uses screen GUI coordinates; reset the pose while defining its bounds.
