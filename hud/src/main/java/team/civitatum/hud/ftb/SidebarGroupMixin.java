@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import team.civitatum.hud.client.QuestsBridge;
 import team.civitatum.hud.client.SidebarRow;
 
 /**
@@ -33,13 +34,18 @@ public abstract class SidebarGroupMixin {
     @Shadow
     private int currentGirdWidth;
 
-    /** The method then counts the visible buttons of each row, so hidden ones leave no gap. */
+    /**
+     * The method then counts the visible buttons of each row, so hidden ones leave no gap. FTB Quests' button is
+     * switched off: the inventory has its own "Quests" button, which presses this one ({@link QuestsBridge}).
+     */
     @Inject(method = "ensureGridAlignment", at = @At("HEAD"))
     private void civitatumHud$putIntoOneRow(CallbackInfo ci) {
         int column = 0;
         for (SidebarGuiButton button : SidebarButtonManager.INSTANCE.getButtonList()) {
-            button.setEnabled(true);
-            button.setGridLocation(column++, 0);
+            // getEnabledButtonList, which the method and the drawing use, leaves a disabled button out entirely
+            boolean quests = button.getSidebarButton().getId().equals(QuestsBridge.QUESTS);
+            button.setEnabled(!quests);
+            if (!quests) button.setGridLocation(column++, 0);
         }
     }
 

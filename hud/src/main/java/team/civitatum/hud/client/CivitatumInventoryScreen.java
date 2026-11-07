@@ -39,10 +39,8 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
     /** Left edge of the top row of buttons, "Character" first. */
     private static final int TOP_ROW_X = 6;
     private static final int RESET_WIDTH = 66;
-    /** The width of "Powers", so the two buttons of the top row match. */
-    private static final int BOOKS_WIDTH = 54;
-    /** Distance of a bottom corner button's top edge from the screen bottom: its 18 pixels and a 4 pixel margin. */
-    private static final int BOTTOM_BUTTON_Y = 22;
+    /** "Quests" and "Books": as wide as "Powers" and as tall as every button, so the top row stays even. */
+    private static final int EXTRA_WIDTH = 54, EXTRA_HEIGHT = 18;
     /** Space a window leaves below itself by default; it may be moved or stretched closer to the edge. */
     private static final int DEFAULT_FREE_BELOW = 44;
     /** The hint under the windows takes this much height; a window moved over it hides it. */
@@ -102,7 +100,7 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
     /** Row of each accessory slot of the classic Accessories menu, counted from the top of its list. */
     private final IdentityHashMap<Slot, Integer> accessoryRows = new IdentityHashMap<>();
     private List<Slot> extraSlots = List.of();
-    private Button cosmetics, powersButton, booksButton;
+    private Button cosmetics, powersButton, questsButton, booksButton;
     /** Scrolled rows of the backpack grid, and of the accessories window when its menu does not scroll itself. */
     private int extraRow, accessoryRow, accessoryMaxRow, accessoryRowCount;
     /** A worn accessory under the cursor where the window only shows them; its tooltip is drawn last. */
@@ -255,15 +253,29 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         // Top left, in every layout: "Character", then "Powers".
         int powersX = characterButton.getX() + characterButton.getWidth() + 4;
         powersButton.setPosition(powersX, 4);
-        if (BooksBridge.LOADED) {
-            booksButton = button(tr("books"), b -> BooksBridge.openLibrary(this), BOOKS_WIDTH);
-            booksButton.setTooltip(Tooltip.create(tr("books_hint")));
-            // After "Powers"; when the row would reach "Reset", the bottom right corner, which the footer leaves free.
-            int booksX = powersX + powersButton.getWidth() + 4;
-            if (booksX + BOOKS_WIDTH + 4 > reset.getX()) {
-                booksButton.setPosition(width - BOOKS_WIDTH - SidebarRow.RIGHT_MARGIN, height - BOTTOM_BUTTON_Y);
+        questsButton = QuestsBridge.available() ? button(tr("quests"), b -> QuestsBridge.open(), EXTRA_WIDTH) : null;
+        booksButton = BooksBridge.LOADED ? button(tr("books"), b -> BooksBridge.openLibrary(this), EXTRA_WIDTH) : null;
+        if (booksButton != null) booksButton.setTooltip(Tooltip.create(tr("books_hint")));
+        placeExtraButtons(powersX + powersButton.getWidth() + 4, reset.getX());
+    }
+
+    /**
+     * "Quests" and "Books" continue the top row after "Powers". A button that would reach "Reset" goes to the lower
+     * right corner instead, right to left, above FTB Library's sidebar row; the footer on the left leaves it free.
+     */
+    private void placeExtraButtons(int x, int resetX) {
+        int cornerX = width - SidebarRow.RIGHT_MARGIN, cornerY = SidebarRow.top(height) - 4 - EXTRA_HEIGHT;
+        boolean overflow = false;
+        for (Button extra : new Button[] {questsButton, booksButton}) {
+            if (extra == null) continue;
+            overflow |= x + extra.getWidth() + 4 > resetX;
+            if (overflow) {
+                cornerX -= extra.getWidth();
+                extra.setPosition(cornerX, cornerY);
+                cornerX -= 4;
             } else {
-                booksButton.setPosition(booksX, 4);
+                extra.setPosition(x, 4);
+                x += extra.getWidth() + 4;
             }
         }
     }
@@ -482,6 +494,7 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
             && (kind != CompatBridge.Kind.CURIOS || CompatBridge.flag(menu, "hasCosmetics"));
         cosmetics.active = free;
         if (powersButton != null) powersButton.active = free;
+        if (questsButton != null) questsButton.active = free;
         if (booksButton != null) booksButton.active = free;
         int half = (information.width - 20) / 2;
         summaryTab.setPosition(information.x + 8, information.y + 25);
