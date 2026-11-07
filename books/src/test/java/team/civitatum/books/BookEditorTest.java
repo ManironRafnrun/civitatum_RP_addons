@@ -76,6 +76,34 @@ class BookEditorTest {
         assertEquals(page.text().length(), lines.getLast().start());
     }
 
+    @Test
+    void reflowFromTheEditedPageMatchesTheWholeDocument() {
+        BookEditor partial = new BookEditor(new BookDocument());
+        partial.insert("Путь на север. Река, лес и старая башня. ".repeat(300), FIXED_FONT);
+        BookEditor whole = new BookEditor(BookDocument.parse(partial.document.bytes()));
+        for (BookEditor editor : new BookEditor[] {partial, whole}) {
+            editor.selectPage(2);
+            editor.cursor = 5;
+            editor.currentPage().replace(5, 5, "Вставка посреди книги. ".repeat(40));
+        }
+        partial.paginate(FIXED_FONT, 2);
+        whole.paginate(FIXED_FONT);
+        assertEquals(whole.document.json(), partial.document.json());
+        assertEquals(whole.page, partial.page);
+        assertEquals(whole.cursor, partial.cursor);
+    }
+
+    @Test
+    void limitedWrapIsThePrefixOfTheFullLayout() {
+        BookPage page = new BookPage();
+        page.setText("Строка текста для переноса.\n\n".repeat(40));
+        var full = TextLayout.wrap(page, BookEditor.PAGE_WIDTH, FIXED_FONT);
+        for (int limit : new int[] {1, 7, full.size() - 1, full.size(), full.size() + 5}) {
+            assertEquals(full.subList(0, Math.min(limit, full.size())),
+                    TextLayout.wrap(page, BookEditor.PAGE_WIDTH, FIXED_FONT, limit));
+        }
+    }
+
     private static String joined(BookEditor editor) {
         return editor.document.pages.stream().map(BookPage::text).collect(Collectors.joining());
     }

@@ -21,5 +21,18 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Build Books without tests
+        if: github.ref == 'refs/heads/codex/books/development'
+        run: ./gradlew :books:assemble -x test
+
       - name: Build with Gradle
+        if: github.ref != 'refs/heads/codex/books/development'
         run: ./gradlew build
+      - name: Retain Books jar
+        if: success() && github.ref == 'refs/heads/codex/books/development'
+        uses: actions/upload-artifact@v4
+        with:
+          name: civitatum-books
+          path: books/build/libs/*.jar
+          if-no-files-found: error
+

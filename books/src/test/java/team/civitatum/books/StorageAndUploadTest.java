@@ -48,6 +48,24 @@ class StorageAndUploadTest {
     }
 
     @Test
+    void detailedPngAboveSixtyFourKibKeepsItsPixels() throws Exception {
+        BufferedImage original = new BufferedImage(384, 256, BufferedImage.TYPE_INT_ARGB);
+        java.util.Random random = new java.util.Random(7314);
+        for (int y = 0; y < original.getHeight(); y++) {
+            for (int x = 0; x < original.getWidth(); x++) original.setRGB(x, y, random.nextInt());
+        }
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ImageIO.write(original, "PNG", output);
+        byte[] normalized = PngImage.normalize(output.toByteArray());
+        assertTrue(normalized.length > 64 * 1024 && normalized.length <= PngImage.MAX_BYTES);
+        BufferedImage restored = ImageIO.read(new ByteArrayInputStream(normalized));
+        assertEquals(original.getWidth(), restored.getWidth());
+        assertEquals(original.getHeight(), restored.getHeight());
+        assertArrayEquals(original.getRGB(0, 0, 384, 256, null, 0, 384),
+                restored.getRGB(0, 0, 384, 256, null, 0, 384));
+    }
+
+    @Test
     void invalidAndOversizedPngFilesAreRejected() throws Exception {
         assertThrows(Exception.class, () -> PngImage.normalize(new byte[100]));
         byte[] oversizedDimensions = png(1025, 1);

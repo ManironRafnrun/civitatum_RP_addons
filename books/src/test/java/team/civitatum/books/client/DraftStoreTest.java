@@ -13,15 +13,15 @@ class DraftStoreTest {
 
     @Test
     void recoveryOffersOnlyDifferentUnsignedDraftsForTheSameRevision() throws Exception {
-        DraftStore drafts = new DraftStore(directory, UUID.randomUUID());
+        DraftStore drafts = new DraftStore(directory, UUID.randomUUID(), Runnable::run);
         BookDocument server = new BookDocument();
         server.revision = 3;
         assertNull(drafts.recover(server));
-        drafts.write(server);
+        drafts.write(server).join();
         assertNull(drafts.recover(server));
         BookDocument changed = server.copy();
         changed.pages.getFirst().setText("Несохранённый абзац");
-        drafts.write(changed);
+        drafts.write(changed).join();
         assertEquals(changed.json(), drafts.recover(server).json());
         server.revision = 4;
         assertNull(drafts.recover(server));

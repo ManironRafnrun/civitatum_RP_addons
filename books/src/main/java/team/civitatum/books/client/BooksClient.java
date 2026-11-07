@@ -20,14 +20,18 @@ public final class BooksClient {
             Minecraft.getInstance().setScreen(activeBook);
         };
         NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut event) -> {
+            BookScreen visible = currentBook();
+            if (visible != null && visible != activeBook) visible.releaseImages();
             if (activeBook != null) activeBook.releaseImages();
             activeBook = null;
+            BookLibrary.logout();
         });
         BookNetwork.onReply = packet -> {
             BookScreen screen = currentBook();
             if (screen != null) screen.receive(packet);
         };
         BookNetwork.onImage = packet -> {
+            BookLibrary.image(packet);
             BookScreen screen = currentBook();
             if (screen != null) screen.receive(packet);
         };
@@ -36,7 +40,7 @@ public final class BooksClient {
     private static BookScreen currentBook() {
         Screen current = Minecraft.getInstance().screen;
         if (current instanceof BookScreen book) return book;
-        if (current instanceof BookDialog dialog) return dialog.book();
+        if (current instanceof BookChildScreen dialog) return dialog.book();
         return null;
     }
 }

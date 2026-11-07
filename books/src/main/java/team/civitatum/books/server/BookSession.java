@@ -13,6 +13,7 @@ final class BookSession {
     final UUID token = UUID.randomUUID();
     final UUID book;
     final int slot;
+    final boolean administrative;
     final BlockPos lectern;
     final ResourceKey<Level> dimension;
     final Set<String> uploadedImages = new HashSet<>();
@@ -23,7 +24,8 @@ final class BookSession {
     long rateWindow;
     int receivedBytes;
 
-    BookSession(UUID book, int slot, BlockPos lectern, ResourceKey<Level> dimension, BookDocument document) {
+    BookSession(UUID book, int slot, BlockPos lectern, ResourceKey<Level> dimension, BookDocument document, boolean administrative) {
+        this.administrative = administrative;
         this.book = book;
         this.slot = slot;
         this.lectern = lectern;
@@ -37,6 +39,6 @@ final class BookSession {
             receivedBytes = 0;
         }
         receivedBytes += bytes;
-        return receivedBytes <= 8 * 1024 * 1024;
+        return receivedBytes <= 24 * 1024 * 1024;
     }
 }

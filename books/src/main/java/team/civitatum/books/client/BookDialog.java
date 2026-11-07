@@ -19,7 +19,7 @@ import team.civitatum.books.document.PngImage;
 /**
  * Small text/search dialog, or PNG import by native file picker, path or drag-and-drop.
  */
-final class BookDialog extends Screen {
+final class BookDialog extends Screen implements BookChildScreen {
 
     private final BookScreen book;
     private final String initial;
@@ -55,7 +55,8 @@ final class BookDialog extends Screen {
         book.tick();
     }
 
-    BookScreen book() {
+    @Override
+    public BookScreen book() {
         return book;
     }
 
@@ -151,8 +152,9 @@ final class BookDialog extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0xf0201c18);
         graphics.drawCenteredString(font, title, width / 2, height / 2 - 50, 0xffeee1c2);
-        if (imageImport)
+        if (imageImport) {
             graphics.drawCenteredString(font, Component.translatable("books.png_hint"), width / 2, height / 2 - 33, 0xffbda88a);
+        }
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(font, status, width / 2, height / 2 + 58, 0xffdfbb81);
     }
@@ -166,4 +168,5 @@ final class BookDialog extends Screen {
     public boolean isPauseScreen() {
         return false;
     }
+
 }
