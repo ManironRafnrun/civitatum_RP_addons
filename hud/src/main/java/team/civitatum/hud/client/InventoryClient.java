@@ -51,6 +51,7 @@ public final class InventoryClient {
         game.addListener(CivitatumHud::hideReplaced);
         // Last, so the layer is not run here when another listener cancels it.
         game.addListener(EventPriority.LOWEST, CivitatumHud::moveParCoolEnergy);
+        game.addListener(EventPriority.LOWEST, CivitatumHud::moveArsSpellName);
         game.addListener((RenderGuiEvent.Pre event) -> MinimapBounds.clear());
         game.addListener(InventoryClient::opening);
         game.addListener(InventoryClient::tick);

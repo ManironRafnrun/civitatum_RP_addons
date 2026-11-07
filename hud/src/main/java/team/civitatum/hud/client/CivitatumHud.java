@@ -28,6 +28,8 @@ public final class CivitatumHud {
     private static final int BARS_HEIGHT = 3 * BAR_HEIGHT + 2;
     /** The bars start 2 px above the {@link #SLOT} high slots, so they end this far below them. */
     private static final int BARS_BELOW_SLOTS = BARS_HEIGHT - 2 - SLOT;
+    /** The bars' bottom edge is this far above the bottom of the screen. */
+    private static final int BARS_EDGE = MARGIN - BARS_BELOW_SLOTS;
     /**
      * Between ParCool's stamina row and the health bar. More than the 1 px between the bars: the icons shake by 1 px
      * while stamina is spent and would touch the bar's frame.
@@ -57,6 +59,7 @@ public final class CivitatumHud {
     public static void register(RegisterGuiLayersEvent event) {
         event.registerAbove(VanillaGuiLayers.HOTBAR, ID, CivitatumHud::render);
         event.replaceLayer(VanillaGuiLayers.EFFECTS, new StatusEffectsLayer());
+        if (CompatBridge.loaded("ars_nouveau")) ArsBridge.findSpellNameOffsets();
     }
 
     public static void hideReplaced(RenderGuiLayerEvent.Pre event) {
@@ -116,6 +119,22 @@ public final class CivitatumHud {
         g.pose().scale(fit, fit, 1);
         int rightHeight = Minecraft.getInstance().gui.rightHeight;
         g.pose().translate(-ParCoolBridge.left(g.guiWidth()), -ParCoolBridge.top(g.guiHeight(), rightHeight), 0);
+        event.getLayer().render(g, event.getPartialTick());
+        g.pose().popPose();
+    }
+
+    /**
+     * Moves Ars Nouveau's selected spell line from under the bars to the top left corner, as far from the left and top
+     * edges as the bars are from the left and bottom ones, and hides it with the HUD while a container screen is open.
+     * Ars's own layer is run in the moved pose, so the line is drawn exactly as Ars draws it.
+     */
+    public static void moveArsSpellName(RenderGuiLayerEvent.Pre event) {
+        if (!event.getName().equals(ArsBridge.SPELL_NAME) || !active()) return;
+        event.setCanceled(true);
+        if (Minecraft.getInstance().screen instanceof AbstractContainerScreen<?>) return;
+        var g = event.getGuiGraphics();
+        g.pose().pushPose();
+        g.pose().translate(MARGIN - ArsBridge.spellNameLeft(), BARS_EDGE - ArsBridge.spellNameTop(g.guiHeight()), 0);
         event.getLayer().render(g, event.getPartialTick());
         g.pose().popPose();
     }
