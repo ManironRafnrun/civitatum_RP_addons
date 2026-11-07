@@ -36,8 +36,8 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
     private static final int ARROW = 0xFFB29A6B;
     /** Vanilla slot pitch and item size. */
     private static final int SLOT = 18, ITEM = 16;
-    /** Left edge of the screen title in the wide layout. */
-    private static final int TITLE_X = 10;
+    /** Left edge of the top row of buttons, "Character" first. */
+    private static final int TOP_ROW_X = 6;
     private static final int RESET_WIDTH = 66;
     /** The width of "Powers", so the two buttons of the top row match. */
     private static final int BOOKS_WIDTH = 54;
@@ -109,7 +109,7 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
     private ItemStack wornHover = ItemStack.EMPTY;
     private boolean wornHoverShown;
     private EditBox search;
-    private Button summaryTab, attributeTab, attributeFilter, ability, compactToggle, gearButton;
+    private Button summaryTab, attributeTab, attributeFilter, ability, characterButton, gearButton;
     private final PowersView powersView = new PowersView();
     private boolean autoBackpack = true, menuRequested;
     private int playerRow, resizeMask, anchorX, anchorY, anchorW, anchorH;
@@ -250,17 +250,10 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         var reset = button(tr("reset"), b -> resetLayout(), RESET_WIDTH);
         reset.setPosition(width - RESET_WIDTH - SidebarRow.RIGHT_MARGIN, 4);
         powersButton = button(tr("powers"), b -> togglePowers(), 54);
-        compactToggle = compact ? button(tr(compactInfo ? "equipment" : "information"), b -> {
-            compactInfo = !compactInfo;
-            updateVisibility();
-            positionControls();
-            positionSlots();
-            b.setMessage(tr(compactInfo ? "equipment" : "information"));
-        }, 82) : null;
-        if (compactToggle != null) compactToggle.setPosition(6, 4);
-        // Top left: after "Character" in the narrow layout, after the screen title in the wide one.
-        int powersX = compactToggle != null ? compactToggle.getX() + compactToggle.getWidth() + 4
-            : TITLE_X + font.width(tr("title")) + 8;
+        characterButton = button(characterLabel(), b -> toggleCharacter(), 82);
+        characterButton.setPosition(TOP_ROW_X, 4);
+        // Top left, in every layout: "Character", then "Powers".
+        int powersX = characterButton.getX() + characterButton.getWidth() + 4;
         powersButton.setPosition(powersX, 4);
         if (BooksBridge.LOADED) {
             booksButton = button(tr("books"), b -> BooksBridge.openLibrary(this), BOOKS_WIDTH);
@@ -324,6 +317,29 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         return mainAccessoryX() - accessoryPitch() - COLUMN_GAP;
     }
 
+    /** "Equipment" while the narrow layout shows the character window in its place, otherwise "Character". */
+    private Component characterLabel() {
+        return tr(compact && compactInfo ? "equipment" : "information");
+    }
+
+    /**
+     * The narrow layout has room for one of the two windows, so it swaps equipment and the character window; the wide
+     * one shows or hides the character window beside the items, as "Powers" does with its window.
+     */
+    private void toggleCharacter() {
+        if (compact) {
+            compactInfo = !compactInfo;
+        } else {
+            InventoryPreferences.get().characterVisible = !InventoryPreferences.get().characterVisible;
+            InventoryPreferences.get().save();
+        }
+        updateVisibility();
+        positionControls();
+        positionSlots();
+        characterButton.setMessage(characterLabel());
+        if (information.visible) raise(information);
+    }
+
     private void togglePowers() {
         powers.visible = !powers.visible;
         InventoryPreferences.get().powersVisible = powers.visible;
@@ -357,7 +373,7 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
     private void updateVisibility() {
         equipment.visible = !compact || !compactInfo;
         accessories.visible = accessoriesShown() && equipment.visible;
-        information.visible = !compact || compactInfo;
+        information.visible = compact ? compactInfo : InventoryPreferences.get().characterVisible;
         powers.visible = InventoryPreferences.get().powersVisible && !compact;
         dockEquipment();
     }
@@ -600,8 +616,8 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
     }
 
     /**
-     * Accessories' experimental menu laid out as the classic column: eight rows, the cosmetic column on the left while
-     * it is switched on, scrolled by this screen. All its slots are always active.
+     * Accessories' experimental menu laid out as the classic column: as many rows as fit, the cosmetic column on the
+     * left while it is switched on, scrolled by this screen. All its slots are always active.
      */
     private void placeAccessoryColumn() {
         int cell = accessoryPitch();
@@ -618,10 +634,11 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
             cosmetic = null;
         }
         accessoryRowCount = rows.size();
-        accessoryMaxRow = Math.max(0, rows.size() - CLASSIC_ROWS);
+        int shown = accessoryRowsShown();
+        accessoryMaxRow = Math.max(0, rows.size() - shown);
         accessoryRow = Math.clamp(accessoryRow, 0, accessoryMaxRow);
         boolean cosmetics = InventoryPreferences.get().accessoryCosmetics;
-        for (int r = 0; r < CLASSIC_ROWS && accessoryRow + r < rows.size(); r++) {
+        for (int r = 0; r < shown && accessoryRow + r < rows.size(); r++) {
             var row = rows.get(accessoryRow + r);
             int y = top + r * cell;
             if (cosmetics && row[0] != null) assign(row[0], accessories, left, y);
@@ -641,11 +658,20 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         }
     }
 
+    /**
+     * Rows that fit between the title bar and the cosmetics button. The window is as tall as the items window, so on a
+     * small GUI scale it holds more than the classic menu's eight. That menu scrolls its own eight rows on the server,
+     * so only it keeps {@link #CLASSIC_ROWS}.
+     */
+    private int accessoryRowsShown() {
+        return Math.max(1, (accessories.height - ACCESSORIES_TOP - ACCESSORIES_BOTTOM) / accessoryPitch());
+    }
+
     /** Curios: its slots in two columns, scrolled by this screen. */
     private void placeAccessoryGrid() {
         int cell = accessoryPitch();
         int left = accessories.x + ACCESSORIES_MARGIN, top = accessories.y + ACCESSORIES_TOP;
-        int visible = Math.max(1, (accessories.height - ACCESSORIES_TOP - ACCESSORIES_BOTTOM) / cell);
+        int visible = accessoryRowsShown();
         accessoryMaxRow = Math.max(0, (extraSlots.size() + 1) / 2 - visible);
         accessoryRow = Math.clamp(accessoryRow, 0, accessoryMaxRow);
         for (int i = 0; i < extraSlots.size(); i++) {
@@ -839,7 +865,6 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
 
     @Override
     protected void renderBg(GuiGraphics g, float tick, int mx, int my) {
-        if (!compact) g.drawString(font, tr("title"), TITLE_X, 9, GOLD, false);
         for (var panel : List.copyOf(panels)) {
             if (!panel.visible) continue;
             g.pose().pushPose();
@@ -962,7 +987,7 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
             renderWornAccessories(g, mx, my);
             total = accessoryRowCount;
             first = accessoryRow;
-            shown = CLASSIC_ROWS;
+            shown = accessoryRowsShown();
         } else if (classicAccessories()) {
             total = CompatBridge.integer(menu, "totalSlots", 0);
             first = CompatBridge.integer(menu, "scrolledIndex", 0);
@@ -970,7 +995,7 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         } else if (kind == CompatBridge.Kind.ACCESSORIES) {
             total = accessoryRowCount;
             first = accessoryRow;
-            shown = CLASSIC_ROWS;
+            shown = accessoryRowsShown();
         } else {
             total = accessoryMaxRow + 1;
             first = accessoryRow;
@@ -993,12 +1018,13 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         var worn = CompatBridge.wornAccessories(player);
         var rows = worn.stream().filter(w -> w.armor() < 0).toList();
         accessoryRowCount = rows.size();
-        accessoryMaxRow = Math.max(0, rows.size() - CLASSIC_ROWS);
+        int shown = accessoryRowsShown();
+        accessoryMaxRow = Math.max(0, rows.size() - shown);
         accessoryRow = Math.clamp(accessoryRow, 0, accessoryMaxRow);
         int cell = accessoryPitch(), size = ITEM;
         int main = mainAccessoryX(), looks = cosmeticAccessoryX(), top = accessories.y + ACCESSORIES_TOP;
         boolean cosmetics = cosmeticsShown(), here = topPane(mx, my) == accessories;
-        for (int r = 0; r < CLASSIC_ROWS && accessoryRow + r < rows.size(); r++) {
+        for (int r = 0; r < shown && accessoryRow + r < rows.size(); r++) {
             var accessory = rows.get(accessoryRow + r);
             int y = top + r * cell;
             if (cosmetics) renderWorn(g, accessory.look(), accessory.shown(), looks, y, size, here, mx, my);

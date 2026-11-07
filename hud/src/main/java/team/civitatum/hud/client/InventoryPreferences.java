@@ -28,6 +28,8 @@ public final class InventoryPreferences {
     public double effectsScale = DEFAULT_HUD_SCALE;
     public String selectedAbility = "civitatum:racial_gift";
     public boolean powersVisible = true;
+    /** The character window in the wide layout; the narrow one swaps it with equipment instead. */
+    public boolean characterVisible = true;
     /** The cosmetic column of the accessories window, for menus that leave it to this screen. */
     public boolean accessoryCosmetics = false;
     public Map<String, SavedPanel> panels = new LinkedHashMap<>();
