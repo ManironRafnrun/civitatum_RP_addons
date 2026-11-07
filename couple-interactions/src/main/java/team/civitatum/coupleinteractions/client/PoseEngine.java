@@ -1,9 +1,8 @@
 package team.civitatum.coupleinteractions.client;
 
-import java.util.*;
-
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import team.civitatum.coupleinteractions.*;
 import team.civitatum.coupleinteractions.core.*;
@@ -36,10 +35,35 @@ public final class PoseEngine {
     public static Player previewCarrier(Player p){return p==previewSecond?previewFirst:null;}
     public static Player previewPassenger(Player p){return p==previewFirst?previewSecond:null;}
     public static PoseSettings tuning(Player p){return p==previewSecond?previewPose:CarryHooks.tuning(p);}
-    public static void apply(HumanoidModel<?> m,PoseFrame frame){
-        if(frame==null)return;
-        Map<String,ModelPart> parts=Map.of("head",m.head,"torso",m.body,"leftArm",m.leftArm,"rightArm",m.rightArm,"leftLeg",m.leftLeg,"rightLeg",m.rightLeg);
-        frame.bones.forEach((name,b)->{var part=parts.get(name);if(part==null)return;float w=frame.weight;part.xRot=net.minecraft.util.Mth.lerp(w,part.xRot,b.pitch());part.yRot=net.minecraft.util.Mth.lerp(w,part.yRot,b.yaw());part.zRot=net.minecraft.util.Mth.lerp(w,part.zRot,b.roll());if(b.position()){part.x=net.minecraft.util.Mth.lerp(w,part.x,b.x());part.y=net.minecraft.util.Mth.lerp(w,part.y,b.y());part.z=net.minecraft.util.Mth.lerp(w,part.z,b.z());}});m.hat.copyFrom(m.head);
+    public static void apply(HumanoidModel<?> m, PoseFrame frame) {
+        if (frame == null) return;
+        float w = frame.weight;
+        frame.bones.forEach((name, b) -> {
+            var part = part(m, name);
+            if (part == null) return;
+            part.xRot = Mth.lerp(w, part.xRot, b.pitch());
+            part.yRot = Mth.lerp(w, part.yRot, b.yaw());
+            part.zRot = Mth.lerp(w, part.zRot, b.roll());
+            if (b.position()) {
+                part.x = Mth.lerp(w, part.x, b.x());
+                part.y = Mth.lerp(w, part.y, b.y());
+                part.z = Mth.lerp(w, part.z, b.z());
+            }
+        });
+        m.hat.copyFrom(m.head);
+    }
+
+    /** The model part a bone of {@link PoseFrame} drives; the frame uses PlayerAnimator's bone names. */
+    private static ModelPart part(HumanoidModel<?> m, String bone) {
+        return switch (bone) {
+            case "head" -> m.head;
+            case "torso" -> m.body;
+            case "leftArm" -> m.leftArm;
+            case "rightArm" -> m.rightArm;
+            case "leftLeg" -> m.leftLeg;
+            case "rightLeg" -> m.rightLeg;
+            default -> null;
+        };
     }
     private PoseEngine(){}
 }

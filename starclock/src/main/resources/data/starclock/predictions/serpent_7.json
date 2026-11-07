@@ -1,0 +1,42 @@
+{
+  "id": "starclock:serpent_7",
+  "sign": "serpent",
+  "orientation": "none",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.serpent_7",
+  "variants": [
+    {
+      "id": "main",
+      "category": "damage",
+      "target": "player",
+      "actions": [
+        {
+          "type": "damage",
+          "params": {
+            "amount": 8,
+            "magic": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:hunger",
+                "seconds": 60,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

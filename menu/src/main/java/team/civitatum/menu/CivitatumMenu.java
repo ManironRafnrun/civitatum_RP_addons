@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
@@ -21,6 +22,8 @@ public final class CivitatumMenu {
     public CivitatumMenu() {
         MenuConfig.load();
         NeoForge.EVENT_BUS.addListener(this::opening);
+        // last, so that it sees the buttons other mods add to the title screen
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::initialized);
         NeoForge.EVENT_BUS.addListener(this::tick);
         NeoForge.EVENT_BUS.addListener(this::sound);
     }
@@ -35,6 +38,12 @@ public final class CivitatumMenu {
             && event.getNewScreen() instanceof TitleScreen
             && !(event.getNewScreen() instanceof SeasonalTitleScreen)) {
             event.setNewScreen(new SeasonalTitleScreen());
+        }
+    }
+
+    private void initialized(ScreenEvent.Init.Post event) {
+        if (event.getScreen() instanceof SeasonalTitleScreen screen) {
+            ForeignButtons.arrange(screen, event);
         }
     }
 

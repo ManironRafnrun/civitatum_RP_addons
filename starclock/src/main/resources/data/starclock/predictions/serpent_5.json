@@ -1,0 +1,52 @@
+{
+  "id": "starclock:serpent_5",
+  "sign": "serpent",
+  "orientation": "none",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.serpent_5",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:poison",
+                "seconds": 10,
+                "level": 1
+              },
+              {
+                "id": "minecraft:weakness",
+                "seconds": 30,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:nausea",
+                "seconds": 30,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -14,7 +14,9 @@ import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.ProgressScreen;
 import net.minecraft.client.gui.screens.ReceivingLevelScreen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
+import net.minecraft.locale.Language;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -22,6 +24,17 @@ import net.minecraft.util.RandomSource;
 
 /** Streams the menu playlist while no world is loaded and shows the current track and time. */
 public final class MenuMusic {
+    private static final String PLAYLIST = "/assets/civitatum_menu/tracks.json";
+    /** A streamed track may take up to three seconds to become active; before that it is not treated as broken. */
+    private static final int START_GRACE_TICKS = 60;
+    /** A track that ends this close to its listed duration has simply finished. */
+    private static final double END_TOLERANCE_MILLIS = 2000.0;
+    /** Five seconds before the next attempt after a broken track, so a missing file is not retried every tick. */
+    private static final int RETRY_DELAY_TICKS = 100;
+    /** Volume change per tick: a full fade takes one second. */
+    private static final float FADE_STEP = 0.05F;
+    /** Starting volume; the track fades in from it. */
+    private static final float START_VOLUME = 0.01F;
     private static List<Track> tracks = List.of();
     private static ShuffleBag shuffle;
     private static MenuTrack sound;
@@ -42,12 +55,13 @@ public final class MenuMusic {
         if (!initialized) {
             initialized = true;
 
-            try (InputStream stream = MenuMusic.class.getResourceAsStream("/assets/civitatum_menu/tracks.json")) {
+            try (InputStream stream = MenuMusic.class.getResourceAsStream(PLAYLIST)) {
                 if (stream == null) {
                     throw new IllegalStateException("Missing tracks.json");
                 }
 
-                tracks = List.of(new Gson().fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), Track[].class));
+                var reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
+                tracks = List.of(new Gson().fromJson(reader, Track[].class));
                 shuffle = new ShuffleBag(tracks.size(), new Random());
             } catch (Exception e) {
                 CivitatumMenu.LOG.error("Cannot load menu playlist", e);
@@ -61,56 +75,68 @@ public final class MenuMusic {
     }
 
     public static void tick(Minecraft minecraft) {
-        if (session) {
-            if (inMenu(minecraft) && MenuConfig.current.enabled) {
-                if (!MenuConfig.current.music
-                    || MenuConfig.current.musicVolume <= 0.0
-                    || minecraft.options.getSoundSourceVolume(SoundSource.MASTER) <= 0.0F
-                    || minecraft.options.getSoundSourceVolume(SoundSource.MUSIC) <= 0.0F
-                    || tracks.isEmpty()) {
-                    stop();
-                    label = "Музыка выключена";
-                } else if (retryDelay > 0) {
-                    retryDelay--;
-                } else {
-                    if (sound == null) {
-                        minecraft.getMusicManager().stopPlaying();
-                        selected = tracks.get(shuffle.next());
-                        sound = new MenuTrack(selected);
-                        minecraft.getSoundManager().play(sound);
-                        started = Util.getMillis();
-                        age = 0;
-                        lastSecond = -1;
-                    }
+        if (!session) {
+            return;
+        }
+        if (!inMenu(minecraft) || !MenuConfig.current.enabled) {
+            session = false;
+            stop();
+            SeasonalTitleScreen.releaseBackground(minecraft);
+        } else if (!audible(minecraft)) {
+            stop();
+            label = I18n.get("menu.civitatum_menu.music_off");
+        } else if (retryDelay > 0) {
+            retryDelay--;
+        } else {
+            play(minecraft);
+        }
+    }
 
-                    age++;
-                    boolean active = minecraft.getSoundManager().isActive(sound);
-                    if (age > 60 && !active) {
-                        if ((double)(Util.getMillis() - started) < selected.durationSeconds() * 1000.0 - 2000.0) {
-                            CivitatumMenu.LOG.warn("Menu track {} stopped early or could not start", selected.id());
-                            retryDelay = 100;
-                        }
+    private static boolean audible(Minecraft minecraft) {
+        return MenuConfig.current.music
+            && MenuConfig.current.musicVolume > 0.0
+            && minecraft.options.getSoundSourceVolume(SoundSource.MASTER) > 0.0F
+            && minecraft.options.getSoundSourceVolume(SoundSource.MUSIC) > 0.0F
+            && !tracks.isEmpty();
+    }
 
-                        sound = null;
-                    } else {
-                        int second = Math.min((int)selected.durationSeconds(), (int)((Util.getMillis() - started) / 1000L));
-                        if (second != lastSecond) {
-                            lastSecond = second;
-                            label = "Сейчас играет: " + selected.title() + "  " + time(second) + " / " + time((int)selected.durationSeconds());
-                        }
-                    }
-                }
-            } else {
-                session = false;
-                stop();
-                SeasonalTitleScreen.releaseBackground(minecraft);
+    private static void play(Minecraft minecraft) {
+        if (sound == null) {
+            minecraft.getMusicManager().stopPlaying();
+            selected = tracks.get(shuffle.next());
+            sound = new MenuTrack(selected);
+            minecraft.getSoundManager().play(sound);
+            started = Util.getMillis();
+            age = 0;
+            lastSecond = -1;
+        }
+
+        age++;
+        long elapsed = Util.getMillis() - started;
+        if (age > START_GRACE_TICKS && !minecraft.getSoundManager().isActive(sound)) {
+            if (elapsed < selected.durationSeconds() * 1000.0 - END_TOLERANCE_MILLIS) {
+                CivitatumMenu.LOG.warn("Menu track {} stopped early or could not start", selected.id());
+                retryDelay = RETRY_DELAY_TICKS;
             }
+            sound = null;
+            return;
+        }
+
+        int duration = (int)selected.durationSeconds();
+        int second = Math.min(duration, (int)(elapsed / 1000L));
+        if (second != lastSecond) {
+            lastSecond = second;
+            // tracks.json keeps the original title, shown when the language has no translation of it.
+            String title = Language.getInstance()
+                .getOrDefault("menu.civitatum_menu.track." + selected.id(), selected.title());
+            label = I18n.get("menu.civitatum_menu.now_playing", title, time(second), time(duration));
         }
     }
 
     /**
      * The menu ends as soon as a world or server starts loading, not only once the level exists: the game stops all
-     * sounds while loading, and the stopped track must not be taken for a broken one or restarted on the loading screen.
+     * sounds while loading, and the stopped track must not be taken for a broken one or restarted on the loading
+     * screen.
      */
     private static boolean inMenu(Minecraft minecraft) {
         return minecraft.level == null && minecraft.getConnection() == null
@@ -150,11 +176,12 @@ public final class MenuMusic {
         private boolean fading;
 
         MenuTrack(Track track) {
-            super(SoundEvent.createVariableRangeEvent(CivitatumMenu.resource(track.id())), SoundSource.MUSIC, RandomSource.create());
+            super(SoundEvent.createVariableRangeEvent(CivitatumMenu.resource(track.id())), SoundSource.MUSIC,
+                RandomSource.create());
             this.relative = true;
             this.attenuation = SoundInstance.Attenuation.NONE;
             this.looping = false;
-            this.volume = 0.01F;
+            this.volume = START_VOLUME;
         }
 
         void fadeOut() {
@@ -169,13 +196,13 @@ public final class MenuMusic {
         @Override
         public void tick() {
             if (this.fading) {
-                this.volume = Math.max(0.0F, this.volume - 0.05F);
+                this.volume = Math.max(0.0F, this.volume - FADE_STEP);
                 if (this.volume == 0.0F) {
                     this.stop();
                 }
             } else {
                 float target = (float)MenuConfig.current.musicVolume;
-                this.volume = this.volume + Math.max(-0.05F, Math.min(0.05F, target - this.volume));
+                this.volume = this.volume + Math.clamp(target - this.volume, -FADE_STEP, FADE_STEP);
             }
         }
     }

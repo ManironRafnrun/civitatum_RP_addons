@@ -56,20 +56,20 @@ public final class RaceAbilities {
         rt.lastRequest = now;
         var state = p.getData(Civitatum.STATE);
         if (state.cooldownUntil() > now) {
-            p.displayClientMessage(Component.literal("Способность восстановится через " + ((state.cooldownUntil() - now + 19) / 20) + " сек."), true); return;
+            p.displayClientMessage(Civitatum.message("ability_cooldown", (state.cooldownUntil() - now + 19) / 20), true); return;
         }
         Vec3 destination = null;
         LivingEntity single = null;
         if (r.id.equals("astral_elf") || r.id.equals("goblin")) {
-            Vec3 vector = r.id.equals("goblin") ? new Vec3(p.getLookAngle().x, 0, p.getLookAngle().z).normalize().scale(-3) : p.getLookAngle().scale(6);
+            Vec3 vector = r.id.equals("goblin") ? facing(p).scale(-3) : p.getLookAngle().scale(6);
             destination = safeDestination(p, vector);
-            if (destination.distanceToSqr(p.position()) < .09) { message(p, "Недостаточно места для перемещения"); return; }
+            if (destination.distanceToSqr(p.position()) < .09) { message(p, Civitatum.message("no_room")); return; }
         }
-        if (r.id.equals("forest_algnor") && !p.onGround()) { message(p, "Для скачка нужно стоять на земле"); return; }
-        if (r.id.equals("forged") && p.getHealth() >= p.getMaxHealth()) { message(p, "Ремонт сейчас не требуется"); return; }
+        if (r.id.equals("forest_algnor") && !p.onGround()) { message(p, Civitatum.message("leap_ground")); return; }
+        if (r.id.equals("forged") && p.getHealth() >= p.getMaxHealth()) { message(p, Civitatum.message("no_repair")); return; }
         if (r.id.equals("jahar")) {
             single = beamTarget(p, 6);
-            if (single == null) { message(p, "В пределах шести блоков нет враждебной цели"); return; }
+            if (single == null) { message(p, Civitatum.message("no_target")); return; }
         }
         if (!pay(p, r)) return;
         p.setData(Civitatum.STATE, new RaceState(state.character(), state.curseDeaths(), now + r.cooldown * 20L));
@@ -99,7 +99,7 @@ public final class RaceAbilities {
                 RaceService.modifier(p, Attributes.KNOCKBACK_RESISTANCE, "ability_knockback", .50, AttributeModifier.Operation.ADD_VALUE);
             }
             case "forest_algnor" -> {
-                Vec3 forward = new Vec3(p.getLookAngle().x, 0, p.getLookAngle().z).normalize().scale(.62);
+                Vec3 forward = facing(p).scale(.62);
                 p.setDeltaMovement(forward.x, .42, forward.z); p.hurtMarked = true;
             }
             case "city_algnor" -> {
@@ -114,7 +114,7 @@ public final class RaceAbilities {
         }
         tick(p);
         RaceNetwork.sync(p);
-        message(p, r.active.split("•")[0].strip());
+        message(p, Component.translatable(r.key("ability_name")));
     }
     private static boolean pay(ServerPlayer p, RaceDefinition r) {
         if (p.isCreative()) return true;
@@ -127,11 +127,11 @@ public final class RaceAbilities {
                 case "jahar" -> 30;
                 default -> 40;
             };
-            if (!CompatPatches.payMana(p, mana)) { message(p, "Недостаточно маны"); return false; }
+            if (!CompatPatches.payMana(p, mana)) { message(p, Civitatum.message("no_mana")); return false; }
             return true;
         }
         int food = p.getFoodData().getFoodLevel();
-        if (food - r.food < 6) { message(p, "После применения должно остаться хотя бы 6 единиц питания"); return false; }
+        if (food - r.food < 6) { message(p, Civitatum.message("food_left")); return false; }
         p.getFoodData().setFoodLevel(food - r.food);
         p.getFoodData().setSaturation(Math.min(p.getFoodData().getSaturationLevel(), food - r.food));
         return true;
@@ -163,9 +163,9 @@ public final class RaceAbilities {
         }
         if (rt.repairUntil > 0) {
             if (rt.repairAt.distanceToSqr(p.position()) > .0025 || rt.repairHurt != rt.lastHurt || p.isUsingItem() || !p.isAlive()) {
-                rt.repairUntil = 0; message(p, "Ремонт прерван");
-            } else if (now >= rt.repairUntil) { p.heal(6); rt.repairUntil = 0; message(p, "Ремонт завершён"); }
-            else if (p.tickCount % 20 == 0) message(p, "Ремонт: " + ((rt.repairUntil - now + 19) / 20) + " сек.");
+                rt.repairUntil = 0; message(p, Civitatum.message("repair_interrupted"));
+            } else if (now >= rt.repairUntil) { p.heal(6); rt.repairUntil = 0; message(p, Civitatum.message("repair_done")); }
+            else if (p.tickCount % 20 == 0) message(p, Civitatum.message("repair_progress", (rt.repairUntil - now + 19) / 20));
         }
         if (r.elf() && p.tickCount % 200 == 0) effect(p, MobEffects.NIGHT_VISION, 600, 0);
         if (r.id.equals("firbolg") && p.tickCount % 200 == 0 && now - rt.lastHurt >= 100 && p.getFoodData().getFoodLevel() >= 10) {
@@ -205,6 +205,14 @@ public final class RaceAbilities {
         }
         return best;
     }
+    /**
+     * Horizontal unit vector the player faces. Taken from the yaw, not from the look vector: looking straight up or
+     * down, the look vector has no horizontal part to normalize.
+     */
+    private static Vec3 facing(ServerPlayer p) {
+        return Vec3.directionFromRotation(0, p.getYRot());
+    }
+
     private static boolean sight(ServerPlayer p, Vec3 target) {
         return p.level().clip(new ClipContext(p.getEyePosition(), target, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, p)).getType() == HitResult.Type.MISS;
     }
@@ -259,5 +267,5 @@ public final class RaceAbilities {
         }
     }
     public static void logout(ServerPlayer p) { RUNTIME.remove(p.getUUID()); }
-    private static void message(ServerPlayer p, String text) { p.displayClientMessage(Component.literal(text), true); }
+    private static void message(ServerPlayer p, Component text) { p.displayClientMessage(text, true); }
 }

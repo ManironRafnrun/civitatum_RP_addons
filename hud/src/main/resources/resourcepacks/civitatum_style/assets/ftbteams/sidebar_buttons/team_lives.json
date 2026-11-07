@@ -1,0 +1,7 @@
+{
+  "icon": "civitatum_hud:textures/gui/sidebar/team_lives.png",
+  "sort_index": 551,
+  "click": [
+    "ftbteams:open_gui"
+  ]
+}

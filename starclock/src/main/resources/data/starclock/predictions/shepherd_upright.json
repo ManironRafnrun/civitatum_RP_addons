@@ -1,0 +1,53 @@
+{
+  "id": "starclock:shepherd_upright",
+  "sign": "shepherd",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.shepherd_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "peaceSeconds": 300,
+            "radius": 32
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:sheep",
+            "count": 3,
+            "distance": 8,
+            "mode": "default",
+            "lifetime": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/shepherd"
+          }
+        }
+      ]
+    }
+  ]
+}

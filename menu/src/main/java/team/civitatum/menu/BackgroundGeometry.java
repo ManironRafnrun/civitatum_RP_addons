@@ -1,10 +1,11 @@
 package team.civitatum.menu;
 
 public record BackgroundGeometry(int x, int y, int width, int height) {
-    public static BackgroundGeometry fit(int viewWidth, int viewHeight, int imageWidth, int imageHeight, double intensity, double cursorX, double cursorY) {
+    public static BackgroundGeometry fit(int viewWidth, int viewHeight, int imageWidth, int imageHeight,
+                                         double intensity, double cursorX, double cursorY) {
         double panX = (double)viewWidth * intensity;
         double panY = (double)viewHeight * intensity;
-        double scale = Math.max(((double)viewWidth + 2.0 * panX) / (double)imageWidth, ((double)viewHeight + 2.0 * panY) / (double)imageHeight);
+        double scale = Math.max((viewWidth + 2.0 * panX) / imageWidth, (viewHeight + 2.0 * panY) / imageHeight);
         int w = (int)Math.ceil((double)imageWidth * scale) + 2;
         int h = (int)Math.ceil((double)imageHeight * scale) + 2;
         int x = (int)Math.floor((double)(viewWidth - w) / 2.0 - clamp(cursorX) * panX);
@@ -13,6 +14,6 @@ public record BackgroundGeometry(int x, int y, int width, int height) {
     }
 
     private static double clamp(double value) {
-        return Math.max(-1.0, Math.min(1.0, value));
+        return Math.clamp(value, -1.0, 1.0);
     }
 }

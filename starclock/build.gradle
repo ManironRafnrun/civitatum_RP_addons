@@ -1,0 +1,61 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+}
+
+repositories {
+    maven { url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
+}
+
+dependencies {
+    compileOnly project(':hud')
+    implementation 'software.bernie.geckolib:geckolib-neoforge-1.21.1:4.8.4'
+    testImplementation 'com.google.code.gson:gson:2.10.1'
+}
+
+// Скрипты доступны отдельному набору tools и не включаются в jar мода.
+sourceSets {
+    tools { resources.srcDirs = ['tools'] }
+}
+
+neoForge {
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+    }
+}
+
+// Генераторы ресурсов — ручные утилиты набора tools: они пишут прямо в src/main/resources,
+// результат хранится в репозитории, сборка их не вызывает.
+def resourcesDir = file('src/main/resources').absolutePath
+
+tasks.register('generateArt', JavaExec) {
+    group = 'tools'
+    description = 'Перерисовывает созвездия, карты, фон, искру и значки из starsigns.zip.'
+    classpath = sourceSets.tools.runtimeClasspath
+    mainClass = 'team.civitatum.starclock.tools.art.ArtGenerator'
+    args '--archive', file('starsigns.zip').absolutePath, '--output', resourcesDir
+}
+
+tasks.register('generateTextures', JavaExec) {
+    group = 'tools'
+    description = 'Перерисовывает иконки предметов и атласы моделей.'
+    classpath = sourceSets.tools.runtimeClasspath
+    mainClass = 'team.civitatum.starclock.tools.textures.TextureGenerator'
+    args '--output', resourcesDir
+}
+
+// Кодировщика Vorbis в Java нет, звуки кодирует ffmpeg: из PATH или из -PstarclockFfmpeg=<путь>.
+tasks.register('generateSounds', JavaExec) {
+    group = 'tools'
+    description = 'Синтезирует звуки обряда и кодирует их в Ogg Vorbis.'
+    classpath = sourceSets.tools.runtimeClasspath
+    mainClass = 'team.civitatum.starclock.tools.sound.SoundGenerator'
+    args '--output', resourcesDir,
+            '--report', layout.buildDirectory.file('reports/starclock-audio.json').get().asFile.absolutePath,
+            '--ffmpeg', providers.gradleProperty('starclockFfmpeg').getOrElse('ffmpeg')
+}
+
+tasks.named('test') {
+    systemProperty 'starclock.projectDir', projectDir.absolutePath
+}

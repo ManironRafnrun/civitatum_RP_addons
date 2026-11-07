@@ -52,6 +52,14 @@ public final class CoupleServer {
     private static final Map<UUID, CoupleNetwork.Preferences> pendingPreferences = new HashMap<>();
     private static long ticks;
     private static final String CARRY_MARK = "CivitatumCoupleCarried";
+    private static final String PREFERENCES = "CivitatumCouplePreferences";
+    /**
+     * Parsed preferences by player, with the stored JSON they were parsed from. The carry pose is read on every
+     * {@code positionRider}, twice a tick per pair; the JSON is parsed again only after it changes. The returned
+     * objects are shared and must not be modified.
+     */
+    private static final Map<UUID, CachedPreferences> preferenceCache = new HashMap<>();
+    private record CachedPreferences(String json, PlayerPreferences preferences) {}
     private static final String DENY_CARRY = "CivitatumCoupleDenyCarry";
     private static final String DENY_KISS = "CivitatumCoupleDenyKiss";
 
@@ -79,8 +87,14 @@ public final class CoupleServer {
     }
 
     public static PlayerPreferences preferencesOf(Player p) {
-        var data=p.getPersistentData();String json=data.getString("CivitatumCouplePreferences");
-        return json.isEmpty()?PlayerPreferences.legacy(!data.getBoolean(DENY_CARRY),!data.getBoolean(DENY_KISS)):PlayerPreferences.read(json);
+        var data = p.getPersistentData();
+        String json = data.getString(PREFERENCES);
+        if (json.isEmpty()) return PlayerPreferences.legacy(!data.getBoolean(DENY_CARRY), !data.getBoolean(DENY_KISS));
+        var cached = preferenceCache.get(p.getUUID());
+        if (cached != null && cached.json.equals(json)) return cached.preferences;
+        var parsed = PlayerPreferences.read(json);
+        preferenceCache.put(p.getUUID(), new CachedPreferences(json, parsed));
+        return parsed;
     }
     public static void request(ServerPlayer sender, CoupleNetwork.Action packet) {
         Interaction action = Interaction.fromWire(packet.action());
@@ -130,9 +144,18 @@ public final class CoupleServer {
     public static void preferences(ServerPlayer player,CoupleNetwork.Preferences packet){
         if(ticks-lastPreferences.getOrDefault(player.getUUID(),Long.MIN_VALUE/2)<PREFERENCES_INTERVAL){pendingPreferences.put(player.getUUID(),packet);return;}
         lastPreferences.put(player.getUUID(),ticks);pendingPreferences.remove(player.getUUID());
-        var p=PlayerPreferences.read(packet.data());player.getPersistentData().putString("CivitatumCouplePreferences",p.json());cancelRequest(player);
-        var social=SocialSessions.state(player.getUUID());if(social!=null && p.policy(Interaction.fromWire(social.action()))==Consent.BLOCK)SocialSessions.end(player.getUUID());
-        var carry=pairs.get(player.getUUID());if(carry!=null){if(p.policy(Interaction.CARRY)==Consent.BLOCK)end(player,"released");else broadcast(carry,true);}
+        var p = PlayerPreferences.read(packet.data());
+        player.getPersistentData().putString(PREFERENCES, p.json());
+        cancelRequest(player);
+        var social = SocialSessions.state(player.getUUID());
+        if (social != null && p.policy(Interaction.fromWire(social.action())) == Consent.BLOCK) {
+            SocialSessions.end(player.getUUID());
+        }
+        var carry = pairs.get(player.getUUID());
+        if (carry != null) {
+            if (p.policy(Interaction.CARRY) == Consent.BLOCK) end(player, "released");
+            else broadcast(carry, true);
+        }
     }
 
     public static String validate(ServerPlayer sender, ServerPlayer target, Interaction action) {
@@ -319,13 +342,14 @@ public final class CoupleServer {
         if (event.getEntity() instanceof ServerPlayer p) {
             cancelRequest(p); end(p, null); requests.forget(p.getUUID());
             lastPreferences.remove(p.getUUID()); pendingPreferences.remove(p.getUUID());
+            preferenceCache.remove(p.getUUID());
         }
     }
     @SubscribeEvent public static void clonePlayer(PlayerEvent.Clone event) {
         Player p = event.getEntity(), old = event.getOriginal();
         p.getPersistentData().putBoolean(DENY_CARRY, old.getPersistentData().getBoolean(DENY_CARRY));
         p.getPersistentData().putBoolean(DENY_KISS, old.getPersistentData().getBoolean(DENY_KISS));
-        p.getPersistentData().putString("CivitatumCouplePreferences",preferencesOf(old).json());
+        p.getPersistentData().putString(PREFERENCES, preferencesOf(old).json());
         if (old instanceof ServerPlayer s) { cancelRequest(s); end(s, null); }
     }
     @SubscribeEvent public static void tracking(PlayerEvent.StartTracking event) {
@@ -377,7 +401,16 @@ public final class CoupleServer {
         for (Pair pair : new HashSet<>(pairs.values())) end(pair.carrier, null);
         clear();
     }
-    private static void clear() { SocialSessions.clear();pairs.clear(); requests = new RequestBook(); lastRelease.clear(); lastPreferences.clear(); pendingPreferences.clear(); ticks = 0; }
+    private static void clear() {
+        SocialSessions.clear();
+        pairs.clear();
+        requests = new RequestBook();
+        lastRelease.clear();
+        lastPreferences.clear();
+        pendingPreferences.clear();
+        preferenceCache.clear();
+        ticks = 0;
+    }
 
     private static void cancelRequest(ServerPlayer member) {
         RequestBook.Request request = requests.cancel(member.getUUID());

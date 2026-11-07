@@ -1,0 +1,60 @@
+{
+  "id": "starclock:spear_reversed",
+  "sign": "spear",
+  "orientation": "reversed",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.spear_reversed",
+  "variants": [
+    {
+      "id": "main",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:zombie",
+            "count": 3,
+            "distance": 10,
+            "mode": "hostile",
+            "lifetime": 300,
+            "maxDistance": 16
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "durability",
+      "target": "held_item",
+      "actions": [
+        {
+          "type": "durability",
+          "params": {
+            "mode": "damage",
+            "fraction": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:weakness",
+                "seconds": 60,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

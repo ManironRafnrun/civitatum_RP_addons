@@ -23,6 +23,8 @@ import team.civitatum.coupleinteractions.core.Interaction;
 
 public final class ClientEvents {
     private static LocalPlayer lastPlayer;
+    /** Shift ends a pose once per press; the server ends it on its own as well, so repeats are only noise. */
+    private static boolean releaseSent;
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
         var mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
@@ -49,7 +51,12 @@ public final class ClientEvents {
             }
         }
         if (CarryHooks.carrying(mc.player)) mc.player.setSprinting(false);
-        if(SocialHooks.active(mc.player) && mc.player.isShiftKeyDown())PacketDistributor.sendToServer(new CoupleNetwork.Action(mc.player.getUUID(),Interaction.RELEASE.ordinal()));
+        boolean release = SocialHooks.active(mc.player) && mc.player.isShiftKeyDown();
+        if (release && !releaseSent) {
+            var action = new CoupleNetwork.Action(mc.player.getUUID(), Interaction.RELEASE.ordinal());
+            PacketDistributor.sendToServer(action);
+        }
+        releaseSent = release;
     }
     @SubscribeEvent public static void movement(net.neoforged.neoforge.client.event.MovementInputUpdateEvent event){if(SocialHooks.active(event.getEntity())){var input=event.getInput();input.forwardImpulse=0;input.leftImpulse=0;input.jumping=false;}}
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { ClientState.clear(); lastPlayer = null; }

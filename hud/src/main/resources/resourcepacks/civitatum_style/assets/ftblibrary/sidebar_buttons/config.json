@@ -1,0 +1,10 @@
+{
+  "icon": "civitatum_hud:textures/gui/sidebar/config.png",
+  "sort_index": 2147483647,
+  "click": [
+    "command:/ftblibrary clientconfig"
+  ],
+  "required_mods": [
+    "ftblibrary"
+  ]
+}

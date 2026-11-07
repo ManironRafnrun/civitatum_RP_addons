@@ -1,0 +1,15 @@
+{
+  "menu.civitatum_menu.singleplayer": "Одиночное приключение",
+  "menu.civitatum_menu.multiplayer": "Отправиться с группой",
+  "menu.civitatum_menu.wardrobe": "Гардероб",
+  "menu.civitatum_menu.mods": "Моды",
+  "menu.civitatum_menu.options": "Настройки",
+  "menu.civitatum_menu.quit": "Выйти из игры",
+  "menu.civitatum_menu.music_off": "Музыка выключена",
+  "menu.civitatum_menu.now_playing": "Сейчас играет: %s  %s / %s",
+  "menu.civitatum_menu.footer": "Civitatum Team – Право на Возвращение",
+  "menu.civitatum_menu.track.maintheme01": "Право на возвращение",
+  "menu.civitatum_menu.track.maintheme02": "Дом, который мы строим",
+  "menu.civitatum_menu.track.maintheme03": "Старая Переправа",
+  "menu.civitatum_menu.track.maintheme04": "Открытая Дорога"
+}

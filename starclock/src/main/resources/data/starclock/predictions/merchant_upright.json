@@ -1,0 +1,67 @@
+{
+  "id": "starclock:merchant_upright",
+  "sign": "merchant",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.merchant_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "items": [
+              {
+                "id": "minecraft:emerald",
+                "count": 8
+              }
+            ],
+            "scale": true
+          }
+        },
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:hero_of_the_village",
+                "seconds": 60,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "trader",
+      "target": "player",
+      "actions": [
+        {
+          "type": "trader",
+          "params": {
+            "sign": "merchant",
+            "discount": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/merchant"
+          }
+        }
+      ]
+    }
+  ]
+}

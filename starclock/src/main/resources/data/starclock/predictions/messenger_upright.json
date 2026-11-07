@@ -1,0 +1,64 @@
+{
+  "id": "starclock:messenger_upright",
+  "sign": "messenger",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.messenger_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "special": "village_map"
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:horse",
+            "count": 1,
+            "distance": 6,
+            "mode": "tame",
+            "lifetime": 0
+          }
+        },
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/messenger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:speed",
+                "seconds": 120,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

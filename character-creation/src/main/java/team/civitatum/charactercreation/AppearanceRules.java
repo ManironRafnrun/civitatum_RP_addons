@@ -4,7 +4,7 @@ package team.civitatum.charactercreation;
 public final class AppearanceRules {
     public static void check(CharacterData saved,CharacterData incoming,EditorMode mode) {
         if(mode==EditorMode.CREATE)return;
-        if(!saved.race.equals(incoming.race))throw new IllegalArgumentException("В этом редакторе нельзя менять расу");
+        if(!saved.race.equals(incoming.race))throw new IllegalArgumentException(Civitatum.ERROR+"race_locked");
         if(mode==EditorMode.FULL)return;
         var allowed=saved.copy();
         allowed.name=incoming.name;
@@ -15,6 +15,6 @@ public final class AppearanceRules {
         allowed.wardrobe=incoming.wardrobe;allowed.wardrobeEnabled=incoming.wardrobeEnabled;allowed.outfitPreset=incoming.outfitPreset;
         allowed.underwearColor=incoming.underwearColor;allowed.naked=incoming.naked;
         if(!DataJson.GSON.toJsonTree(allowed).equals(DataJson.GSON.toJsonTree(incoming)))
-            throw new IllegalArgumentException("Предмет меняет только имя, причёску, бороду, одежду и татуировки");
+            throw new IllegalArgumentException(Civitatum.ERROR+"cosmetic_only");
     }
 }

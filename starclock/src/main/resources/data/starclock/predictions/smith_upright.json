@@ -1,0 +1,50 @@
+{
+  "id": "starclock:smith_upright",
+  "sign": "smith",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.smith_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "durability",
+      "target": "held_item",
+      "actions": [
+        {
+          "type": "durability",
+          "params": {
+            "mode": "repair",
+            "fraction": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/smith"
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "trader",
+      "target": "player",
+      "actions": [
+        {
+          "type": "trader",
+          "params": {
+            "sign": "smith",
+            "discount": false
+          }
+        }
+      ]
+    }
+  ]
+}

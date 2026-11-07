@@ -1,0 +1,61 @@
+{
+  "id": "starclock:spinner_reversed",
+  "sign": "spinner",
+  "orientation": "reversed",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.spinner_reversed",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:slowness",
+                "seconds": 60,
+                "level": 1
+              },
+              {
+                "id": "minecraft:weakness",
+                "seconds": 30,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "teleport",
+      "target": "player",
+      "actions": [
+        {
+          "type": "teleport",
+          "params": {
+            "distance": 16,
+            "minimum": 16,
+            "mode": "random"
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "special": "hotbar_drop"
+          }
+        }
+      ]
+    }
+  ]
+}

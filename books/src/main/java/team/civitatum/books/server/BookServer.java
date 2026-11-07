@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -39,6 +40,12 @@ public final class BookServer {
                 thread.setDaemon(true);
                 return thread;
             });
+    /** Our own failure codes; anything else is an unexpected exception and is logged. */
+    private static final Pattern REASON = Pattern.compile("[a-z_]{1,64}");
+    /** Slot index of the off hand in the player inventory. */
+    private static final int OFFHAND_SLOT = 40;
+    /** A lectern can be used from at most 8 blocks away. */
+    private static final double LECTERN_REACH_SQR = 8 * 8;
     private static MinecraftServer currentServer;
     private static BookStore store;
 
@@ -48,7 +55,7 @@ public final class BookServer {
         event.setCanceled(true);
         event.setCancellationResult(InteractionResult.SUCCESS);
         if (event.getEntity() instanceof ServerPlayer player) {
-            int slot = event.getHand() == InteractionHand.OFF_HAND ? 40 : player.getInventory().selected;
+            int slot = event.getHand() == InteractionHand.OFF_HAND ? OFFHAND_SLOT : player.getInventory().selected;
             open(player, slot, null);
         }
     }
@@ -96,7 +103,7 @@ public final class BookServer {
             BookSession previous = SESSIONS.get(player.getUUID());
             if (previous != null && previous.processingImage) return;
             if (lecternPosition != null && (!player.level().hasChunkAt(lecternPosition)
-                    || player.distanceToSqr(lecternPosition.getCenter()) > 64)) return;
+                    || player.distanceToSqr(lecternPosition.getCenter()) > LECTERN_REACH_SQR)) return;
             ItemStack stack = stack(player, slot, lecternPosition);
             if (!BookItems.supported(stack)) return;
             UUID id = identify(player, stack, storage, lecternPosition);
@@ -160,8 +167,9 @@ public final class BookServer {
     private static boolean valid(ServerPlayer player, BookSession session) {
         if (!player.isAlive() || player.isRemoved() || !player.level().dimension().equals(session.dimension)) return false;
         if (session.lectern != null) {
-            if (!player.level().hasChunkAt(session.lectern) || player.distanceToSqr(session.lectern.getCenter()) > 64) return false;
-        } else if (session.slot != 40 && player.getInventory().selected != session.slot) {
+            if (!player.level().hasChunkAt(session.lectern)
+                    || player.distanceToSqr(session.lectern.getCenter()) > LECTERN_REACH_SQR) return false;
+        } else if (session.slot != OFFHAND_SLOT && player.getInventory().selected != session.slot) {
             return false;
         }
         ItemStack held = stack(player, session.slot, session.lectern);
@@ -234,8 +242,9 @@ public final class BookServer {
         if ((existing.signed && !session.administrative) || existing.revision != next.revision || session.document.revision != next.revision) {
             throw new IllegalArgumentException("conflict");
         }
+        var known = session.document.images();
         for (String hash : next.images()) {
-            if ((!session.document.images().contains(hash) && !session.uploadedImages.contains(hash)) || !store.hasImage(hash)) {
+            if ((!known.contains(hash) && !session.uploadedImages.contains(hash)) || !store.hasImage(hash)) {
                 throw new IllegalArgumentException("image");
             }
         }
@@ -310,7 +319,7 @@ public final class BookServer {
 
     private static String reason(Exception exception) {
         String message = exception.getMessage();
-        if (message != null && message.matches("[a-z_]{1,64}")) return message;
+        if (message != null && REASON.matcher(message).matches()) return message;
         CivitatumBooks.LOG.warn("Book operation failed", exception);
         return "failed";
     }

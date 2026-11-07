@@ -22,13 +22,36 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer, Play
 
     public static final ModelLayerLocation MODEL = new ModelLayerLocation(Civitatum.res("body_details"), "main");
     private static final net.minecraft.resources.ResourceLocation TEXTURE = Civitatum.res("textures/entity/details.png");
-    private final ModelPart root;
+    /** Style counts of {@link #createModel}; index 0 of each array is "none". */
+    private static final int EAR_STYLES = 7, HORN_STYLES = 10, HAIR_STYLES = 4, TAIL_STYLES = 3;
+    private static final int[] SIDES = {-1, 1};
+    private static final int TUSK_COLOR = 0xEADBB7;
+    private final ModelPart[] ears, horns, hair, tails;
+    private final ModelPart tusks, nose, muzzle, foot;
     private final AlgnorLegs leftAlgnorLeg = new AlgnorLegs(true), rightAlgnorLeg = new AlgnorLegs(false);
-    private final ModelPart bust = createBustModel().bakeRoot();
+    /** Breasts: left, right, then their outer-layer copies in the same order. */
+    private final ModelPart[] bust;
 
     public CharacterLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent, ModelPart root) {
         super(parent);
-        this.root = root;
+        // Parts are looked up once here instead of by a concatenated name on every frame.
+        ears = styles(root, "ears", EAR_STYLES);
+        horns = styles(root, "horns", HORN_STYLES);
+        hair = styles(root, "hair", HAIR_STYLES);
+        tails = styles(root, "tail", TAIL_STYLES);
+        tusks = root.getChild("tusks");
+        nose = root.getChild("nose");
+        muzzle = root.getChild("muzzle");
+        foot = root.getChild("foot");
+        var bustRoot = createBustModel().bakeRoot();
+        bust = new ModelPart[]{bustRoot.getChild("left"), bustRoot.getChild("right"),
+            bustRoot.getChild("left_overlay"), bustRoot.getChild("right_overlay")};
+    }
+
+    private static ModelPart[] styles(ModelPart root, String name, int count) {
+        var parts = new ModelPart[count + 1];
+        for (int style = 1; style <= count; style++) parts[style] = root.getChild(name + style);
+        return parts;
     }
 
     @Override
@@ -39,37 +62,40 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer, Play
         RaceDefinition r = RaceCatalog.get(c.race);
         if (r == null) return;
         if (!ClientCharacters.isPreview(p)) FemaleGenderBridge.apply(p.getUUID(), c, false);
+        int skin = r.color("skin", c.skin);
         var buffer = buffers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
         boolean helmet = !p.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
         if (!helmet) {
-            pair(pose, buffer, light, getParentModel().head, "ears" + c.ears, c.ears != 0, r.color("skin", c.skin), 1, c.earPitch, c.earYaw, c.earRoll, c.earOffset, false);
+            if (c.ears != 0) {
+                pair(pose, buffer, light, getParentModel().head, ears[c.ears], skin, 1,
+                    c.earPitch, c.earYaw, c.earRoll, c.earOffset, false);
+            }
             if (c.hairAsset.isEmpty() && c.hairStyle != 0 && r.hairAllowed)
-                attached(pose, buffer, light, getParentModel().head, "hair" + c.hairStyle, SkinTemplates.hairColor(c));
-            if (r.id.equals("orc")) attached(pose, buffer, light, getParentModel().head, "tusks", 0xEADBB7);
-            if (r.id.equals("firbolg"))
-                attached(pose, buffer, light, getParentModel().head, "nose", r.color("skin", c.skin));
-            if (r.dragon()) attached(pose, buffer, light, getParentModel().head, "muzzle", r.color("skin", c.skin));
-
+                attached(pose, buffer, light, getParentModel().head, hair[c.hairStyle], SkinTemplates.hairColor(c));
+            if (r.id.equals("orc")) attached(pose, buffer, light, getParentModel().head, tusks, TUSK_COLOR);
+            if (r.id.equals("firbolg")) attached(pose, buffer, light, getParentModel().head, nose, skin);
+            if (r.dragon()) attached(pose, buffer, light, getParentModel().head, muzzle, skin);
         }
         if (c.horns != 0)
-            pair(pose, buffer, light, getParentModel().head, "horns" + c.horns, true, r.color("horn", c.hornColor), c.hornSize,
+            pair(pose, buffer, light, getParentModel().head, horns[c.horns], r.color("horn", c.hornColor), c.hornSize,
                     c.hornPitch, c.hornYaw, c.hornRoll, c.hornOffset, c.hornOnForehead);
         if (c.tail != 0) {
             pose.pushPose();
             getParentModel().body.translateAndRotate(pose);
-            var tail = root.getChild("tail" + c.tail);
+            var tail = tails[c.tail];
             tail.yRot = (float) Math.sin(age * .09f) * .2f;
-            tail.render(pose, buffer, light, OverlayTexture.NO_OVERLAY, 0xFF000000 | r.color("skin", c.skin));
+            tail.render(pose, buffer, light, OverlayTexture.NO_OVERLAY, 0xFF000000 | skin);
             pose.popPose();
         }
+        var texture = p.getSkin().texture();
         if (r.algnor()) {
-            leftAlgnorLeg.render(pose, buffers, light, getParentModel().leftLeg, r.color("skin", c.skin), p.getSkin().texture());
-            rightAlgnorLeg.render(pose, buffers, light, getParentModel().rightLeg, r.color("skin", c.skin), p.getSkin().texture());
+            leftAlgnorLeg.render(pose, buffers, light, getParentModel().leftLeg, skin, texture);
+            rightAlgnorLeg.render(pose, buffers, light, getParentModel().rightLeg, skin, texture);
         } else if (r.id.equals("hobbit")) {
-            attached(pose, buffer, light, getParentModel().leftLeg, "foot", r.color("skin", c.skin));
-            attached(pose, buffer, light, getParentModel().rightLeg, "foot", r.color("skin", c.skin));
+            attached(pose, buffer, light, getParentModel().leftLeg, foot, skin);
+            attached(pose, buffer, light, getParentModel().rightLeg, foot, skin);
         }
-        var glow = SkinTemplates.glow(p.getSkin().texture());
+        var glow = SkinTemplates.glow(texture);
         if (glow != null)
             getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.eyes(glow)), 0xF000F0, OverlayTexture.NO_OVERLAY);
         if (c.female() && c.bust > 0 && !r.id.equals("forged") && (!FemaleGenderBridge.available() || ClientCharacters.isPreview(p))
@@ -80,33 +106,31 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer, Play
                     ? (float) Math.sin(walk * 1.7f) * amount * c.bounce * c.floppiness * .08f : 0;
             pose.translate(0, c.bustY / 16f + jiggle, (-2.01f + c.bustZ) / 16f);
             pose.scale(1, 1, c.bust * 1.4f);
-            var skinBuffer = buffers.getBuffer(RenderType.entityCutoutNoCull(p.getSkin().texture()));
-            for (int sign : new int[]{-1, 1}) {
+            var skinBuffer = buffers.getBuffer(RenderType.entityCutoutNoCull(texture));
+            for (int side = 0; side < 2; side++) {
                 pose.pushPose();
-                pose.translate(sign * (c.bustX / 32f + (c.uniboob ? 0 : c.cleavage)), 0, 0);
-                String side = sign < 0 ? "left" : "right";
-                bust.getChild(side).render(pose, skinBuffer, light, OverlayTexture.NO_OVERLAY);
-                bust.getChild(side + "_overlay").render(pose, skinBuffer, light, OverlayTexture.NO_OVERLAY);
+                pose.translate(SIDES[side] * (c.bustX / 32f + (c.uniboob ? 0 : c.cleavage)), 0, 0);
+                bust[side].render(pose, skinBuffer, light, OverlayTexture.NO_OVERLAY);
+                bust[side + 2].render(pose, skinBuffer, light, OverlayTexture.NO_OVERLAY);
                 pose.popPose();
             }
             pose.popPose();
         }
     }
 
-    private void attached(PoseStack pose, VertexConsumer b, int light, ModelPart anchor, String part, int color) {
+    private void attached(PoseStack pose, VertexConsumer b, int light, ModelPart anchor, ModelPart part, int color) {
         pose.pushPose();
         anchor.translateAndRotate(pose);
-        root.getChild(part).render(pose, b, light, OverlayTexture.NO_OVERLAY, 0xFF000000 | color);
+        part.render(pose, b, light, OverlayTexture.NO_OVERLAY, 0xFF000000 | color);
         pose.popPose();
     }
 
-    private void pair(PoseStack pose, VertexConsumer b, int light, ModelPart anchor, String part, boolean show, int color, float size,
-                      float pitch, float yaw, float roll, float offset, boolean forehead) {
-        if (!show) return;
+    /** A mirrored left/right pair (ears, horns), turned by the player's own angles. */
+    private void pair(PoseStack pose, VertexConsumer b, int light, ModelPart anchor, ModelPart group, int color,
+                      float size, float pitch, float yaw, float roll, float offset, boolean forehead) {
         pose.pushPose();
         anchor.translateAndRotate(pose);
-        var group = root.getChild(part);
-        for (int sign : new int[]{-1, 1}) {
+        for (int sign : SIDES) {
             var node = group.getChild(sign < 0 ? "left" : "right");
             pose.pushPose();
             pose.translate(node.x / 16f, (node.y + offset + (forehead ? 2.8f : 0)) / 16f, (node.z + (forehead ? -4 : 0)) / 16f);

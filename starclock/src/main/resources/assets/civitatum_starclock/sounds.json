@@ -1,0 +1,82 @@
+{
+  "shuffle": {
+    "subtitle": "subtitles.civitatum_starclock.shuffle",
+    "sounds": [
+      {
+        "name": "starclock:ritual/shuffle",
+        "stream": false,
+        "preload": true
+      }
+    ]
+  },
+  "sextant_click": {
+    "subtitle": "subtitles.civitatum_starclock.sextant_click",
+    "sounds": [
+      {
+        "name": "starclock:ritual/sextant_click",
+        "stream": false,
+        "preload": true
+      }
+    ]
+  },
+  "water_pour": {
+    "subtitle": "subtitles.civitatum_starclock.water_pour",
+    "sounds": [
+      {
+        "name": "starclock:ritual/water_pour",
+        "stream": false,
+        "preload": true
+      }
+    ]
+  },
+  "ring_hum": {
+    "subtitle": "subtitles.civitatum_starclock.ring_hum",
+    "sounds": [
+      {
+        "name": "starclock:ritual/ring_hum",
+        "stream": false,
+        "preload": true
+      }
+    ]
+  },
+  "stars_reveal": {
+    "subtitle": "subtitles.civitatum_starclock.stars_reveal",
+    "sounds": [
+      {
+        "name": "starclock:ritual/stars_reveal",
+        "stream": false,
+        "preload": true
+      }
+    ]
+  },
+  "card_flip": {
+    "subtitle": "subtitles.civitatum_starclock.card_flip",
+    "sounds": [
+      {
+        "name": "starclock:ritual/card_flip",
+        "stream": false,
+        "preload": true
+      }
+    ]
+  },
+  "omen_good": {
+    "subtitle": "subtitles.civitatum_starclock.omen_good",
+    "sounds": [
+      {
+        "name": "starclock:ritual/omen_good",
+        "stream": false,
+        "preload": true
+      }
+    ]
+  },
+  "omen_bad": {
+    "subtitle": "subtitles.civitatum_starclock.omen_bad",
+    "sounds": [
+      {
+        "name": "starclock:ritual/omen_bad",
+        "stream": false,
+        "preload": true
+      }
+    ]
+  }
+}

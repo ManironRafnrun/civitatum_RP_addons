@@ -1,0 +1,42 @@
+{
+  "id": "starclock:serpent_6",
+  "sign": "serpent",
+  "orientation": "none",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.serpent_6",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:wither",
+                "seconds": 5,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "damage",
+      "target": "player",
+      "actions": [
+        {
+          "type": "damage",
+          "params": {
+            "amount": 8,
+            "magic": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "id": "starclock:hearth_reversed",
+  "sign": "hearth",
+  "orientation": "reversed",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.hearth_reversed",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "fireSeconds": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:blindness",
+                "seconds": 30,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:darkness",
+                "seconds": 15,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

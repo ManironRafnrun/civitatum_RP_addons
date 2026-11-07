@@ -9,7 +9,10 @@ import java.util.UUID;
 import team.civitatum.books.document.BookDocument;
 import team.civitatum.books.document.PngImage;
 
-/** World-local documents and deduplicated images. A successful save always means a completed disk write. */
+/**
+ * World-local documents and deduplicated images. A successful save always means a completed disk write.
+ * Used on the logical server thread only; the image worker merely decodes and hands its result back to that thread.
+ */
 public final class BookStore {
     public static final long MAX_IMAGE_STORAGE = 256L * 1024 * 1024;
     private final Path books;
@@ -26,19 +29,19 @@ public final class BookStore {
         }
     }
 
-    public synchronized BookDocument read(UUID id) throws IOException {
+    public BookDocument read(UUID id) throws IOException {
         Path path = books.resolve(id + ".json");
         if (Files.size(path) > BookDocument.MAX_BYTES) throw new IOException("document_size");
         return BookDocument.parse(Files.readAllBytes(path));
     }
 
-    public synchronized void write(UUID id, BookDocument document) throws IOException {
+    public void write(UUID id, BookDocument document) throws IOException {
         byte[] bytes = document.bytes();
         BookDocument.parse(bytes);
         writeAtomically(books.resolve(id + ".json"), bytes);
     }
 
-    public synchronized String putImage(byte[] normalizedPng) throws IOException {
+    public String putImage(byte[] normalizedPng) throws IOException {
         String hash = PngImage.hash(normalizedPng);
         Path path = imagePath(hash);
         if (!Files.exists(path)) {
@@ -49,18 +52,18 @@ public final class BookStore {
         return hash;
     }
 
-    public synchronized boolean hasImage(String hash) {
+    public boolean hasImage(String hash) {
         return Files.isRegularFile(imagePath(hash));
     }
 
-    public synchronized byte[] image(String hash) throws IOException {
+    public byte[] image(String hash) throws IOException {
         Path path = imagePath(hash);
         if (Files.size(path) > PngImage.MAX_BYTES) throw new IOException("png_size");
         return Files.readAllBytes(path);
     }
 
     private Path imagePath(String hash) {
-        if (!hash.matches("[0-9a-f]{64}")) throw new IllegalArgumentException("image");
+        if (!PngImage.isHash(hash)) throw new IllegalArgumentException("image");
         return images.resolve(hash + ".png");
     }
 

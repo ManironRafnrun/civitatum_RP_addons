@@ -9,25 +9,30 @@ import java.util.*;
 public final class AppearanceCatalog {
     public static final List<String> CHANNELS=List.of("main","decor_1","decor_2");
     public static final List<String> GROUPS=List.of("trousers","skirt","shirt","vest","coat","corset","belt","gloves","boots");
-    public static final List<String> GROUP_NAMES=List.of("Брюки","Юбка","Рубашка / блуза","Жилет","Верхняя одежда","Корсет","Пояс","Перчатки","Обувь");
+    public static String groupKey(String group){return "appearance.civitatum.group."+group;}
     public record Color(String label,int rgb) {}
     public record Channel(String label,String affects,List<Color> colors,String kind) {}
     public record Gradient(String neutral,Map<String,String> masks) {}
     public record Variant(String directory,Map<String,String> textures,Map<String,String> masks,Gradient gradient) {}
-    public record Asset(String id,String name,String gender,String group,Map<String,Channel> controls,Map<String,Variant> models,boolean linkedShades) {
+    /**
+     * {@code label} is the Russian piece name of a garment ("" for hair); it is translated on the client.
+     * Catalog texts (labels, palette names) stay as authored in Russian; {@code appearance.civitatum.<text>} in en_us
+     * gives their English.
+     */
+    public record Asset(String id,String name,String label,String gender,String group,Map<String,Channel> controls,Map<String,Variant> models,boolean linkedShades) {
         public boolean permits(String sex) { return gender.equals("any") || gender.equals(sex); }
     }
     public record Outfit(String id,String name,String gender,List<String> items) {}
     private static final Map<String,Asset> HAIR=new LinkedHashMap<>(), CLOTHES=new LinkedHashMap<>();
     private static final Map<String,Outfit> OUTFITS=new LinkedHashMap<>();
     static {
-        for(String set:List.of("haircuts"))for(var e:read(set)) {var o=e.getAsJsonObject();var a=asset(o.get("id").getAsString(),o.get("name").getAsString(),"any","",o);if(HAIR.put(a.id,a)!=null)throw new IllegalStateException("Duplicate hair: "+a.id);}
+        for(String set:List.of("haircuts"))for(var e:read(set)) {var o=e.getAsJsonObject();var a=asset(o.get("id").getAsString(),o.get("name").getAsString(),"","any","",o);if(HAIR.put(a.id,a)!=null)throw new IllegalStateException("Duplicate hair: "+a.id);}
         for(var e:read("clothing")) {
             var o=e.getAsJsonObject();String id=o.get("id").getAsString(), name=o.get("name").getAsString(), gender=o.get("gender").getAsString();
             var items=new ArrayList<String>();
             for(var entry:o.getAsJsonObject("items").entrySet()) {
                 String itemId=id+"/"+entry.getKey();
-                var a=asset(itemId,name+" • "+entry.getValue().getAsJsonObject().get("label_ru").getAsString(),gender,group(entry.getKey()),entry.getValue().getAsJsonObject());
+                var a=asset(itemId,name,entry.getValue().getAsJsonObject().get("label_ru").getAsString(),gender,group(entry.getKey()),entry.getValue().getAsJsonObject());
                 CLOTHES.put(itemId,a);items.add(itemId);
             }
             OUTFITS.put(id,new Outfit(id,name,gender,List.copyOf(items)));
@@ -39,7 +44,7 @@ public final class AppearanceCatalog {
             return JsonParser.parseReader(new InputStreamReader(in,StandardCharsets.UTF_8)).getAsJsonObject().getAsJsonArray("entries");
         } catch(java.io.IOException e){throw new IllegalStateException(e);}
     }
-    private static Asset asset(String id,String name,String gender,String group,JsonObject o) {
+    private static Asset asset(String id,String name,String label,String gender,String group,JsonObject o) {
         var controls=new LinkedHashMap<String,Channel>();
         for(String key:CHANNELS) if(o.getAsJsonObject("controls").has(key)) {
             var c=o.getAsJsonObject("controls").getAsJsonObject(key);var colors=new ArrayList<Color>();
@@ -54,7 +59,7 @@ public final class AppearanceCatalog {
             var gradient=v.has("gradient_blending")?v.getAsJsonObject("gradient_blending"):null;
             models.put(entry.getKey(),new Variant(path.substring("assets/civitatum/".length()),strings(v.getAsJsonObject("textures")),strings(v.getAsJsonObject("masks")),gradient==null?null:new Gradient(gradient.get("neutral").getAsString(),strings(gradient.getAsJsonObject("masks")))));
         }
-        return new Asset(id,name,gender,group,Collections.unmodifiableMap(controls),Collections.unmodifiableMap(models),o.has("linked_shades") && o.get("linked_shades").getAsBoolean());
+        return new Asset(id,name,label,gender,group,Collections.unmodifiableMap(controls),Collections.unmodifiableMap(models),o.has("linked_shades") && o.get("linked_shades").getAsBoolean());
     }
     private static Map<String,String> strings(JsonObject o) {var m=new LinkedHashMap<String,String>();for(var e:o.entrySet())m.put(e.getKey(),e.getValue().getAsString());return Collections.unmodifiableMap(m);}
     private static String group(String id) {return switch(id){case "breeches"->"trousers";case "blouse"->"shirt";case "tunic","dress","gambeson"->"coat";case "sash"->"belt";default->id;};}

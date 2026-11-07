@@ -16,8 +16,11 @@ plugins {
 rootProject.name = 'civitatum-rp-addons'
 
 // one module per mod
-include 'inventory'
+include 'hud'
 include 'character-creation'
 include 'couple-interactions'
 include 'menu'
 include 'books'
+
+// Звёздный счёт: общий серверный и клиентский мод.
+include 'starclock'

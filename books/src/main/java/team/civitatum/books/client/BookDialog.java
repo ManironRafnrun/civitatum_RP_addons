@@ -5,22 +5,28 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import team.civitatum.books.document.PngImage;
 
-/** Small text/search dialog, or PNG import by native file picker, path or drag-and-drop. */
+/**
+ * Small text/search dialog, or PNG import by native file picker, path or drag-and-drop.
+ */
 final class BookDialog extends Screen implements BookChildScreen {
+
     private final BookScreen book;
     private final String initial;
     private final int limit;
     private final Consumer<String> accept;
     private final boolean imageImport;
+
     private EditBox input;
     private boolean working;
     private Component status = Component.empty();
@@ -43,7 +49,16 @@ final class BookDialog extends Screen implements BookChildScreen {
         imageImport = true;
     }
 
-    @Override public BookScreen book() { return book; }
+    /** The book's save timer and server timeout keep running while this dialog covers it. */
+    @Override
+    public void tick() {
+        book.tick();
+    }
+
+    @Override
+    public BookScreen book() {
+        return book;
+    }
 
     @Override
     protected void init() {
@@ -126,7 +141,7 @@ final class BookDialog extends Screen implements BookChildScreen {
 
     @Override
     public boolean keyPressed(int key, int scanCode, int modifiers) {
-        if (key == 257 || key == 335) {
+        if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) {
             submit();
             return true;
         }
@@ -137,7 +152,9 @@ final class BookDialog extends Screen implements BookChildScreen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0xf0201c18);
         graphics.drawCenteredString(font, title, width / 2, height / 2 - 50, 0xffeee1c2);
-        if (imageImport) graphics.drawCenteredString(font, Component.translatable("books.png_hint"), width / 2, height / 2 - 33, 0xffbda88a);
+        if (imageImport) {
+            graphics.drawCenteredString(font, Component.translatable("books.png_hint"), width / 2, height / 2 - 33, 0xffbda88a);
+        }
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(font, status, width / 2, height / 2 + 58, 0xffdfbb81);
     }
@@ -148,5 +165,8 @@ final class BookDialog extends Screen implements BookChildScreen {
     }
 
     @Override
-    public boolean isPauseScreen() { return false; }
+    public boolean isPauseScreen() {
+        return false;
+    }
+
 }

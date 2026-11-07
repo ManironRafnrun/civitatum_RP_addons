@@ -7,6 +7,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.effect.*;
@@ -17,6 +18,11 @@ import net.minecraft.sounds.SoundSource;
 public final class MetalEating {
     private record Meal(InteractionHand hand, ItemStack identity, long finish, ModConfig.MetalFood food, boolean ore, boolean netherite) {}
     private static final Map<UUID,Meal> MEALS=new HashMap<>();
+    private static final TagKey<Item> STEEL_INGOTS = common("ingots/steel"), INGOTS = common("ingots");
+    private static final TagKey<Item> NUGGETS = common("nuggets"), ORE_ITEMS = common("ores");
+    private static TagKey<Item> common(String path) {
+        return TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", path));
+    }
     private static final Set<String> ORES=Set.of("iron_ore","deepslate_iron_ore","gold_ore","deepslate_gold_ore","nether_gold_ore","copper_ore","deepslate_copper_ore","ancient_debris","raw_iron","raw_gold","raw_copper");
     public static ModConfig.MetalFood food(ItemStack stack) {
         String id=BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
@@ -35,10 +41,10 @@ public final class MetalEating {
             };
         }
         if(!ModConfig.INSTANCE.forgedMetalPatches) return null;
-        if(stack.is(TagKey.create(Registries.ITEM,ResourceLocation.fromNamespaceAndPath("c","ingots/steel")))) return new ModConfig.MetalFood(6,6);
-        if(stack.is(TagKey.create(Registries.ITEM,ResourceLocation.fromNamespaceAndPath("c","ingots")))) return new ModConfig.MetalFood(3,3);
-        if(stack.is(TagKey.create(Registries.ITEM,ResourceLocation.fromNamespaceAndPath("c","nuggets")))) return new ModConfig.MetalFood(1,1);
-        if(stack.is(TagKey.create(Registries.ITEM,ResourceLocation.fromNamespaceAndPath("c","ores")))) return new ModConfig.MetalFood(2,1);
+        if(stack.is(STEEL_INGOTS)) return new ModConfig.MetalFood(6,6);
+        if(stack.is(INGOTS)) return new ModConfig.MetalFood(3,3);
+        if(stack.is(NUGGETS)) return new ModConfig.MetalFood(1,1);
+        if(stack.is(ORE_ITEMS)) return new ModConfig.MetalFood(2,1);
         return null;
     }
     public static boolean start(ServerPlayer p, InteractionHand hand) {
@@ -50,11 +56,11 @@ public final class MetalEating {
         if(MEALS.containsKey(p.getUUID())) return true;
         if(!p.canEat(false)) return false;
         String id=BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
-        boolean nugget=id.endsWith("_nugget") || stack.is(TagKey.create(Registries.ITEM,ResourceLocation.fromNamespaceAndPath("c","nuggets")));
-        boolean ore=ORES.contains(id) || stack.is(TagKey.create(Registries.ITEM,ResourceLocation.fromNamespaceAndPath("c","ores")));
+        boolean nugget=id.endsWith("_nugget") || stack.is(NUGGETS);
+        boolean ore=ORES.contains(id) || stack.is(ORE_ITEMS);
         int ticks=nugget ? Math.max(8,ModConfig.INSTANCE.metalUseTicks/2) : ModConfig.INSTANCE.metalUseTicks;
         MEALS.put(p.getUUID(),new Meal(hand,stack.copy(),RaceService.time(p)+ticks,food,ore,stack.is(Items.NETHERITE_INGOT)));
-        p.displayClientMessage(Component.literal("Питание металлом… удерживайте предмет в руке"),true);
+        p.displayClientMessage(Civitatum.message("eating_metal"),true);
         return true;
     }
     public static void tick(ServerPlayer p) {

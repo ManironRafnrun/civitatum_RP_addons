@@ -20,7 +20,8 @@ public final class ClientCharacters {
     }
 
     public static RaceState state(Player p) {
-        return STATES.getOrDefault(p.getUUID(), p.getData(Civitatum.STATE));
+        var state = STATES.get(p.getUUID());
+        return state != null ? state : p.getData(Civitatum.STATE);
     }
 
     public static CharacterData get(Player p) {
@@ -48,7 +49,7 @@ public final class ClientCharacters {
             }
             case 3 -> {
                 game.setScreen(null);
-                if (game.player != null) game.player.displayClientMessage(Component.literal(packet.data()), true);
+                if (game.player != null) game.player.displayClientMessage(Component.translatable(packet.data()), true);
             }
             case 4 -> {
                 if (game.screen instanceof CharacterScreen screen) screen.error(packet.data());

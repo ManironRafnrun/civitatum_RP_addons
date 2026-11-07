@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "team.civitatum.hud.parcool",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "LightStaminaHudMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

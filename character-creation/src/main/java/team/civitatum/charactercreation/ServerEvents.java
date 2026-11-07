@@ -47,7 +47,7 @@ public final class ServerEvents {
         for (ServerPlayer other : p.server.getPlayerList().getPlayers())
             if (other != p) RaceNetwork.send(p,new RaceNetwork.Clientbound(0,other.getUUID(),0,other.getData(Civitatum.STATE).json()));
         if (!p.getData(Civitatum.STATE).character().selected)
-            p.sendSystemMessage(Component.literal("Наконец-то вы прибыли. Создайте персонажа: /civitatum race choose"));
+            p.sendSystemMessage(Civitatum.message("welcome"));
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent e) { if(e.getEntity() instanceof ServerPlayer p) RaceService.logout(p); }
     @SubscribeEvent public static void respawn(PlayerEvent.PlayerRespawnEvent e) { if(e.getEntity() instanceof ServerPlayer p) { RaceService.apply(p); RaceNetwork.sync(p); } }
@@ -88,7 +88,7 @@ public final class ServerEvents {
             e.setCanceled(true); e.setCancellationResult(InteractionResult.CONSUME);
         } else if(RaceService.forbidsBoots(e.getEntity()) && e.getItemStack().getItem() instanceof ArmorItem a && a.getEquipmentSlot() == EquipmentSlot.FEET) {
             e.setCanceled(true); e.setCancellationResult(InteractionResult.FAIL);
-            if(e.getEntity() instanceof ServerPlayer p) p.displayClientMessage(Component.literal(RaceService.bootsMessage(p)),true);
+            if(e.getEntity() instanceof ServerPlayer p) p.displayClientMessage(RaceService.bootsMessage(p),true);
         }
     }
     @SubscribeEvent public static void interactBlock(PlayerInteractEvent.RightClickBlock e) {
@@ -105,7 +105,7 @@ public final class ServerEvents {
         if(e.getEntity() instanceof Player p && "forged".equals(p.getData(Civitatum.STATE).character().race)
             && p.getData(Civitatum.STATE).character().selected && e.getItem().get(DataComponents.FOOD) != null) {
             e.setCanceled(true);
-            if(p instanceof ServerPlayer sp) sp.displayClientMessage(Component.literal("Кованные питаются металлами"),true);
+            if(p instanceof ServerPlayer sp) sp.displayClientMessage(Civitatum.message("forged_food"),true);
         }
     }
     @SubscribeEvent public static void ate(LivingEntityUseItemEvent.Finish e) {
@@ -151,7 +151,7 @@ public final class ServerEvents {
             var state=p.getData(Civitatum.STATE);
             if(state.character().selected && state.character().race.equals("jahar") && e.getSource().is(DamageTypeTags.IS_FIRE)) {
                 p.setData(Civitatum.STATE,new RaceState(state.character(),state.curseDeaths()+1,state.cooldownUntil()));
-                p.sendSystemMessage(Component.literal("Огонь оставил неизгладимый след: −2 максимальных HP."));
+                p.sendSystemMessage(Civitatum.message("jahar_curse"));
             }
             RaceAbilities.clearTransient(p); MetalEating.logout(p);
         }

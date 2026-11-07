@@ -1,10 +1,10 @@
 package team.civitatum.charactercreation;
 
-import java.util.List;
-
 /** Stable saved indices: zero always means none. Drawings use the normal skin UVs. */
 public final class FacialHair {
-    public static final List<String> BEARDS=List.of("Нет","Короткая","Полная","Эспаньолка","Заострённая","Дварфийская коса");
-    public static final List<String> MUSTACHES=List.of("Нет","Шеврон","Подкрученные","Раздельные","Моржовые","Тонкие");
+    /** Styles of each kind, "none" included; names are {@code facial_hair.civitatum.<beard|mustache>.<index>}. */
+    public static final int STYLES = 6;
+    public static String beardKey(int style) { return "facial_hair.civitatum.beard." + style; }
+    public static String mustacheKey(int style) { return "facial_hair.civitatum.mustache." + style; }
     private FacialHair(){}
 }

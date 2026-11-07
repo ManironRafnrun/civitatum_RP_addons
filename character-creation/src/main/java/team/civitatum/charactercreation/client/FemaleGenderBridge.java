@@ -13,6 +13,11 @@ import team.civitatum.charactercreation.ModConfig;
 public final class FemaleGenderBridge {
     private static boolean failed;
     private static final Map<UUID, String> APPLIED = new HashMap<>();
+    /**
+     * The character object last applied per player. The layer calls {@link #apply} every frame; a synced character
+     * is never modified, so the same object needs neither a JSON comparison nor another call into the mod.
+     */
+    private static final Map<UUID, CharacterData> APPLIED_DATA = new HashMap<>();
 
     public static boolean available() {
         return ModConfig.INSTANCE.femaleGenderAdapter && !failed && ModList.get().isLoaded("wildfire_gender");
@@ -21,8 +26,12 @@ public final class FemaleGenderBridge {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void apply(UUID uuid, CharacterData c, boolean force) {
         if (!available()) return;
+        if (!force && APPLIED_DATA.get(uuid) == c) return;
         String key = c.json();
-        if (!force && key.equals(APPLIED.get(uuid))) return;
+        if (!force && key.equals(APPLIED.get(uuid))) {
+            APPLIED_DATA.put(uuid, c);
+            return;
+        }
         try {
             Class<?> mod = Class.forName("com.wildfire.main.WildfireGender");
             Object player = mod.getMethod("getOrAddPlayerById", UUID.class).invoke(null, uuid);
@@ -41,6 +50,7 @@ public final class FemaleGenderBridge {
             call(breasts, "updateCleavage", c.cleavage);
             call(breasts, "updateUniboob", c.uniboob);
             APPLIED.put(uuid, key);
+            APPLIED_DATA.put(uuid, c);
         } catch (ReflectiveOperationException ex) {
             failed = true;
             Civitatum.LOGGER.warn("Female Gender Mod API differs from 3.2.2; using built-in chest model: {}", ex.toString());
@@ -53,6 +63,7 @@ public final class FemaleGenderBridge {
 
     public static void clear() {
         APPLIED.clear();
+        APPLIED_DATA.clear();
         failed = false;
     }
 }

@@ -21,7 +21,7 @@ public final class RaceService {
         open(p,choose?EditorMode.CREATE:item?EditorMode.COSMETIC:EditorMode.FULL,item?Civitatum.SHARD.get():null);
     }
     private static void open(ServerPlayer p,EditorMode mode,net.minecraft.world.item.Item item) {
-        if(!mode.race() && race(p)==null) {p.displayClientMessage(Component.literal("Сначала выберите расу: /civitatum race choose"),false);return;}
+        if(!mode.race() && race(p)==null) {p.displayClientMessage(Civitatum.message("choose_race_first"),false);return;}
         Edit session=new Edit(RANDOM.nextLong(),mode,item,time(p)+20*1800);
         EDITS.put(p.getUUID(),session);
         int kind=mode==EditorMode.CREATE?1:mode==EditorMode.FULL?2:5;
@@ -30,7 +30,7 @@ public final class RaceService {
     public static void naked(ServerPlayer p,boolean value) {
         var state=p.getData(Civitatum.STATE);if(!state.character().selected)return;
         var c=state.character().copy();c.naked=value;p.setData(Civitatum.STATE,new RaceState(c,state.curseDeaths(),state.cooldownUntil()));RaceNetwork.sync(p);
-        p.displayClientMessage(Component.literal(value?"Декоративная одежда скрыта":"Декоративная одежда показана"),true);
+        p.displayClientMessage(Civitatum.message(value?"clothing_hidden":"clothing_shown"),true);
     }
     public static void cancel(ServerPlayer p, long token) {
         Edit edit = EDITS.get(p.getUUID());
@@ -41,7 +41,7 @@ public final class RaceService {
         EDITS.remove(p.getUUID());RaceAbilities.clearTransient(p);MetalEating.logout(p);
         p.setData(Civitatum.STATE,new RaceState(new CharacterData(),previous.curseDeaths(),previous.cooldownUntil()));
         apply(p);p.refreshDisplayName();RaceNetwork.sync(p);
-        p.sendSystemMessage(Component.literal("Раса сброшена. Новый выбор: /civitatum race choose"));
+        p.sendSystemMessage(Civitatum.message("race_reset"));
     }
     public static void openWithShard(ServerPlayer p) {
         var item=p.getInventory().contains(new net.minecraft.world.item.ItemStack(Civitatum.MIRROR.get()))?Civitatum.MIRROR.get():Civitatum.SHARD.get();
@@ -49,14 +49,14 @@ public final class RaceService {
     }
     public static void openCosmetic(ServerPlayer p,net.minecraft.world.item.Item item) {
         if(!p.isCreative() && !p.getInventory().contains(new net.minecraft.world.item.ItemStack(item))) {
-            p.displayClientMessage(Component.literal("Для изменения внешности нужно Зеркало преображения или Осколок Демитары"),true);return;
+            p.displayClientMessage(Civitatum.message("needs_item"),true);return;
         }
         open(p,EditorMode.COSMETIC,item);
     }
     public static void save(ServerPlayer p, long token, String json) {
         Edit edit = EDITS.get(p.getUUID());
         if (edit == null || edit.token != token || edit.expires < time(p) || !p.isAlive()) {
-            p.displayClientMessage(Component.literal("Редактор закрыт или устарел. Откройте его снова."), false); return;
+            p.displayClientMessage(Civitatum.message("editor_expired"), false); return;
         }
         try {
             CharacterData c = RaceCatalog.validate(Civitatum.GSON.fromJson(json, CharacterData.class));
@@ -68,17 +68,17 @@ public final class RaceService {
                 int slot = -1;
                 for (int i = 0; i < p.getInventory().getContainerSize(); i++)
                     if (p.getInventory().getItem(i).is(edit.item)) { slot = i; break; }
-                if (slot < 0) throw new IllegalArgumentException("Предмет для изменения внешности больше не находится в инвентаре");
+                if (slot < 0) throw new IllegalArgumentException(Civitatum.ERROR + "item_missing");
                 p.getInventory().getItem(slot).shrink(1);
             }
             if (edit.mode==EditorMode.CREATE) RaceAbilities.clearTransient(p);
             p.setData(Civitatum.STATE, new RaceState(c, previous.curseDeaths(), previous.cooldownUntil()));
             EDITS.remove(p.getUUID());
             apply(p); enforceBoots(p); p.refreshDisplayName(); RaceNetwork.sync(p);
-            RaceNetwork.send(p, new RaceNetwork.Clientbound(3, p.getUUID(), token, "Персонаж сохранён"));
+            RaceNetwork.send(p, new RaceNetwork.Clientbound(3, p.getUUID(), token, "message.civitatum.saved"));
         } catch (RuntimeException ex) {
             RaceNetwork.send(p, new RaceNetwork.Clientbound(4, p.getUUID(), token,
-                ex.getMessage() == null ? "Некорректные данные персонажа" : ex.getMessage()));
+                ex.getMessage() == null ? Civitatum.ERROR + "invalid" : ex.getMessage()));
         }
     }
     public static void apply(ServerPlayer p) {
@@ -140,16 +140,15 @@ public final class RaceService {
         var r = race(p);
         return r != null && !r.bootsAllowed && !(r.algnor() && ModConfig.INSTANCE.algnorBootsAllowed);
     }
-    public static String bootsMessage(net.minecraft.world.entity.player.Player p) {
-        return "hobbit".equals(p.getData(Civitatum.STATE).character().race)
-            ? "Ваши большие ноги не подходят для обуви" : "Звероподобные расы не способны надеть ботинки";
+    public static Component bootsMessage(net.minecraft.world.entity.player.Player p) {
+        return Civitatum.message("hobbit".equals(p.getData(Civitatum.STATE).character().race) ? "boots.hobbit" : "boots.beast");
     }
     public static void enforceBoots(ServerPlayer p) {
         if (!forbidsBoots(p) || p.getItemBySlot(EquipmentSlot.FEET).isEmpty()) return;
         var boots = p.getItemBySlot(EquipmentSlot.FEET).copy();
         p.setItemSlot(EquipmentSlot.FEET, net.minecraft.world.item.ItemStack.EMPTY);
         if (!p.getInventory().add(boots)) p.drop(boots, false);
-        p.displayClientMessage(Component.literal(bootsMessage(p)), true);
+        p.displayClientMessage(bootsMessage(p), true);
     }
     public static void logout(ServerPlayer p) { EDITS.remove(p.getUUID()); RaceAbilities.logout(p); MetalEating.logout(p); }
 }

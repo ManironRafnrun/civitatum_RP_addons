@@ -1,0 +1,65 @@
+{
+  "id": "starclock:mother_upright",
+  "sign": "mother",
+  "orientation": "upright",
+  "positive": true,
+  "omen": "omen.civitatum_starclock.mother_upright",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "food": 20,
+            "saturation": 10
+          }
+        },
+        {
+          "type": "loot",
+          "params": {
+            "table": "starclock:sign/mother"
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "loot",
+      "target": "player",
+      "actions": [
+        {
+          "type": "loot",
+          "params": {
+            "items": [
+              {
+                "id": "minecraft:bread",
+                "count": 6
+              }
+            ],
+            "scale": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "category": "spawn",
+      "target": "player",
+      "actions": [
+        {
+          "type": "spawn",
+          "params": {
+            "entity": "minecraft:cow",
+            "count": 1,
+            "distance": 8,
+            "mode": "default",
+            "lifetime": 0
+          }
+        }
+      ]
+    }
+  ]
+}

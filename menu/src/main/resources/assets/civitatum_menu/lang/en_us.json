@@ -1,0 +1,15 @@
+{
+  "menu.civitatum_menu.singleplayer": "Solo Adventure",
+  "menu.civitatum_menu.multiplayer": "Set Out with a Group",
+  "menu.civitatum_menu.wardrobe": "Wardrobe",
+  "menu.civitatum_menu.mods": "Mods",
+  "menu.civitatum_menu.options": "Options",
+  "menu.civitatum_menu.quit": "Quit Game",
+  "menu.civitatum_menu.music_off": "Music off",
+  "menu.civitatum_menu.now_playing": "Now playing: %s  %s / %s",
+  "menu.civitatum_menu.footer": "Civitatum Team – The Right to Return",
+  "menu.civitatum_menu.track.maintheme01": "The Right to Return",
+  "menu.civitatum_menu.track.maintheme02": "The Home We Build",
+  "menu.civitatum_menu.track.maintheme03": "The Old Crossing",
+  "menu.civitatum_menu.track.maintheme04": "The Open Road"
+}

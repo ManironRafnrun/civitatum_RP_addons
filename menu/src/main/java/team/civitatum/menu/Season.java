@@ -11,7 +11,10 @@ public enum Season {
 
     public static Season at(LocalDate date, boolean southernHemisphere) {
         int month = date.getMonthValue();
-        Season season = month >= 3 && month <= 5 ? SPRING : (month >= 6 && month <= 8 ? SUMMER : (month >= 9 && month <= 11 ? FALL : WINTER));
+        Season season = month >= 3 && month <= 5 ? SPRING
+            : month >= 6 && month <= 8 ? SUMMER
+            : month >= 9 && month <= 11 ? FALL
+            : WINTER;
         return southernHemisphere ? values()[(season.ordinal() + 2) % 4] : season;
     }
 

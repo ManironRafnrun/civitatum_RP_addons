@@ -1,0 +1,11 @@
+{
+  "icon": "civitatum_hud:textures/gui/sidebar/day.png",
+  "sort_index": 200,
+  "click": [
+    "command:/ftblibrary day"
+  ],
+  "required_mods": [
+    "ftblibrary"
+  ],
+  "requires_op": true
+}

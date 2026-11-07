@@ -18,6 +18,9 @@ import net.neoforged.bus.api.*;
 public final class CompatPatches {
     private static boolean arsReady;
     private static Method manaGetter;
+    /** Looked up on first use and kept: mana regen is computed every tick for every player. */
+    private static Method currentMana, removeMana, syncMana;
+    private static Method teamsApi, teamManager, sameTeamCheck;
     private static final Set<String> WARNED = new HashSet<>();
     @SuppressWarnings({"unchecked","rawtypes"})
     public static void init() {
@@ -26,17 +29,19 @@ public final class CompatPatches {
                 Class<?> caps=Class.forName("com.hollingsworth.arsnouveau.setup.registry.CapabilityRegistry");
                 manaGetter=caps.getMethod("getMana",LivingEntity.class); arsReady=true;
                 Class event=Class.forName("com.hollingsworth.arsnouveau.api.event.ManaRegenCalcEvent");
+                Method getEntity=event.getMethod("getEntity"), getRegen=event.getMethod("getRegen");
+                Method setRegen=event.getMethod("setRegen",double.class);
                 NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL,false,event,(Consumer<Event>)e -> {
                     try {
-                        Object entity=e.getClass().getMethod("getEntity").invoke(e);
+                        Object entity=getEntity.invoke(e);
                         if(!(entity instanceof Player p)) return;
                         RaceDefinition r=RaceService.race(p);
                         if(r==null) return;
                         double factor=r.id.equals("dwarf") ? .70 : r.id.equals("astral_elf") ? 1.15 : r.elf() ? 1.10 : 1;
                         if(p.getData(Civitatum.STATE).character().birthsign.equals("mage"))factor*=1.15;
                         if(factor!=1) {
-                            double regen=((Number)e.getClass().getMethod("getRegen").invoke(e)).doubleValue();
-                            e.getClass().getMethod("setRegen",double.class).invoke(e,regen*factor);
+                            double regen=((Number)getRegen.invoke(e)).doubleValue();
+                            setRegen.invoke(e,regen*factor);
                         }
                     } catch(ReflectiveOperationException ex) { warn("ars_regen",ex); }
                 });
@@ -49,20 +54,28 @@ public final class CompatPatches {
         try {
             Object mana=manaGetter.invoke(null,p);
             if(mana==null) return false;
-            double current=((Number)mana.getClass().getMethod("getCurrentMana").invoke(mana)).doubleValue();
+            if(currentMana==null) {
+                currentMana=mana.getClass().getMethod("getCurrentMana");
+                removeMana=mana.getClass().getMethod("removeMana",double.class);
+                syncMana=mana.getClass().getMethod("syncToClient",ServerPlayer.class);
+            }
+            double current=((Number)currentMana.invoke(mana)).doubleValue();
             if(current<cost) return false;
-            mana.getClass().getMethod("removeMana",double.class).invoke(mana,(double)cost);
-            mana.getClass().getMethod("syncToClient",ServerPlayer.class).invoke(mana,p);
+            removeMana.invoke(mana,(double)cost);
+            syncMana.invoke(mana,p);
             return true;
         } catch(ReflectiveOperationException ex) { warn("ars_payment",ex); return false; }
     }
     public static boolean sameTeam(Player a,Player b) {
         if(!ModConfig.INSTANCE.ftbTeamsPatch || !ModList.get().isLoaded("ftbteams")) return false;
         try {
-            Class<?> api=Class.forName("dev.ftb.mods.ftbteams.api.FTBTeamsAPI");
-            Object instance=api.getMethod("api").invoke(null);
-            Object manager=instance.getClass().getMethod("getManager").invoke(instance);
-            return (boolean)manager.getClass().getMethod("arePlayersInSameTeam",UUID.class,UUID.class).invoke(manager,a.getUUID(),b.getUUID());
+            if(teamsApi==null) teamsApi=Class.forName("dev.ftb.mods.ftbteams.api.FTBTeamsAPI").getMethod("api");
+            Object instance=teamsApi.invoke(null);
+            if(teamManager==null) teamManager=instance.getClass().getMethod("getManager");
+            Object manager=teamManager.invoke(instance);
+            if(sameTeamCheck==null)
+                sameTeamCheck=manager.getClass().getMethod("arePlayersInSameTeam",UUID.class,UUID.class);
+            return (boolean)sameTeamCheck.invoke(manager,a.getUUID(),b.getUUID());
         } catch(ReflectiveOperationException ex) { warn("ftb_teams",ex); return false; }
     }
     public static void target(LivingChangeTargetEvent e) {

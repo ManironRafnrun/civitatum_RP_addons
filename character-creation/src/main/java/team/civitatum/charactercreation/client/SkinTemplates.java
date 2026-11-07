@@ -18,7 +18,19 @@ public final class SkinTemplates {
     private record Entry(ResourceLocation skin, ResourceLocation glow) {
     }
 
-    private static final Map<String, Entry> CACHE = new LinkedHashMap<>();
+    /** Generated skins by appearance key; at most {@link #CACHE_SIZE}, the least recently used is released first. */
+    private static final Map<String, Entry> CACHE = new LinkedHashMap<>(16, 0.75F, true);
+    private static final int CACHE_SIZE = 128;
+
+    /**
+     * Result of the last call per character object. {@code getSkin()} runs many times a frame for every player, and
+     * building the key costs a JSON serialization of the wardrobe. Synced characters are never modified after they
+     * arrive, so the key of the same object stays valid; the editor's draft changes in place and is never kept here.
+     */
+    private record Memo(PlayerSkin original, String key, Entry entry, PlayerSkin result) {
+    }
+
+    private static final Map<CharacterData, Memo> MEMO = new WeakHashMap<>();
     private static final Map<ResourceLocation, ResourceLocation> GLOW = new HashMap<>();
     private static long nextId;
 
@@ -30,6 +42,10 @@ public final class SkinTemplates {
         if (!c.selected) return original;
         var race = RaceCatalog.get(c.race);
         if (race == null) return original;
+        boolean draft = c == ClientCharacters.preview;
+        var memo = draft ? null : MEMO.get(c);
+        // The entry must still be in the cache: an evicted one has released its texture.
+        if (memo != null && memo.original.equals(original) && CACHE.get(memo.key) == memo.entry) return memo.result;
         String model = model(c);
         String key = c.race + "/" + c.sex + "/" + model + "/" + c.skin + "/" + c.eyes + "/" + c.skinOriginal + "/" + c.eyesOriginal + "/" + c.eyeHeight + "/" + c.hair + "/" + c.hairStyle + "/" + c.hairAsset + "/" + c.hairMain + "/" + c.hairDecor1 + "/" + c.hairDecor2 + "/" + c.hairLinkedShades + "/" + c.beard + "/" + c.mustache + "/" + c.usePlayerSkin + "/" + original.texture() + "/" + c.naked + "/" + c.underwearColor + "/" + c.wardrobeEnabled + "/" + DataJson.GSON.toJson(c.wardrobe) + "/" + c.tattoo + "/" + c.tattooColor + "/" + c.glow;
         Entry entry = CACHE.get(key);
@@ -88,14 +104,17 @@ public final class SkinTemplates {
             entry = new Entry(location, glow);
             CACHE.put(key, entry);
             if (glow != null) GLOW.put(location, glow);
-            if (CACHE.size() > 128) {
+            if (CACHE.size() > CACHE_SIZE) {
                 var it = CACHE.entrySet().iterator();
                 var first = it.next();
                 it.remove();
                 release(first.getValue());
             }
         }
-        return new PlayerSkin(entry.skin, original.textureUrl(), original.capeTexture(), original.elytraTexture(), model.equals("slim") ? PlayerSkin.Model.SLIM : PlayerSkin.Model.WIDE, original.secure());
+        var result = new PlayerSkin(entry.skin, original.textureUrl(), original.capeTexture(), original.elytraTexture(),
+            model.equals("slim") ? PlayerSkin.Model.SLIM : PlayerSkin.Model.WIDE, original.secure());
+        if (!draft) MEMO.put(c, new Memo(original, key, entry, result));
+        return result;
     }
 
     public static int hairColor(CharacterData c) {
@@ -168,6 +187,7 @@ public final class SkinTemplates {
         CACHE.values().forEach(SkinTemplates::release);
         CACHE.clear();
         GLOW.clear();
+        MEMO.clear();
         AppearanceTextures.clear();
     }
 }

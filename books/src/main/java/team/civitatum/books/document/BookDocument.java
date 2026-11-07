@@ -114,7 +114,7 @@ public final class BookDocument {
             page.setText(value.get("text").getAsString());
             require(page.text().length() <= document.kind.textLimit() && page.text().indexOf('\0') < 0, "text");
             page.image = value.get("image").getAsString();
-            require(page.image.isEmpty() || page.image.matches("[0-9a-f]{64}"), "image");
+            require(page.image.isEmpty() || PngImage.isHash(page.image), "image");
             page.imageWidth = value.get("imageWidth").getAsFloat();
             page.imageHeight = value.get("imageHeight").getAsInt();
             page.imageBottom = value.get("imageBottom").getAsBoolean();

@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "team.civitatum.hud.ftb",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "SidebarGroupMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

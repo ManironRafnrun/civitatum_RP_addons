@@ -10,26 +10,35 @@ import net.neoforged.fml.loading.FMLPaths;
 
 /** {@code config/civitatum-menu.json}; created with defaults on first launch, out-of-range values are clamped. */
 public final class MenuConfig {
+    private static final String FILE = "civitatum-menu.json";
+    private static final double DEFAULT_PARALLAX_INTENSITY = 0.02;
+    private static final double DEFAULT_PARALLAX_RESPONSE = 8.0;
+    private static final double DEFAULT_MUSIC_VOLUME = 1.0;
+    /** A translation key; any other text in the config is shown as written. */
+    private static final String DEFAULT_FOOTER = "menu.civitatum_menu.footer";
+    /** The footer written by 0.1.0, before translations; it is replaced by the translated default. */
+    private static final String OLD_DEFAULT_FOOTER = "Civitatum Team – Право на Возвращение";
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static MenuConfig current = new MenuConfig();
+
     public boolean enabled = true;
     public String season = "auto";
     public boolean southernHemisphere = false;
     public boolean parallax = true;
-    public double parallaxIntensity = 0.02;
-    public double parallaxResponse = 8.0;
+    public double parallaxIntensity = DEFAULT_PARALLAX_INTENSITY;
+    public double parallaxResponse = DEFAULT_PARALLAX_RESPONSE;
     public boolean music = true;
-    public double musicVolume = 1.0;
-    public String footer = "Civitatum Team – Право на Возвращение";
+    public double musicVolume = DEFAULT_MUSIC_VOLUME;
+    public String footer = DEFAULT_FOOTER;
     public int menuLeft = 51;
     public int menuVerticalOffset = -39;
     public int logoWidth = 351;
     public int logoHeight = 70;
     public int logoTop = 12;
     public boolean showLanguageAndAccessibility = true;
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    public static MenuConfig current = new MenuConfig();
 
     public static void load() {
-        Path path = FMLPaths.CONFIGDIR.get().resolve("civitatum-menu.json");
+        Path path = FMLPaths.CONFIGDIR.get().resolve(FILE);
 
         try {
             if (Files.isRegularFile(path)) {
@@ -46,20 +55,20 @@ public final class MenuConfig {
             current = new MenuConfig();
         }
 
-        current.parallaxIntensity = finiteClamp(current.parallaxIntensity, 0.0, 0.1, 0.02);
-        current.parallaxResponse = finiteClamp(current.parallaxResponse, 0.1, 40.0, 8.0);
-        current.musicVolume = finiteClamp(current.musicVolume, 0.0, 1.0, 1.0);
-        current.logoWidth = Math.max(64, Math.min(700, current.logoWidth));
-        current.logoHeight = Math.max(16, Math.min(200, current.logoHeight));
-        current.logoTop = Math.max(0, Math.min(150, current.logoTop));
-        current.menuLeft = Math.max(4, Math.min(500, current.menuLeft));
-        current.menuVerticalOffset = Math.max(-150, Math.min(100, current.menuVerticalOffset));
-        if (current.footer == null) {
-            current.footer = "Civitatum Team – Право на Возвращение";
+        current.parallaxIntensity = finiteClamp(current.parallaxIntensity, 0.0, 0.1, DEFAULT_PARALLAX_INTENSITY);
+        current.parallaxResponse = finiteClamp(current.parallaxResponse, 0.1, 40.0, DEFAULT_PARALLAX_RESPONSE);
+        current.musicVolume = finiteClamp(current.musicVolume, 0.0, 1.0, DEFAULT_MUSIC_VOLUME);
+        current.logoWidth = Math.clamp(current.logoWidth, 64, 700);
+        current.logoHeight = Math.clamp(current.logoHeight, 16, 200);
+        current.logoTop = Math.clamp(current.logoTop, 0, 150);
+        current.menuLeft = Math.clamp(current.menuLeft, 4, 500);
+        current.menuVerticalOffset = Math.clamp(current.menuVerticalOffset, -150, 100);
+        if (current.footer == null || current.footer.equals(OLD_DEFAULT_FOOTER)) {
+            current.footer = DEFAULT_FOOTER;
         }
     }
 
     private static double finiteClamp(double value, double min, double max, double fallback) {
-        return Double.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
+        return Double.isFinite(value) ? Math.clamp(value, min, max) : fallback;
     }
 }

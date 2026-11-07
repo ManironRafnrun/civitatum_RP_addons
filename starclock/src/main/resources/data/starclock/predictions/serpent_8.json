@@ -1,0 +1,47 @@
+{
+  "id": "starclock:serpent_8",
+  "sign": "serpent",
+  "orientation": "none",
+  "positive": false,
+  "omen": "omen.civitatum_starclock.serpent_8",
+  "variants": [
+    {
+      "id": "main",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:slowness",
+                "seconds": 30,
+                "level": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "category": "effect",
+      "target": "player",
+      "actions": [
+        {
+          "type": "effect",
+          "params": {
+            "effects": [
+              {
+                "id": "minecraft:mining_fatigue",
+                "seconds": 60,
+                "level": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

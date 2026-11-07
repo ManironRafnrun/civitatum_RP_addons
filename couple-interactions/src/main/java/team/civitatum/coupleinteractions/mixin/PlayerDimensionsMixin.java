@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import team.civitatum.coupleinteractions.CarryGeometry;
 import team.civitatum.coupleinteractions.CarryHooks;
+import team.civitatum.coupleinteractions.SocialHooks;
 
 @Mixin(Player.class)
 public abstract class PlayerDimensionsMixin {
@@ -16,6 +17,8 @@ public abstract class PlayerDimensionsMixin {
     private void couple$dimensions(Pose pose, CallbackInfoReturnable<EntityDimensions> cir) {
         Player self = (Player) (Object) this;
         // Player's Entity constructor invokes dimensions before level is assigned.
-        if(self.level()!=null){if(CarryHooks.carried(self))cir.setReturnValue(CarryGeometry.DIMENSIONS);else if(team.civitatum.coupleinteractions.SocialHooks.resting(self))cir.setReturnValue(EntityDimensions.scalable(.6f,1.05f).withEyeHeight(.85f));}
+        if (self.level() == null) return;
+        if (CarryHooks.carried(self)) cir.setReturnValue(CarryGeometry.DIMENSIONS);
+        else if (SocialHooks.resting(self)) cir.setReturnValue(CarryGeometry.RESTING);
     }
 }

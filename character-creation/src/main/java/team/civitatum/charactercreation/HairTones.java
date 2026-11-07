@@ -3,7 +3,7 @@ package team.civitatum.charactercreation;
 /** RGB arithmetic shared by the editor, compositor and tests. No client classes. */
 public final class HairTones {
     private static final float[] LEVELS={1,.38f,.60f,.80f,1.15f,1.40f,1.75f};
-    public static final String[] LABELS={"Исходный оттенок","Глубокая тень","Тёмный","Приглушённый","Светлее","Светлый","Светлый блик"};
+    public static String labelKey(int index){return "appearance.civitatum.tone."+index;}
     public static int shade(int base,int index,int originalMain,int originalShade) {
         float level=index==0?Math.clamp(luma(originalShade)/Math.max(1,luma(originalMain)),.2f,2.5f):LEVELS[Math.clamp(index,1,6)];
         return scale(base,level);

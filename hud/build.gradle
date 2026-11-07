@@ -1,0 +1,64 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+}
+
+repositories {
+    maven { url = 'https://api.modrinth.com/maven' }
+    // FTB Library is only on CurseForge
+    maven {
+        url = 'https://cursemaven.com'
+        content { includeGroup 'curse.maven' }
+    }
+}
+
+dependencies {
+    // Optional at runtime: RacesBridge touches it only when the civitatum mod is loaded.
+    compileOnly project(':character-creation')
+    // Xaero's Minimap neoforge-1.21.1-26.6.0 (Modrinth version id): optional at runtime, only the mixins in
+    // team.civitatum.hud.xaero touch it, and they are applied only when it is installed
+    compileOnly 'maven.modrinth:xaeros-minimap:irjR7dHk'
+    // JEI neoforge-1.21.1-19.57.0.451 (Modrinth version id): optional at runtime, only JeiPlugin and JeiBrowser touch
+    // it, and JEI loads the plugin only when it is installed
+    compileOnly 'maven.modrinth:jei:RI8WCow6'
+    // FTB Library neoforge-2101.1.37 (CurseForge project and file id): optional at runtime, only the mixin in
+    // team.civitatum.hud.ftb touches it, and it is applied only when the mod is installed
+    compileOnly 'curse.maven:ftb-library-404465:9008089'
+}
+
+// Generators for the mod's textures; not part of the mod jar.
+sourceSets {
+    tools
+}
+
+tasks.register('generateSidebarIcons', JavaExec) {
+    group = 'tools'
+    description = 'Regenerates the FTB Library sidebar buttons in the built-in pack; needs -Pmods=<folder of mod jars>.'
+    classpath = sourceSets.tools.runtimeClasspath
+    mainClass = 'team.civitatum.hud.tools.SidebarIcons'
+    workingDir = projectDir
+    args layout.buildDirectory.file("moddev/artifacts/neoforge-${neo_version}-client-extra-aka-minecraft-resources.jar")
+        .get().asFile.absolutePath
+    if (providers.gradleProperty('mods').isPresent()) args file(providers.gradleProperty('mods').get()).absolutePath
+}
+
+tasks.register('generateStoneTexture', JavaExec) {
+    group = 'tools'
+    description = 'Regenerates the stone background of the windows, textures/gui/stone.png.'
+    classpath = sourceSets.tools.runtimeClasspath
+    mainClass = 'team.civitatum.hud.tools.StoneTexture'
+    workingDir = projectDir
+}
+
+tasks.register('generateVanillaStyle', JavaExec) {
+    group = 'tools'
+    description = 'Restyles vanilla block screens and widgets into assets/minecraft/textures/gui of the resources.'
+    classpath = sourceSets.tools.runtimeClasspath
+    mainClass = 'team.civitatum.hud.tools.VanillaStyle'
+    workingDir = projectDir
+    // vanilla textures as ModDevGradle unpacks them while setting the module up
+    args layout.buildDirectory.file("moddev/artifacts/neoforge-${neo_version}-client-extra-aka-minecraft-resources.jar")
+        .get().asFile.absolutePath
+    // the mods' jars are not dependencies of the module: their folder is given by hand, -Pmods=<folder>
+    if (providers.gradleProperty('mods').isPresent()) args file(providers.gradleProperty('mods').get()).absolutePath
+}

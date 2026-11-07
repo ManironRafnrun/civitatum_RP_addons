@@ -35,6 +35,12 @@ public final class ModConfig {
             INSTANCE.jaharHealthFloor = Math.max(2, Math.min(20, INSTANCE.jaharHealthFloor));
             INSTANCE.metalUseTicks = Math.max(16, Math.min(100, INSTANCE.metalUseTicks));
             INSTANCE.netheriteEffectSeconds = Math.max(1, Math.min(300, INSTANCE.netheriteEffectSeconds));
+            INSTANCE.koboldPairCooldownSeconds = Math.max(0, INSTANCE.koboldPairCooldownSeconds);
+            // "key": null in the file would otherwise fail on every use of the setting
+            if (INSTANCE.dragonHunterEntityIds == null) INSTANCE.dragonHunterEntityIds = new ArrayList<>();
+            if (INSTANCE.automatonNamespaces == null) INSTANCE.automatonNamespaces = new ArrayList<>();
+            if (INSTANCE.metalBlacklist == null) INSTANCE.metalBlacklist = new ArrayList<>();
+            if (INSTANCE.metalOverrides == null) INSTANCE.metalOverrides = new LinkedHashMap<>();
         } catch (Exception e) { Civitatum.LOGGER.error("Cannot read civitatum-races.json; using defaults", e); }
     }
 }

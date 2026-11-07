@@ -1,0 +1,54 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+[[mods]]
+modId="civitatum_hud"
+version="0.4.1"
+displayName="Civitatum HUD"
+authors="Civitatum Team"
+displayTest="IGNORE_ALL_VERSION"
+description='''Client-side HUD and inventory inspired by Morrowind: movable character, item and statistics windows, a status HUD, and status effects drawn next to Xaero's Minimap.'''
+[[dependencies.civitatum_hud]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.256,)"
+ordering="NONE"
+side="CLIENT"
+[[dependencies.civitatum_hud]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="CLIENT"
+[[dependencies.civitatum_hud]]
+modId="xaerominimap"
+type="optional"
+versionRange="[26.6.0,)"
+ordering="NONE"
+side="CLIENT"
+[[dependencies.civitatum_hud]]
+modId="ftblibrary"
+type="optional"
+versionRange="[2101.1.37,)"
+ordering="NONE"
+side="CLIENT"
+[[dependencies.civitatum_hud]]
+modId="parcool"
+type="optional"
+versionRange="[4.0.1.2,)"
+ordering="NONE"
+side="CLIENT"
+[[mixins]]
+config="civitatum_hud.mixins.json"
+# the effects next to the minimap: applied only with Xaero's Minimap installed
+[[mixins]]
+config="civitatum_hud.xaero.mixins.json"
+requiredMods=["xaerominimap"]
+# the sidebar in one row at the place of the former sliders: applied only with FTB Library installed
+[[mixins]]
+config="civitatum_hud.ftblibrary.mixins.json"
+requiredMods=["ftblibrary"]
+# the stamina icons in the HUD's colours: applied only with ParCool installed
+[[mixins]]
+config="civitatum_hud.parcool.mixins.json"
+requiredMods=["parcool"]

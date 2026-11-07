@@ -1,0 +1,8 @@
+{
+  "icon": "civitatum_hud:textures/gui/sidebar/gamemode.png",
+  "sort_index": 100,
+  "click": [
+    "command:/ftblibrary gamemode"
+  ],
+  "requires_op": true
+}

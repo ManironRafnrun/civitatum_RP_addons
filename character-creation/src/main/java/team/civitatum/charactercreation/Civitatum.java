@@ -31,6 +31,14 @@ public final class Civitatum {
         RaceCatalog.all();
         ModConfig.load();
     }
+    /** Prefix of the error codes sent to the editor; the client translates them. */
+    public static final String ERROR = "message.civitatum.error.";
+
+    /** A chat or action-bar message; translated by the client into its own language. */
+    public static net.minecraft.network.chat.Component message(String key, Object... args) {
+        return net.minecraft.network.chat.Component.translatable("message.civitatum." + key, args);
+    }
+
     public static net.minecraft.resources.ResourceLocation res(String name) {
         return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(ID, name);
     }

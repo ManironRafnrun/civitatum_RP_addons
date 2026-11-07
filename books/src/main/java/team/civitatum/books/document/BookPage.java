@@ -10,6 +10,8 @@ public final class BookPage {
 
     private String text = "";
     private int[] styles = new int[0];
+    /** Grows with every change of the text or its styles; lets the screen keep a line layout until it is stale. */
+    private int changes;
     public String image = "";
     public float imageWidth = 0.85f;
     public int imageHeight = 130;
@@ -21,6 +23,10 @@ public final class BookPage {
         return text;
     }
 
+    public int changeCount() {
+        return changes;
+    }
+
     public int styleAt(int index) {
         return index >= 0 && index < styles.length ? styles[index] : INK;
     }
@@ -29,6 +35,7 @@ public final class BookPage {
         text = value;
         styles = new int[value.length()];
         Arrays.fill(styles, INK);
+        changes++;
     }
 
     public void replace(int start, int end, String insertion) {
@@ -41,16 +48,19 @@ public final class BookPage {
         System.arraycopy(styles, end, result, start + insertion.length(), text.length() - end);
         text = text.substring(0, start) + insertion + text.substring(end);
         styles = result;
+        changes++;
     }
 
     public void format(int start, int end, int flag, Integer color) {
         for (int index = start; index < end; index++) {
             styles[index] = color == null ? styles[index] ^ flag : (color << 2) | (styles[index] & 3);
         }
+        changes++;
     }
 
     void setStyle(int start, int end, int style) {
         Arrays.fill(styles, start, end, style);
+        changes++;
     }
 
     /** Removes the overflow while preserving its character formatting. Images stay on their page. */
@@ -62,6 +72,7 @@ public final class BookPage {
         tail.alignment = alignment;
         text = text.substring(0, offset);
         styles = Arrays.copyOf(styles, offset);
+        changes++;
         return tail;
     }
 
@@ -71,5 +82,6 @@ public final class BookPage {
         System.arraycopy(styles, 0, combined, prefix.styles.length, styles.length);
         text = prefix.text + text;
         styles = combined;
+        changes++;
     }
 }

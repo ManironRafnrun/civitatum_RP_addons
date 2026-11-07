@@ -6,6 +6,9 @@ import java.util.*;
 
 public final class RaceCatalog {
     private static final LinkedHashMap<String, RaceDefinition> ALL = load();
+    private static final List<RaceDefinition> ROOTS = ALL.values().stream().filter(r -> r.parent == null).toList();
+    /** Sub-races by parent id, in catalog order. */
+    private static final Map<String, List<RaceDefinition>> CHILDREN = groupChildren();
     private static LinkedHashMap<String, RaceDefinition> load() {
         try (var in = RaceCatalog.class.getResourceAsStream("/races.json")) {
             if (in == null) throw new IllegalStateException("Missing races.json");
@@ -20,14 +23,23 @@ public final class RaceCatalog {
                 }
                 if (r.minHeight < .9f || r.maxHeight > 2.5f || r.minHeight > r.maxHeight) throw new IllegalStateException("Invalid height");
                 if (result.put(r.id, r) != null) throw new IllegalStateException("Duplicate race");
+                r.bake();
             }
             return result;
         } catch (Exception e) { throw new IllegalStateException("Cannot read race catalog", e); }
     }
     public static Collection<RaceDefinition> all() { return Collections.unmodifiableCollection(ALL.values()); }
     public static RaceDefinition get(String id) { return ALL.get(id); }
-    public static List<RaceDefinition> roots() { return ALL.values().stream().filter(r -> r.parent == null).toList(); }
-    public static List<RaceDefinition> children(String id) { return ALL.values().stream().filter(r -> id.equals(r.parent)).toList(); }
+    private static Map<String, List<RaceDefinition>> groupChildren() {
+        var children = new HashMap<String, List<RaceDefinition>>();
+        for (var r : ALL.values()) {
+            if (r.parent != null) children.computeIfAbsent(r.parent, k -> new ArrayList<>()).add(r);
+        }
+        children.replaceAll((parent, list) -> List.copyOf(list));
+        return Map.copyOf(children);
+    }
+    public static List<RaceDefinition> roots() { return ROOTS; }
+    public static List<RaceDefinition> children(String id) { return CHILDREN.getOrDefault(id, List.of()); }
     public static CharacterData defaults(String id, String sex) {
         RaceDefinition r = Objects.requireNonNull(get(id));
         var c = new CharacterData();
@@ -47,8 +59,8 @@ public final class RaceCatalog {
         Objects.requireNonNull(input, "character");
         var c = input.copy();
         var r = Objects.requireNonNull(get(c.race), "unknown race");
-        if (r.family()) throw new IllegalArgumentException("Нужно выбрать подрасу");
-        if (!List.of("male", "female").contains(c.sex)) throw new IllegalArgumentException("Неизвестный пол");
+        if (r.family()) throw new IllegalArgumentException(Civitatum.ERROR + "subrace");
+        if (!List.of("male", "female").contains(c.sex)) throw new IllegalArgumentException(Civitatum.ERROR + "sex");
         c.name = c.name == null ? "" : c.name.strip().replaceAll("[\\p{Cntrl}§]", "");
         if (c.name.length() > 32) c.name = c.name.substring(0, 32);
         c.height = finite(c.height, r.minHeight, r.maxHeight, (r.minHeight + r.maxHeight) / 2);
@@ -56,7 +68,8 @@ public final class RaceCatalog {
         c.eyes = paletteIndex(c.eyes, r.eyeColors); c.hornColor = paletteIndex(c.hornColor, r.hornColors);
         c.tattooColor = paletteIndex(c.tattooColor, r.tattooColors);
         boolean ears=r.pointedEars || java.util.Arrays.stream(r.earStyles).anyMatch(n->n>0);
-        c.ears = ears ? clamp(c.ears,r.pointedEars?1:0,4) : 0;
+        c.ears = !ears ? 0
+            : contains(earOptions(r), c.ears) ? c.ears : clamp(c.ears, r.pointedEars ? 1 : 0, SHARED_EARS);
         if (!r.hornsAllowed) c.horns = 0;
         else {
             boolean mayNone = !r.hornsRequired || (r.algnor() && c.female());
@@ -87,7 +100,7 @@ public final class RaceCatalog {
         return c;
     }
     static int paletteIndex(int index, String[] palette) {
-        if (index < 0 || index >= palette.length) throw new IllegalArgumentException("Цвет не входит в палитру");
+        if (index < 0 || index >= palette.length) throw new IllegalArgumentException(Civitatum.ERROR + "palette");
         return index;
     }
     public static boolean beardAllowed(CharacterData c){var r=get(c.race);return r!=null && r.beardAllowed && (!c.female() || r.id.equals("dwarf"));}
@@ -95,6 +108,16 @@ public final class RaceCatalog {
         return Float.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
     }
     static float angle(float value) { return finite(value, -60, 60, 0); }
+    /** Ear shapes 1..4 are shared by every race with ears; firbolgs, goblins and algnors have their own after them. */
+    private static final int SHARED_EARS = 4;
+
+    /** Ear shapes a race may pick: the shared ones (pointed ears have no flat 0), then the race's own. */
+    public static int[] earOptions(RaceDefinition r) {
+        var shared = java.util.stream.IntStream.rangeClosed(r.pointedEars ? 1 : 0, SHARED_EARS);
+        var own = java.util.Arrays.stream(r.earStyles).filter(n -> n > SHARED_EARS);
+        return java.util.stream.IntStream.concat(shared, own).distinct().toArray();
+    }
+
     static int clamp(int n, int min, int max) { return Math.max(min, Math.min(max, n)); }
     static boolean contains(int[] values, int n) { for (int v : values) if (v == n) return true; return false; }
 }

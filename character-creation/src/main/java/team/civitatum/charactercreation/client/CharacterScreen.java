@@ -5,6 +5,8 @@ import java.util.function.*;
 
 import net.minecraft.client.CameraType;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.locale.Language;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
@@ -36,6 +38,7 @@ public final class CharacterScreen extends Screen {
     private final List<Slider> sliders = new ArrayList<>();
     private CharacterData draft;
     private int category, tab = 12, garmentGroup, portraitScroll, focus = -1;
+    private double portraitWheel;
     private String error = "";
     private boolean nameFocus, sending, portraitDragging, breastAdvanced, confirming;
     private float zoom = 1, panX, panY, angle = -.35f, previewZoom = 1, startTick;
@@ -51,7 +54,7 @@ public final class CharacterScreen extends Screen {
     }
 
     public CharacterScreen(long token, EditorMode mode, CharacterData saved) {
-        super(Component.literal("Civitatum — редактор персонажа"));
+        super(Component.translatable("screen.civitatum.title"));
         this.token = token;
         this.mode = mode;
         draft = saved.selected ? saved.copy() : RaceCatalog.defaults("human", "male");
@@ -89,8 +92,10 @@ public final class CharacterScreen extends Screen {
         return false;
     }
 
+    /** {@code message} is an error key from the server or the validation, or plain text that is shown as is. */
     public void error(String message) {
-        error = message;
+        // No formatting: a plain exception text may contain "%".
+        error = message == null ? null : Language.getInstance().getOrDefault(message);
         sending = false;
         confirming = false;
     }
@@ -146,7 +151,7 @@ public final class CharacterScreen extends Screen {
 
     private void navigation(GuiGraphics g) {
         panel(g, 270, 18, 670, 77);
-        String[] names = {"Тип", "Внешность", "Созвездие"};
+        String[] names = {t("category.type"), t("category.looks"), t("category.sign")};
         for (int i = 0; i < 3; i++) {
             int n = i;
             button(280 + i * 219, 26, 211, 24, names[i], mode.body() || i == 1, () -> {
@@ -155,7 +160,7 @@ public final class CharacterScreen extends Screen {
                 nameFocus = false;
             }, category == i);
         }
-        String[] labels = category == 0 ? new String[]{"Скин", "Кожа", "Глаза", "Раса", "Грудь", "Рост"} : category == 1 ? new String[]{"Волосы", "Борода", "Одежда", "Татуировки"} : new String[]{"Знаки рождения"};
+        String[] labels = category == 0 ? new String[]{t("tab.skin"), t("tab.skin_tone"), t("tab.eyes"), t("tab.race"), t("tab.bust"), t("tab.height")} : category == 1 ? new String[]{t("tab.hair"), t("tab.beard"), t("tab.clothing"), t("tab.tattoos")} : new String[]{t("tab.birthsigns")};
         int[] ids = category == 0 ? new int[]{12, 0, 9, 1, 5, 8} : category == 1 ? new int[]{3, 10, 6, 4} : new int[]{11};
         int step = 650 / labels.length;
         for (int i = 0; i < labels.length; i++) {
@@ -166,8 +171,8 @@ public final class CharacterScreen extends Screen {
                 nameFocus = false;
             }, active);
         }
-        text(g, "Имя", 323, 111, MUTED);
-        button(365, 102, 341, 26, draft.name.isBlank() ? "Введите имя персонажа" : draft.name, true, () -> nameFocus = true, nameFocus);
+        text(g, t("name"), 323, 111, MUTED);
+        button(365, 102, 341, 26, draft.name.isBlank() ? t("name_hint") : draft.name, true, () -> nameFocus = true, nameFocus);
     }
 
     private void raceWindow(GuiGraphics g) {
@@ -176,28 +181,29 @@ public final class CharacterScreen extends Screen {
         g.fill(83, 17, 185, 119, 0xDD35291C);
         g.fill(86, 20, 182, 116, GOLD);
         g.blit(Civitatum.res("textures/gui/portraits/" + r.id + ".png"), 88, 22, 92, 92, 0, 0, 1254, 1254, 1254, 1254);
-        centered(g, r.name, 134, 125, INK);
+        centered(g, I18n.get(r.key("name")), 134, 125, INK);
         var roots = RaceCatalog.roots();
         String root = r.parent == null ? r.id : r.parent;
         for (int i = 0; i < roots.size(); i++) {
             var race = roots.get(i);
-            button(29 + (i % 2) * 110, 146 + (i / 2) * 23, 104, 20, race.name, mode.race(), () -> selectRace(race.family() ? RaceCatalog.children(race.id).getFirst().id : race.id), race.id.equals(root));
+            button(29 + (i % 2) * 110, 146 + (i / 2) * 23, 104, 20, I18n.get(race.key("name")), mode.race(), () -> selectRace(race.family() ? RaceCatalog.children(race.id).getFirst().id : race.id), race.id.equals(root));
         }
         g.fill(29, 285, 239, 437, 0x80201710);
-        String content = r.description + "\n\n+ " + r.positive + "\n− " + r.negative;
-        if (!r.active.isBlank())
-            content += "\n\n" + r.active + "\nЦена: " + (r.magic && net.neoforged.fml.ModList.get().isLoaded("ars_nouveau") ? "мана Ars Nouveau" : r.food + " питания") + "; откат: " + r.cooldown + " сек.";
+        String content = I18n.get(r.key("description")) + "\n\n+ " + I18n.get(r.key("positive"))
+            + "\n− " + I18n.get(r.key("negative"));
+        if (r.hasAbility())
+            content += "\n\n" + I18n.get(r.key("ability")) + "\n" + t("cost", r.magic && net.neoforged.fml.ModList.get().isLoaded("ars_nouveau") ? t("cost.mana") : t("cost.food", r.food), r.cooldown);
         var lines = font.split(Component.literal(content), 192);
         int visible = 13;
         portraitScroll = Math.clamp(portraitScroll, 0, Math.max(0, lines.size() - visible));
         for (int i = 0; i < visible && i + portraitScroll < lines.size(); i++)
             g.drawString(font, lines.get(i + portraitScroll), 37, 293 + i * 10, INK, false);
-        if (lines.size() > visible) centered(g, "Колесо: описание и способности", 134, 426, MUTED);
+        if (lines.size() > visible) centered(g, t("scroll_hint"), 134, 426, MUTED);
         var children = RaceCatalog.children(root);
-        text(g, children.isEmpty() ? "Подрасы отсутствуют" : "Подраса", 30, 447, MUTED);
+        text(g, children.isEmpty() ? t("no_subraces") : t("subrace"), 30, 447, MUTED);
         for (int i = 0; i < children.size(); i++) {
             var race = children.get(i);
-            button(29 + (i % 2) * 110, 463 + (i / 2) * 25, 104, 22, race.name, mode.race(), () -> selectRace(race.id), race.id.equals(r.id));
+            button(29 + (i % 2) * 110, 463 + (i / 2) * 25, 104, 22, I18n.get(race.key("name")), mode.race(), () -> selectRace(race.id), race.id.equals(r.id));
         }
     }
 
@@ -220,23 +226,23 @@ public final class CharacterScreen extends Screen {
         panel(g, 704, 136, 238, 396);
         var r = RaceCatalog.get(draft.race);
         String title = switch (tab) {
-            case 0 -> "Кожа";
-            case 1, 2, 7, 13 -> "Расовые элементы";
-            case 3 -> "Волосы";
-            case 4 -> "Татуировки";
-            case 5 -> "Грудь";
-            case 6 -> "Одежда";
-            case 8 -> "Рост";
-            case 9 -> "Глаза";
-            case 10 -> "Борода";
-            case 11 -> "Созвездие";
-            default -> "Тип персонажа";
+            case 0 -> t("tab.skin_tone");
+            case 1, 2, 7, 13 -> t("racial");
+            case 3 -> t("tab.hair");
+            case 4 -> t("tab.tattoos");
+            case 5 -> t("tab.bust");
+            case 6 -> t("tab.clothing");
+            case 8 -> t("tab.height");
+            case 9 -> t("tab.eyes");
+            case 10 -> t("tab.beard");
+            case 11 -> t("category.sign");
+            default -> t("type");
         };
         centered(g, title, 823, 148, GOLD);
         g.fill(716, 163, 930, 164, 0x887F6846);
         if (List.of(1, 2, 7).contains(tab)) {
             int[] ids = {1, 2, 7};
-            String[] names = {"Уши", "Рога", "Хвост"};
+            String[] names = {t("ears"), t("horns"), t("tail")};
             for (int i = 0; i < 3; i++) {
                 int id = ids[i];
                 button(714 + i * 73, 174, 68, 23, names[i], true, () -> tab = id, tab == id);
@@ -244,74 +250,74 @@ public final class CharacterScreen extends Screen {
         }
         switch (tab) {
             case 12 -> {
-                text(g, "Пол", 716, 180, MUTED);
-                button(716, 198, 103, 25, "Мужской", mode.body(), () -> changeSex("male"), !draft.female());
-                button(824, 198, 103, 25, "Женский", mode.body(), () -> changeSex("female"), draft.female());
-                text(g, "Источник скина", 716, 241, MUTED);
-                button(716, 260, 103, 25, "Имеющийся", mode.body(), () -> draft.usePlayerSkin = true, draft.usePlayerSkin);
-                button(824, 260, 103, 25, "Новый", mode.body(), () -> draft.usePlayerSkin = false, !draft.usePlayerSkin);
-                text(g, "Модель рук", 716, 305, MUTED);
+                text(g, t("sex"), 716, 180, MUTED);
+                button(716, 198, 103, 25, t("male"), mode.body(), () -> changeSex("male"), !draft.female());
+                button(824, 198, 103, 25, t("female"), mode.body(), () -> changeSex("female"), draft.female());
+                text(g, t("skin_source"), 716, 241, MUTED);
+                button(716, 260, 103, 25, t("skin.own"), mode.body(), () -> draft.usePlayerSkin = true, draft.usePlayerSkin);
+                button(824, 260, 103, 25, t("skin.new"), mode.body(), () -> draft.usePlayerSkin = false, !draft.usePlayerSkin);
+                text(g, t("arm_model"), 716, 305, MUTED);
                 button(716, 324, 103, 25, "Classic", mode.body(), () -> draft.armModel = "classic", SkinTemplates.model(draft).equals("classic"));
                 button(824, 324, 103, 25, "Slim", mode.body(), () -> draft.armModel = "slim", SkinTemplates.model(draft).equals("slim"));
-                wrapped(g, "Имеющийся скин сохраняет собственные цвета. Новый использует подготовленную основу кожи и глаз.", 716, 374, 208, MUTED, 7);
+                wrapped(g, t("skin_source_hint"), 716, 374, 208, MUTED, 7);
             }
             case 0 -> {
-                palette(g, "Цвет кожи / чешуи", 184, r.skinColors, draft.skin, mode.body() && !draft.usePlayerSkin, n -> {
+                palette(g, t("skin_color"), 184, r.skinColors, draft.skin, mode.body() && !draft.usePlayerSkin, n -> {
                     draft.skin = n;
                     draft.skinOriginal = false;
                 }, !draft.skinOriginal);
-                button(716, 246, 211, 24, "Исходная текстура", mode.body() && !draft.usePlayerSkin && r.id.equals("human"), () -> draft.skinOriginal = true, draft.skinOriginal);
-                wrapped(g, draft.usePlayerSkin ? "Цвет кожи задаётся имеющимся скином." : "Светотень исходной текстуры сохраняется при перекраске.", 716, 295, 208, MUTED, 6);
+                button(716, 246, 211, 24, t("original_texture"), mode.body() && !draft.usePlayerSkin && r.id.equals("human"), () -> draft.skinOriginal = true, draft.skinOriginal);
+                wrapped(g, draft.usePlayerSkin ? t("skin_own_hint") : t("skin_new_hint"), 716, 295, 208, MUTED, 6);
             }
             case 9 -> {
-                palette(g, "Цвет глаз", 184, r.eyeColors, draft.eyes, mode.body() && !draft.usePlayerSkin, n -> {
+                palette(g, t("eye_color"), 184, r.eyeColors, draft.eyes, mode.body() && !draft.usePlayerSkin, n -> {
                     draft.eyes = n;
                     draft.eyesOriginal = false;
                 }, !draft.eyesOriginal);
-                button(716, 246, 211, 23, "Исходный цвет", mode.body() && !draft.usePlayerSkin && r.eyeColors.length > 1, () -> draft.eyesOriginal = true, draft.eyesOriginal);
-                number(g, "Высота глаз", 292, draft.eyeHeight, 1, -2, 2, n -> draft.eyeHeight = Math.round(n), mode.body() && !draft.usePlayerSkin);
-                wrapped(g, "Верхний контур связан с основным цветом волос. Настройки глаз применяются к новому скину.", 716, 362, 208, MUTED, 6);
+                button(716, 246, 211, 23, t("original_color"), mode.body() && !draft.usePlayerSkin && r.eyeColors.length > 1, () -> draft.eyesOriginal = true, draft.eyesOriginal);
+                number(g, t("eye_height"), 292, draft.eyeHeight, 1, -2, 2, n -> draft.eyeHeight = Math.round(n), mode.body() && !draft.usePlayerSkin);
+                wrapped(g, t("eye_hint"), 716, 362, 208, MUTED, 6);
             }
             case 1 -> {
-                int[] options = r.pointedEars ? new int[]{1, 2, 3, 4} : new int[]{0, 1, 2, 3, 4};
-                cycle(g, "Форма ушей", 212, draft.ears, options, n -> draft.ears = n, mode.body() && (r.pointedEars || Arrays.stream(r.earStyles).anyMatch(n -> n > 0)));
-                number(g, "Наклон", 268, draft.earPitch, 5, -60, 60, n -> draft.earPitch = n, mode.body() && draft.ears > 0);
-                number(g, "Разворот", 316, draft.earYaw, 5, -60, 60, n -> draft.earYaw = n, mode.body() && draft.ears > 0);
-                number(g, "Крен", 364, draft.earRoll, 5, -60, 60, n -> draft.earRoll = n, mode.body() && draft.ears > 0);
-                number(g, "Высота крепления", 412, draft.earOffset, .25f, -2, 2, n -> draft.earOffset = n, mode.body() && draft.ears > 0);
+                int[] options = RaceCatalog.earOptions(r);
+                cycle(g, t("ear_shape"), 212, draft.ears, options, n -> draft.ears = n, mode.body() && (r.pointedEars || Arrays.stream(r.earStyles).anyMatch(n -> n > 0)));
+                number(g, t("pitch"), 268, draft.earPitch, 5, -60, 60, n -> draft.earPitch = n, mode.body() && draft.ears > 0);
+                number(g, t("yaw"), 316, draft.earYaw, 5, -60, 60, n -> draft.earYaw = n, mode.body() && draft.ears > 0);
+                number(g, t("roll"), 364, draft.earRoll, 5, -60, 60, n -> draft.earRoll = n, mode.body() && draft.ears > 0);
+                number(g, t("mount_height"), 412, draft.earOffset, .25f, -2, 2, n -> draft.earOffset = n, mode.body() && draft.ears > 0);
             }
             case 2 -> {
                 int[] styles = (!r.hornsRequired || r.algnor() && draft.female()) ? prepend(r.hornStyles, 0) : r.hornStyles;
-                cycle(g, "Вид рогов", 211, draft.horns, styles, n -> draft.horns = n, mode.body() && r.hornsAllowed);
-                palette(g, "Цвет рогов", 261, r.hornColors, draft.hornColor, mode.body() && r.hornsAllowed, n -> draft.hornColor = n, true);
-                number(g, "Наклон", 319, draft.hornPitch, 5, -60, 60, n -> draft.hornPitch = n, mode.body() && r.hornsAllowed);
-                number(g, "Разворот", 366, draft.hornYaw, 5, -60, 60, n -> draft.hornYaw = n, mode.body() && r.hornsAllowed);
-                number(g, "Размер", 413, draft.hornSize, .05f, .65f, 1.35f, n -> draft.hornSize = n, mode.body() && r.hornsAllowed);
-                button(716, 472, 211, 22, "Крепление: " + (draft.hornOnForehead ? "лоб" : "макушка"), mode.body() && r.hornsAllowed, () -> draft.hornOnForehead = !draft.hornOnForehead);
-                button(716, 499, 211, 20, "Дополнительно: крен / высота", mode.body() && r.hornsAllowed, () -> tab = 13);
+                cycle(g, t("horn_style"), 211, draft.horns, styles, n -> draft.horns = n, mode.body() && r.hornsAllowed);
+                palette(g, t("horn_color"), 261, r.hornColors, draft.hornColor, mode.body() && r.hornsAllowed, n -> draft.hornColor = n, true);
+                number(g, t("pitch"), 319, draft.hornPitch, 5, -60, 60, n -> draft.hornPitch = n, mode.body() && r.hornsAllowed);
+                number(g, t("yaw"), 366, draft.hornYaw, 5, -60, 60, n -> draft.hornYaw = n, mode.body() && r.hornsAllowed);
+                number(g, t("size"), 413, draft.hornSize, .05f, .65f, 1.35f, n -> draft.hornSize = n, mode.body() && r.hornsAllowed);
+                button(716, 472, 211, 22, t("horn_mount", t(draft.hornOnForehead ? "horn_mount.forehead" : "horn_mount.crown")), mode.body() && r.hornsAllowed, () -> draft.hornOnForehead = !draft.hornOnForehead);
+                button(716, 499, 211, 20, t("horn_more"), mode.body() && r.hornsAllowed, () -> tab = 13);
             }
             case 13 -> {
-                number(g, "Крен рогов", 190, draft.hornRoll, 5, -60, 60, n -> draft.hornRoll = n, mode.body() && r.hornsAllowed);
-                number(g, "Высота крепления", 245, draft.hornOffset, .2f, -.2f, 2, n -> draft.hornOffset = n, mode.body() && r.hornsAllowed);
-                button(716, 310, 211, 24, "Назад к рогам", true, () -> tab = 2);
+                number(g, t("horn_roll"), 190, draft.hornRoll, 5, -60, 60, n -> draft.hornRoll = n, mode.body() && r.hornsAllowed);
+                number(g, t("mount_height"), 245, draft.hornOffset, .2f, -.2f, 2, n -> draft.hornOffset = n, mode.body() && r.hornsAllowed);
+                button(716, 310, 211, 24, t("back_to_horns"), true, () -> tab = 2);
             }
             case 7 -> {
-                cycle(g, "Вид хвоста", 215, draft.tail, new int[]{0, 1, 2, 3}, n -> draft.tail = n, mode.body() && r.tailAllowed);
-                wrapped(g, r.tailAllowed ? "Три варианта оленьего хвоста: короткий, удлинённый и пушистый." : "Для этой расы хвост недоступен.", 716, 280, 208, MUTED, 7);
+                cycle(g, t("tail_style"), 215, draft.tail, new int[]{0, 1, 2, 3}, n -> draft.tail = n, mode.body() && r.tailAllowed);
+                wrapped(g, r.tailAllowed ? t("tail_hint") : t("no_tail"), 716, 280, 208, MUTED, 7);
             }
             case 8 -> {
-                number(g, "Рост, блоки", 195, draft.height, .05f, r.minHeight, r.maxHeight, n -> draft.height = n, mode.body());
-                wrapped(g, "Рост влияет на модель, камеру, размеры тела и досягаемость. Диапазон определяется расой.", 716, 270, 208, MUTED, 7);
+                number(g, t("height_blocks"), 195, draft.height, .05f, r.minHeight, r.maxHeight, n -> draft.height = n, mode.body());
+                wrapped(g, t("height_hint"), 716, 270, 208, MUTED, 7);
             }
             case 3 -> hair(g, r);
             case 10 -> facialHair(g, r);
             case 4 -> {
                 int[] options = new int[r.tattoos + 1];
                 for (int i = 0; i < options.length; i++) options[i] = i;
-                cycle(g, "Вид отметок", 188, draft.tattoo, options, n -> draft.tattoo = n, r.tattoos > 0);
-                palette(g, "Цвет отметок", 249, r.tattooColors, draft.tattooColor, r.tattoos > 0, n -> draft.tattooColor = n, true);
-                button(716, 312, 211, 25, "Свечение: " + yes(draft.glow), r.id.equals("orthosian"), () -> draft.glow = !draft.glow);
-                wrapped(g, "Отметки находятся под нижним бельём и одеждой. Особенности зависят от расы.", 716, 365, 208, MUTED, 7);
+                cycle(g, t("tattoo_style"), 188, draft.tattoo, options, n -> draft.tattoo = n, r.tattoos > 0);
+                palette(g, t("tattoo_color"), 249, r.tattooColors, draft.tattooColor, r.tattoos > 0, n -> draft.tattooColor = n, true);
+                button(716, 312, 211, 25, t("glow", yes(draft.glow)), r.id.equals("orthosian"), () -> draft.glow = !draft.glow);
+                wrapped(g, t("tattoo_hint"), 716, 365, 208, MUTED, 7);
             }
             case 5 -> bust(g, r);
             case 6 -> clothing(g);
@@ -319,11 +325,11 @@ public final class CharacterScreen extends Screen {
                 var signs = BirthsignCatalog.all();
                 for (int i = 0; i < signs.size(); i++) {
                     var sign = signs.get(i);
-                    button(716, 178 + i * 26, 211, 23, sign.name(), mode.body(), () -> draft.birthsign = sign.id(), draft.birthsign.equals(sign.id()));
+                    button(716, 178 + i * 26, 211, 23, I18n.get(sign.key("name")), mode.body(), () -> draft.birthsign = sign.id(), draft.birthsign.equals(sign.id()));
                 }
                 var sign = BirthsignCatalog.get(draft.birthsign);
                 g.fill(714, 370, 932, 518, 0x80201710);
-                wrapped(g, sign.description() + "\n\n" + sign.effect(), 722, 381, 200, INK, 12);
+                wrapped(g, I18n.get(sign.key("description")) + "\n\n" + I18n.get(sign.key("effect")), 722, 381, 200, INK, 12);
             }
         }
     }
@@ -331,8 +337,8 @@ public final class CharacterScreen extends Screen {
     private void hair(GuiGraphics g, RaceDefinition r) {
         var list = AppearanceCatalog.hair();
         var asset = AppearanceCatalog.hair(draft.hairAsset);
-        text(g, "Причёска", 716, 180, MUTED);
-        chooser(716, 198, 211, asset == null ? "Нет / старая" : asset.name(), r.hairAllowed, delta -> {
+        text(g, t("haircut"), 716, 180, MUTED);
+        chooser(716, 198, 211, asset == null ? t("haircut.none") : name(asset), r.hairAllowed, delta -> {
             int i = -1;
             for (int n = 0; n < list.size(); n++) if (list.get(n).id().equals(draft.hairAsset)) i = n;
             int next = Math.floorMod(i + 1 + delta, list.size() + 1) - 1;
@@ -342,7 +348,7 @@ public final class CharacterScreen extends Screen {
         });
         if (asset != null) {
             if (asset.linkedShades())
-                button(716, 229, 211, 22, "Оттенки от цвета волос: " + yes(draft.hairLinkedShades), true, () -> {
+                button(716, 229, 211, 22, t("linked_shades", yes(draft.hairLinkedShades)), true, () -> {
                     draft.hairLinkedShades = !draft.hairLinkedShades;
                     draft.hairDecor1 = draft.hairDecor2 = 0;
                 });
@@ -352,53 +358,53 @@ public final class CharacterScreen extends Screen {
                 else draft.hairDecor2 = n;
             });
         } else {
-            cycle(g, "Старая причёска", 255, draft.hairStyle, new int[]{0, 1, 2, 3, 4}, n -> draft.hairStyle = n, r.hairAllowed);
-            palette(g, "Цвет волос", 315, r.hairColors, draft.hair, r.hairAllowed, n -> draft.hair = n, true);
+            cycle(g, t("legacy_haircut"), 255, draft.hairStyle, new int[]{0, 1, 2, 3, 4}, n -> draft.hairStyle = n, r.hairAllowed);
+            palette(g, t("hair_color"), 315, r.hairColors, draft.hair, r.hairAllowed, n -> draft.hair = n, true);
         }
     }
 
     private void facialHair(GuiGraphics g, RaceDefinition r) {
         boolean enabled = RaceCatalog.beardAllowed(draft);
-        text(g, "Борода", 716, 185, MUTED);
-        chooser(716, 202, 211, FacialHair.BEARDS.get(Math.clamp(draft.beard, 0, 5)), enabled, n -> draft.beard = Math.floorMod(draft.beard + n, 6));
-        text(g, "Усы", 716, 244, MUTED);
-        chooser(716, 261, 211, FacialHair.MUSTACHES.get(Math.clamp(draft.mustache, 0, 5)), enabled, n -> draft.mustache = Math.floorMod(draft.mustache + n, 6));
+        text(g, t("tab.beard"), 716, 185, MUTED);
+        chooser(716, 202, 211, I18n.get(FacialHair.beardKey(Math.clamp(draft.beard, 0, FacialHair.STYLES - 1))), enabled, n -> draft.beard = Math.floorMod(draft.beard + n, 6));
+        text(g, t("mustache"), 716, 244, MUTED);
+        chooser(716, 261, 211, I18n.get(FacialHair.mustacheKey(Math.clamp(draft.mustache, 0, FacialHair.STYLES - 1))), enabled, n -> draft.mustache = Math.floorMod(draft.mustache + n, 6));
         var hair = AppearanceCatalog.hair(draft.hairAsset);
         if (hair == null)
-            palette(g, "Цвет волос и бороды", 319, r.hairColors, draft.hair, enabled, n -> draft.hair = n, true);
+            palette(g, t("hair_beard_color"), 319, r.hairColors, draft.hair, enabled, n -> draft.hair = n, true);
         else {
-            text(g, "Цвет волос и бороды", 716, 319, MUTED);
-            button(856, 336, 71, 20, "Исходный", enabled, () -> draft.hairMain = 0, draft.hairMain == 0);
+            text(g, t("hair_beard_color"), 716, 319, MUTED);
+            button(856, 336, 71, 20, t("original"), enabled, () -> draft.hairMain = 0, draft.hairMain == 0);
             var colors = hair.controls().get("main").colors();
             for (int i = 1; i < colors.size(); i++) {
                 int n = i;
                 var c = colors.get(i);
-                swatch(g, 716 + (i - 1) * 35, 365, 29, 26, c.rgb(), enabled, draft.hairMain == i, c.label(), () -> draft.hairMain = n);
+                swatch(g, 716 + (i - 1) * 35, 365, 29, 26, c.rgb(), enabled, draft.hairMain == i, catalog(c.label()), () -> draft.hairMain = n);
             }
         }
-        wrapped(g, enabled ? "Борода и усы — текстуры скина. Цвет связан с основным цветом волос." : "Для этой расы борода недоступна. Из женщин бороды и усы могут выбирать только дварфы.", 716, 418, 208, MUTED, 8);
+        wrapped(g, enabled ? t("beard_hint") : t("no_beard_hint"), 716, 418, 208, MUTED, 8);
     }
 
     private void clothing(GuiGraphics g) {
-        button(716, 176, 211, 23, (draft.naked ? "[x]" : "[ ]") + " Только нижнее бельё", true, () -> draft.naked = !draft.naked);
+        button(716, 176, 211, 23, (draft.naked ? "[x]" : "[ ]") + " " + t("underwear_only"), true, () -> draft.naked = !draft.naked);
         var outfits = AppearanceCatalog.outfits(draft.sex);
         var outfit = outfits.stream().filter(o -> o.id().equals(draft.outfitPreset)).findFirst().orElse(null);
-        chooser(716, 207, 211, outfit == null ? "Свой комплект" : outfit.name(), true, delta -> {
+        chooser(716, 207, 211, outfit == null ? t("own_outfit") : outfit.name(), true, delta -> {
             int i = outfit == null ? -1 : outfits.indexOf(outfit), n = Math.floorMod(i + 1 + delta, outfits.size() + 1) - 1;
             AppearanceCatalog.outfit(draft, n < 0 ? "" : outfits.get(n).id());
         });
         String group = garmentGroup == 9 ? "underwear" : AppearanceCatalog.GROUPS.get(garmentGroup);
-        chooser(716, 240, 211, garmentGroup == 9 ? "Нижнее бельё" : AppearanceCatalog.GROUP_NAMES.get(garmentGroup), true, delta -> garmentGroup = Math.floorMod(garmentGroup + delta, 10));
+        chooser(716, 240, 211, garmentGroup == 9 ? t("underwear") : I18n.get(AppearanceCatalog.groupKey(AppearanceCatalog.GROUPS.get(garmentGroup))), true, delta -> garmentGroup = Math.floorMod(garmentGroup + delta, 10));
         if (garmentGroup == 9) {
             String[] palette = {"#E0D5B9", "#44434A", "#A45B6C", "#578FB8", "#687E60", "#9B7753"};
-            palette(g, "Цвет нижнего белья", 294, palette, draft.underwearColor - 1, true, n -> draft.underwearColor = n + 1, draft.underwearColor > 0);
-            button(716, 355, 211, 23, "Исходный цвет белья", true, () -> draft.underwearColor = 0, draft.underwearColor == 0);
+            palette(g, t("underwear_color"), 294, palette, draft.underwearColor - 1, true, n -> draft.underwearColor = n + 1, draft.underwearColor > 0);
+            button(716, 355, 211, 23, t("underwear_original"), true, () -> draft.underwearColor = 0, draft.underwearColor == 0);
             return;
         }
         var choice = draft.wardrobe.get(group);
         var asset = choice == null ? null : AppearanceCatalog.clothing(choice.asset);
         var list = AppearanceCatalog.clothes(draft.sex, group);
-        chooser(716, 273, 211, asset == null ? "Нет" : asset.name(), !list.isEmpty(), delta -> {
+        chooser(716, 273, 211, asset == null ? t("none") : name(asset), !list.isEmpty(), delta -> {
             int i = asset == null ? -1 : list.indexOf(asset), n = Math.floorMod(i + 1 + delta, list.size() + 1) - 1;
             draft.wardrobeEnabled = true;
             draft.outfitPreset = "";
@@ -415,33 +421,33 @@ public final class CharacterScreen extends Screen {
     private void bust(GuiGraphics g, RaceDefinition r) {
         boolean enabled = mode.body() && draft.female() && !r.id.equals("forged");
         if (breastAdvanced) {
-            number(g, "Подвижность", 190, draft.bounce, .025f, 0, .5f, n -> draft.bounce = n, enabled);
-            number(g, "Мягкость", 240, draft.floppiness, .05f, .25f, 1, n -> draft.floppiness = n, enabled);
-            button(716, 305, 211, 24, "Физика под бронёй: " + yes(draft.armorPhysics), enabled, () -> draft.armorPhysics = !draft.armorPhysics);
-            button(716, 350, 211, 24, "Основные настройки", true, () -> breastAdvanced = false);
+            number(g, t("bounce"), 190, draft.bounce, .025f, 0, .5f, n -> draft.bounce = n, enabled);
+            number(g, t("floppiness"), 240, draft.floppiness, .05f, .25f, 1, n -> draft.floppiness = n, enabled);
+            button(716, 305, 211, 24, t("armor_physics", yes(draft.armorPhysics)), enabled, () -> draft.armorPhysics = !draft.armorPhysics);
+            button(716, 350, 211, 24, t("basic_settings"), true, () -> breastAdvanced = false);
             return;
         }
-        number(g, "Размер груди", 185, draft.bust, .05f, 0, .8f, n -> draft.bust = n, enabled);
-        number(g, "Смещение X", 233, draft.bustX, .1f, -1, 1, n -> draft.bustX = n, enabled);
-        number(g, "Смещение Y", 281, draft.bustY, .1f, -1, 1, n -> draft.bustY = n, enabled);
-        number(g, "Смещение Z", 329, draft.bustZ, .1f, -1, 0, n -> draft.bustZ = n, enabled);
-        number(g, "Расстояние", 377, draft.cleavage, .01f, 0, .1f, n -> draft.cleavage = n, enabled);
-        button(716, 428, 103, 22, "Физика: " + yes(draft.breastPhysics), enabled, () -> draft.breastPhysics = !draft.breastPhysics);
-        button(824, 428, 103, 22, "Броня: " + yes(draft.showInArmor), enabled, () -> draft.showInArmor = !draft.showInArmor);
-        button(716, 455, 211, 22, "Форма: " + (draft.uniboob ? "единая" : "парная"), enabled, () -> draft.uniboob = !draft.uniboob);
-        button(716, 483, 211, 24, "Дополнительные настройки", enabled, () -> breastAdvanced = true);
+        number(g, t("bust_size"), 185, draft.bust, .05f, 0, .8f, n -> draft.bust = n, enabled);
+        number(g, t("offset_x"), 233, draft.bustX, .1f, -1, 1, n -> draft.bustX = n, enabled);
+        number(g, t("offset_y"), 281, draft.bustY, .1f, -1, 1, n -> draft.bustY = n, enabled);
+        number(g, t("offset_z"), 329, draft.bustZ, .1f, -1, 0, n -> draft.bustZ = n, enabled);
+        number(g, t("cleavage"), 377, draft.cleavage, .01f, 0, .1f, n -> draft.cleavage = n, enabled);
+        button(716, 428, 103, 22, t("physics", yes(draft.breastPhysics)), enabled, () -> draft.breastPhysics = !draft.breastPhysics);
+        button(824, 428, 103, 22, t("armor", yes(draft.showInArmor)), enabled, () -> draft.showInArmor = !draft.showInArmor);
+        button(716, 455, 211, 22, t("shape", t(draft.uniboob ? "shape.single" : "shape.pair")), enabled, () -> draft.uniboob = !draft.uniboob);
+        button(716, 483, 211, 24, t("advanced"), enabled, () -> breastAdvanced = true);
     }
 
     private void footer(GuiGraphics g) {
         panel(g, 270, 478, 418, 54);
-        button(280, 485, 67, 18, "Поворот <", true, () -> angle -= .4f);
-        button(353, 485, 67, 18, "Поворот >", true, () -> angle += .4f);
-        button(426, 485, 77, 18, "Голова +", true, () -> previewZoom = Math.min(3, previewZoom + .4f));
-        button(509, 485, 77, 18, "Голова −", true, () -> previewZoom = Math.max(1, previewZoom - .4f));
-        button(592, 485, 86, 18, "Весь рост", true, () -> previewZoom = 1);
-        button(280, 508, 92, 18, "Отмена", !sending, this::onClose);
-        button(378, 508, 145, 18, "Сброс раздела", !sending && (mode.body() || category == 1), this::resetSection);
-        button(529, 508, 149, 18, sending ? "Сохранение…" : "Подтвердить", !sending, () -> {
+        button(280, 485, 67, 18, t("rotate_left"), true, () -> angle -= .4f);
+        button(353, 485, 67, 18, t("rotate_right"), true, () -> angle += .4f);
+        button(426, 485, 77, 18, t("head_in"), true, () -> previewZoom = Math.min(3, previewZoom + .4f));
+        button(509, 485, 77, 18, t("head_out"), true, () -> previewZoom = Math.max(1, previewZoom - .4f));
+        button(592, 485, 86, 18, t("full_height"), true, () -> previewZoom = 1);
+        button(280, 508, 92, 18, t("cancel"), !sending, this::onClose);
+        button(378, 508, 145, 18, t("reset"), !sending && (mode.body() || category == 1), this::resetSection);
+        button(529, 508, 149, 18, sending ? t("saving") : t("confirm"), !sending, () -> {
             confirming = true;
             nameFocus = false;
         });
@@ -462,46 +468,100 @@ public final class CharacterScreen extends Screen {
             return;
         }
         var source = initial.race.equals(draft.race) && initial.sex.equals(draft.sex) ? initial.copy() : RaceCatalog.defaults(draft.race, draft.sex);
-        String[] fields = switch (tab) {
-            case 0 -> new String[]{"skin", "skinOriginal"};
-            case 9 -> new String[]{"eyes", "eyesOriginal", "eyeHeight"};
-            case 1 -> new String[]{"ears", "earPitch", "earYaw", "earRoll", "earOffset"};
-            case 2, 13 ->
-                    new String[]{"horns", "hornColor", "hornPitch", "hornYaw", "hornRoll", "hornOffset", "hornSize", "hornOnForehead"};
-            case 7 -> new String[]{"tail"};
-            case 8 -> new String[]{"height"};
-            case 3 ->
-                    new String[]{"hairAsset", "hairStyle", "hair", "hairMain", "hairDecor1", "hairDecor2", "hairLinkedShades"};
-            case 10 -> new String[]{"beard", "mustache", "hair", "hairMain"};
-            case 4 -> new String[]{"tattoo", "tattooColor", "glow"};
-            case 6 -> new String[]{"wardrobe", "wardrobeEnabled", "outfitPreset", "naked", "underwearColor"};
-            case 5 ->
-                    new String[]{"bust", "bustX", "bustY", "bustZ", "cleavage", "bounce", "floppiness", "breastPhysics", "armorPhysics", "showInArmor", "uniboob"};
-            case 11 -> new String[]{"birthsign"};
-            default -> new String[]{"usePlayerSkin", "armModel"};
-        };
-        try {
-            for (String field : fields) {
-                var f = CharacterData.class.getField(field);
-                f.set(draft, f.get(source));
+        var d = draft;
+        switch (tab) {
+            case 0 -> {
+                d.skin = source.skin;
+                d.skinOriginal = source.skinOriginal;
             }
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException(e);
+            case 9 -> {
+                d.eyes = source.eyes;
+                d.eyesOriginal = source.eyesOriginal;
+                d.eyeHeight = source.eyeHeight;
+            }
+            case 1 -> {
+                d.ears = source.ears;
+                d.earPitch = source.earPitch;
+                d.earYaw = source.earYaw;
+                d.earRoll = source.earRoll;
+                d.earOffset = source.earOffset;
+            }
+            case 2, 13 -> {
+                d.horns = source.horns;
+                d.hornColor = source.hornColor;
+                d.hornPitch = source.hornPitch;
+                d.hornYaw = source.hornYaw;
+                d.hornRoll = source.hornRoll;
+                d.hornOffset = source.hornOffset;
+                d.hornSize = source.hornSize;
+                d.hornOnForehead = source.hornOnForehead;
+            }
+            case 7 -> d.tail = source.tail;
+            case 8 -> d.height = source.height;
+            case 3 -> {
+                d.hairAsset = source.hairAsset;
+                d.hairStyle = source.hairStyle;
+                d.hair = source.hair;
+                d.hairMain = source.hairMain;
+                d.hairDecor1 = source.hairDecor1;
+                d.hairDecor2 = source.hairDecor2;
+                d.hairLinkedShades = source.hairLinkedShades;
+            }
+            case 10 -> {
+                d.beard = source.beard;
+                d.mustache = source.mustache;
+                d.hair = source.hair;
+                d.hairMain = source.hairMain;
+            }
+            case 4 -> {
+                d.tattoo = source.tattoo;
+                d.tattooColor = source.tattooColor;
+                d.glow = source.glow;
+            }
+            case 6 -> {
+                d.wardrobe = source.wardrobe;
+                d.wardrobeEnabled = source.wardrobeEnabled;
+                d.outfitPreset = source.outfitPreset;
+                d.naked = source.naked;
+                d.underwearColor = source.underwearColor;
+            }
+            case 5 -> {
+                d.bust = source.bust;
+                d.bustX = source.bustX;
+                d.bustY = source.bustY;
+                d.bustZ = source.bustZ;
+                d.cleavage = source.cleavage;
+                d.bounce = source.bounce;
+                d.floppiness = source.floppiness;
+                d.breastPhysics = source.breastPhysics;
+                d.armorPhysics = source.armorPhysics;
+                d.showInArmor = source.showInArmor;
+                d.uniboob = source.uniboob;
+            }
+            case 11 -> d.birthsign = source.birthsign;
+            default -> {
+                d.usePlayerSkin = source.usePlayerSkin;
+                d.armModel = source.armModel;
+            }
         }
     }
 
     private void confirmation(GuiGraphics g) {
         panel(g, 282, 186, 394, 235);
         var r = RaceCatalog.get(draft.race);
-        centered(g, "ПОДТВЕРЖДЕНИЕ", 479, 199, GOLD);
-        wrapped(g, (draft.name.isBlank() ? minecraft.player.getGameProfile().getName() : draft.name) + "\n" + r.name + " • " + (draft.female() ? "женский" : "мужской") + " • " + format(draft.height) + " блока\n" + BirthsignCatalog.get(draft.birthsign).name() + "\n\n" + (mode == EditorMode.COSMETIC ? "Изменятся только доступные внешние детали." : "Проверьте выбранные настройки персонажа."), 298, 226, 360, INK, 12);
+        centered(g, t("confirmation"), 479, 199, GOLD);
+        String name = draft.name.isBlank() ? minecraft.player.getGameProfile().getName() : draft.name;
+        String summary = name + "\n" + I18n.get(r.key("name")) + " • " + t(draft.female() ? "sex.female" : "sex.male")
+            + " • " + t("blocks", format(draft.height)) + "\n" + I18n.get(BirthsignCatalog.get(draft.birthsign).key("name"))
+            + "\n\n" + t(mode == EditorMode.COSMETIC ? "confirm_cosmetic" : "confirm_check");
+        wrapped(g, summary, 298, 226, 360, INK, 12);
         // Prevent click-through into controls behind this window.
         controls.replaceAll(c -> new Control(c.x, c.y, c.w, c.h, c.text, c.tip, false, c.selected, c.action));
         sliders.clear();
         controls.add(new Control(282, 186, 394, 235, "", "", false, false, () -> {
         }));
-        button(298, 378, 165, 28, "Назад к настройкам", !sending, () -> confirming = false);
-        button(478, 378, 180, 28, sending ? "Сохранение…" : "Сохранить персонажа", !sending, () -> {
+        button(298, 378, 165, 28, t("back_to_settings"), !sending, () -> confirming = false);
+        button(478, 378, 180, 28, sending ? t("saving") : t("save"), !sending, () -> {
             try {
                 draft = RaceCatalog.validate(draft);
                 sending = true;
@@ -559,7 +619,7 @@ public final class CharacterScreen extends Screen {
         } finally {
             clearPreview();
         }
-        centered(g, "Рост: " + format(draft.height) + " блока", x + w / 2, y + 7, MUTED);
+        centered(g, t("height_label", format(draft.height)), x + w / 2, y + 7, MUTED);
         if (previewZoom == 1) {
             int base = y + h - 8, line = x + 25;
             g.fill(line, base - Math.round(lastPreviewSize * 2.5f * .9375f), line + 1, base, GOLD);
@@ -597,13 +657,13 @@ public final class CharacterScreen extends Screen {
             int channel = i;
             boolean shade = AppearanceCatalog.shadeChannel(asset, key, linked);
             int count = AppearanceCatalog.colorCount(asset, key, linked);
-            text(g, i == 0 ? "Основной цвет" : shade ? "Оттенок волос" : "Декор " + i, 716, row, MUTED);
-            button(856, row - 4, 71, 18, "Исходный", true, () -> set.accept(channel, 0), values[i] == 0);
+            text(g, i == 0 ? t("main_color") : shade ? t("hair_shade") : t("decor", i), 716, row, MUTED);
+            button(856, row - 4, 71, 18, t("original"), true, () -> set.accept(channel, 0), values[i] == 0);
             for (int n = 1; n < count; n++) {
                 int index = n;
                 var color = c.colors().get(Math.min(n, c.colors().size() - 1));
                 int rgb = shade ? AppearanceCatalog.tint(asset, key, n, draft.hairMain, true) : color.rgb();
-                swatch(g, 716 + (n - 1) % 6 * 35, row + 19 + (n - 1) / 6 * 29, 29, 26, rgb, true, values[i] == n, (shade ? HairTones.LABELS[n] : color.label()) + " • " + c.affects(), () -> set.accept(channel, index));
+                swatch(g, 716 + (n - 1) % 6 * 35, row + 19 + (n - 1) / 6 * 29, 29, 26, rgb, true, values[i] == n, (shade ? I18n.get(HairTones.labelKey(n)) : catalog(color.label())) + " • " + catalog(c.affects()), () -> set.accept(channel, index));
             }
             row += count > 7 ? 82 : 67;
         }
@@ -631,7 +691,7 @@ public final class CharacterScreen extends Screen {
 
     private void cycle(GuiGraphics g, String label, int y, int value, int[] values, IntConsumer set, boolean enabled) {
         text(g, label, 716, y, MUTED);
-        chooser(716, y + 17, 211, value == 0 ? "Нет" : "Вариант " + value, enabled, delta -> {
+        chooser(716, y + 17, 211, value == 0 ? t("none") : t("variant", value), enabled, delta -> {
             int index = 0;
             for (int i = 0; i < values.length; i++) if (values[i] == value) index = i;
             set.accept(values[Math.floorMod(index + delta, values.length)]);
@@ -698,11 +758,28 @@ public final class CharacterScreen extends Screen {
     }
 
     private static String yes(boolean v) {
-        return v ? "да" : "нет";
+        return t(v ? "yes" : "no");
     }
 
     private static String format(float v) {
-        return String.format(Locale.ROOT, "%.2f", v).replace('.', ',');
+        return String.format(Locale.ROOT, "%.2f", v).replace(".", t("decimal"));
+    }
+
+    private static String t(String key, Object... args) {
+        return I18n.get("screen.civitatum." + key, args);
+    }
+
+    /**
+     * A text of the appearance catalogs: they are authored in Russian, and {@code appearance.civitatum.<text>} gives
+     * the translation. A text without one, such as a newly generated label, is shown as authored.
+     */
+    static String catalog(String text) {
+        String key = "appearance.civitatum." + text;
+        return I18n.exists(key) ? I18n.get(key) : text;
+    }
+
+    private static String name(AppearanceCatalog.Asset asset) {
+        return asset.label().isEmpty() ? asset.name() : asset.name() + " • " + catalog(asset.label());
     }
 
     private void slide(Slider slider, double x) {
@@ -768,7 +845,13 @@ public final class CharacterScreen extends Screen {
     public boolean mouseScrolled(double x, double y, double horizontal, double vertical) {
         geometry();
         double mx = (x - panX) / zoom, my = (y - panY) / zoom;
-        if (mx < 250 && my >= 285 && my <= 437) portraitScroll = Math.max(0, portraitScroll - (int) vertical * 3);
+        if (mx < 250 && my >= 285 && my <= 437) {
+            // touchpads send fractions of a notch; they add up instead of being cut to zero
+            portraitWheel += vertical * 3;
+            int rows = (int) portraitWheel;
+            portraitWheel -= rows;
+            portraitScroll = Math.max(0, portraitScroll - rows);
+        }
         else if (mx >= 258 && mx <= 696 && my >= 136 && my <= 472)
             previewZoom = Math.clamp(previewZoom + (float) vertical * .2f, 1, 3);
         return true;
