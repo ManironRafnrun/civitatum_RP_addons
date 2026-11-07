@@ -11,7 +11,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /** Searchable local catalogue. Opening an entry never requests a book from the server. */
-final class BookLibraryScreen extends Screen {
+public final class BookLibraryScreen extends Screen {
     private final Screen parent;
     private final BookShelf shelf;
     private final List<Button> rows = new ArrayList<>();
@@ -24,6 +24,11 @@ final class BookLibraryScreen extends Screen {
     private boolean working;
     private String query = "";
     private Component status = Component.empty();
+
+    /** Entry point for other mods, such as the inventory of Civitatum HUD; {@code parent} is shown again on close. */
+    public static void open(Screen parent) {
+        net.minecraft.client.Minecraft.getInstance().setScreen(new BookLibraryScreen(parent, BookLibrary.shelf()));
+    }
 
     BookLibraryScreen(Screen parent, BookShelf shelf) {
         super(Component.translatable("books.library_title"));

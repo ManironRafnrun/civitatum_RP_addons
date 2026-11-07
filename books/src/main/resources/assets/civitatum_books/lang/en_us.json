@@ -72,7 +72,6 @@
   "books.error.permission": "This action requires operator permission level 2.",
   "books.previous": "Previous",
   "books.next": "Next",
-  "books.library_button": "Books",
   "books.library_title": "Read books",
   "books.library_search": "Search title or author",
   "books.library_hint": "Local copies · no inventory item required",

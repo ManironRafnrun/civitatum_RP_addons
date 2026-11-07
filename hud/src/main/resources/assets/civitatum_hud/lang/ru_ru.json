@@ -7,6 +7,8 @@
   "gui.civitatum_hud.search": "Поиск предметов…",
   "gui.civitatum_hud.statistics": "Статы",
   "gui.civitatum_hud.powers": "Дары",
+  "gui.civitatum_hud.books": "Книги",
+  "gui.civitatum_hud.books_hint": "Прочитанные книги: локальные копии, предмет не нужен",
   "gui.civitatum_hud.activate": "Применить выбранное",
   "gui.civitatum_hud.reset": "Сброс окон",
   "gui.civitatum_hud.crafting": "Создание",

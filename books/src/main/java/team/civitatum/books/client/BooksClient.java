@@ -14,7 +14,6 @@ public final class BooksClient {
     private BookScreen activeBook;
 
     public BooksClient() {
-        new InventoryLibraryButton().register();
         BookNetwork.onOpen = packet -> {
             if (activeBook != null) activeBook.releaseImages();
             activeBook = new BookScreen(packet);

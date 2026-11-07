@@ -4,6 +4,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -38,6 +39,10 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
     /** Left edge of the screen title in the wide layout. */
     private static final int TITLE_X = 10;
     private static final int RESET_WIDTH = 66;
+    /** The width of "Powers", so the two buttons of the top row match. */
+    private static final int BOOKS_WIDTH = 54;
+    /** Distance of a bottom corner button's top edge from the screen bottom: its 18 pixels and a 4 pixel margin. */
+    private static final int BOTTOM_BUTTON_Y = 22;
     /** Space a window leaves below itself by default; it may be moved or stretched closer to the edge. */
     private static final int DEFAULT_FREE_BELOW = 44;
     /** The hint under the windows takes this much height; a window moved over it hides it. */
@@ -97,7 +102,7 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
     /** Row of each accessory slot of the classic Accessories menu, counted from the top of its list. */
     private final IdentityHashMap<Slot, Integer> accessoryRows = new IdentityHashMap<>();
     private List<Slot> extraSlots = List.of();
-    private Button cosmetics, powersButton;
+    private Button cosmetics, powersButton, booksButton;
     /** Scrolled rows of the backpack grid, and of the accessories window when its menu does not scroll itself. */
     private int extraRow, accessoryRow, accessoryMaxRow, accessoryRowCount;
     /** A worn accessory under the cursor where the window only shows them; its tooltip is drawn last. */
@@ -257,6 +262,17 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         int powersX = compactToggle != null ? compactToggle.getX() + compactToggle.getWidth() + 4
             : TITLE_X + font.width(tr("title")) + 8;
         powersButton.setPosition(powersX, 4);
+        if (BooksBridge.LOADED) {
+            booksButton = button(tr("books"), b -> BooksBridge.openLibrary(this), BOOKS_WIDTH);
+            booksButton.setTooltip(Tooltip.create(tr("books_hint")));
+            // After "Powers"; when the row would reach "Reset", the bottom right corner, which the footer leaves free.
+            int booksX = powersX + powersButton.getWidth() + 4;
+            if (booksX + BOOKS_WIDTH + 4 > reset.getX()) {
+                booksButton.setPosition(width - BOOKS_WIDTH - SidebarRow.RIGHT_MARGIN, height - BOTTOM_BUTTON_Y);
+            } else {
+                booksButton.setPosition(booksX, 4);
+            }
+        }
     }
 
     private void setQuery(String value) {
@@ -450,6 +466,7 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
             && (kind != CompatBridge.Kind.CURIOS || CompatBridge.flag(menu, "hasCosmetics"));
         cosmetics.active = free;
         if (powersButton != null) powersButton.active = free;
+        if (booksButton != null) booksButton.active = free;
         int half = (information.width - 20) / 2;
         summaryTab.setPosition(information.x + 8, information.y + 25);
         summaryTab.setWidth(half);

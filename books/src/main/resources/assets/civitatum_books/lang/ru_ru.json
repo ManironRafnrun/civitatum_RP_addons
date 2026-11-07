@@ -72,7 +72,6 @@
   "books.error.permission": "Для этого действия нужны права оператора уровня 2.",
   "books.previous": "Назад",
   "books.next": "Далее",
-  "books.library_button": "Книги",
   "books.library_title": "Прочитанные книги",
   "books.library_search": "Поиск по названию или автору",
   "books.library_hint": "Локальные копии · предмет в инвентаре не нужен",

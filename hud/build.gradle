@@ -15,6 +15,8 @@ repositories {
 dependencies {
     // Optional at runtime: RacesBridge touches it only when the civitatum mod is loaded.
     compileOnly project(':character-creation')
+    // Optional at runtime: BooksBridge touches it only when the civitatum_books mod is loaded.
+    compileOnly project(':books')
     // Xaero's Minimap neoforge-1.21.1-26.6.0 (Modrinth version id): optional at runtime, only the mixins in
     // team.civitatum.hud.xaero touch it, and they are applied only when it is installed
     compileOnly 'maven.modrinth:xaeros-minimap:irjR7dHk'
