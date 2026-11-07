@@ -58,6 +58,11 @@ public final class BookPage {
         changes++;
     }
 
+    boolean hasStylesWithin(int maximum) {
+        for (int style : styles) if (style < 0 || style > maximum) return false;
+        return true;
+    }
+
     void setStyle(int start, int end, int style) {
         Arrays.fill(styles, start, end, style);
         changes++;

@@ -116,8 +116,8 @@ public final class BookEditor {
             currentPage().replace(start, selectionEnd(), insertion);
             cursor = start + insertion.length();
             anchor = cursor;
-            paginate(measure);
-            BookDocument.parse(document.bytes());
+            paginate(measure, page);
+            document.checkedJson();
             // only an accepted change becomes an undo step and drops the redo history
             remember(before);
         } catch (RuntimeException exception) {
@@ -136,7 +136,7 @@ public final class BookEditor {
             DocumentFormats.change(document, kind);
             selectPage(0);
             paginate(measure);
-            BookDocument.parse(document.bytes());
+            document.checkedJson();
             remember(before);
         } catch (RuntimeException exception) {
             document = BookDocument.parse(before);
@@ -151,13 +151,28 @@ public final class BookEditor {
      * Overflow moves forward without deleting page boundaries deliberately added by the author.
      */
     public void paginate(TextLayout.GlyphWidth measure) {
+        paginate(measure, 0, false);
+    }
+
+    /**
+     * Reflows after a change confined to page {@code from}: earlier pages are untouched and every page after it changes
+     * only by the overflow it receives, so the first page that does not overflow ends the pass.
+     */
+    public void paginate(TextLayout.GlyphWidth measure, int from) {
+        paginate(measure, from, true);
+    }
+
+    private void paginate(TextLayout.GlyphWidth measure, int from, boolean untilFits) {
         if (document.kind == DocumentKind.SCROLL) return;
-        for (int index = 0; index < document.pages.size(); index++) {
+        for (int index = from; index < document.pages.size(); index++) {
             BookPage current = document.pages.get(index);
-            var lines = TextLayout.wrap(current, PAGE_WIDTH, (codePoint, style) ->
-                    measure.width(codePoint, style) * current.fontSize / 9f);
             int capacity = Math.max(1, textHeight(current) / lineHeight(current));
-            if (lines.size() <= capacity) continue;
+            var lines = TextLayout.wrap(current, PAGE_WIDTH, (codePoint, style) ->
+                    measure.width(codePoint, style) * current.fontSize / 9f, capacity + 1);
+            if (lines.size() <= capacity) {
+                if (untilFits) return;
+                continue;
+            }
             if (document.kind == DocumentKind.NOTE) throw new IllegalArgumentException("note_full");
             if (index + 1 == document.pages.size()) {
                 if (document.pages.size() >= BookDocument.MAX_PAGES) throw new IllegalArgumentException("pages");

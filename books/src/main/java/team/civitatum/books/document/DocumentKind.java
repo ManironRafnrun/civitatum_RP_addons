@@ -4,7 +4,10 @@ package team.civitatum.books.document;
 public enum DocumentKind {
     BOOK, SCROLL, NOTE;
 
-    public String id() { return name().toLowerCase(java.util.Locale.ROOT); }
+    /** Stored in documents and used in translation keys; the screen asks for it every frame. */
+    private final String id = name().toLowerCase(java.util.Locale.ROOT);
+
+    public String id() { return id; }
 
     public int textLimit() {
         return this == SCROLL ? BookDocument.MAX_CHARACTERS : BookDocument.MAX_PAGE_CHARACTERS;

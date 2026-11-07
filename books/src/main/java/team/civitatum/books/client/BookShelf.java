@@ -26,9 +26,7 @@ final class BookShelf {
     }
 
     void remember(UUID id, BookDocument document) throws IOException {
-        byte[] bytes = document.bytes();
-        BookDocument.parse(bytes);
-        BookStore.writeAtomically(bookPath(id), bytes);
+        BookStore.writeAtomically(bookPath(id), document.checkedJson().getBytes(StandardCharsets.UTF_8));
     }
 
     void image(String hash, byte[] png) throws IOException {
@@ -94,7 +92,7 @@ final class BookShelf {
     private Path bookPath(UUID id) { return directory.resolve("books").resolve(id + ".json"); }
 
     private Path imagePath(String hash) {
-        if (!hash.matches("[0-9a-f]{64}")) throw new IllegalArgumentException("image");
+        if (!PngImage.isHash(hash)) throw new IllegalArgumentException("image");
         return directory.resolve("images").resolve(hash + ".png");
     }
 }

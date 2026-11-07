@@ -13,10 +13,19 @@ public final class TextLayout {
     public record Line(int start, int end, float width) {}
 
     public static List<Line> wrap(BookPage page, float maximumWidth, GlyphWidth measure) {
+        return wrap(page, maximumWidth, measure, Integer.MAX_VALUE);
+    }
+
+    /**
+     * The first {@code maximumLines} lines of {@link #wrap(BookPage, float, GlyphWidth)}. Pagination only needs one
+     * line past the capacity of a page, not the layout of a whole pasted text.
+     */
+    public static List<Line> wrap(BookPage page, float maximumWidth, GlyphWidth measure, int maximumLines) {
         List<Line> lines = new ArrayList<>();
         String text = page.text();
         int start = 0;
         while (start < text.length()) {
+            if (lines.size() >= maximumLines) return lines;
             int offset = start;
             int lastSpace = -1;
             float width = 0;
@@ -44,7 +53,9 @@ public final class TextLayout {
                 start = offset;
             }
         }
-        if (text.isEmpty() || text.endsWith("\n")) lines.add(new Line(text.length(), text.length(), 0));
+        if ((text.isEmpty() || text.endsWith("\n")) && lines.size() < maximumLines) {
+            lines.add(new Line(text.length(), text.length(), 0));
+        }
         return lines;
     }
 

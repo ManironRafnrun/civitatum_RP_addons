@@ -42,7 +42,8 @@ final class BookLibrary {
         Capture capture = new Capture(shelf(), packet.book());
         sessions.put(packet.session(), capture);
         while (sessions.size() > 8) sessions.remove(sessions.keySet().iterator().next());
-        capture.remember(BookDocument.parse(packet.document()));
+        byte[] document = packet.document();
+        run(() -> capture.shelf.remember(capture.book, BookDocument.parse(document)));
         return capture;
     }
 
@@ -78,9 +79,18 @@ final class BookLibrary {
 
         private Capture(BookShelf shelf, UUID book) { this.shelf = shelf; this.book = book; }
 
-        void remember(BookDocument document) {
-            BookDocument snapshot = document.copy();
-            run(() -> shelf.remember(book, snapshot));
+        /**
+         * Retains the upload the server acknowledged, with the revision, author and signature it reported. Reading the
+         * JSON happens on the disk thread: the client thread only hands over the string it already sent.
+         */
+        void confirmed(String json, int revision, String author, boolean signed) {
+            run(() -> {
+                BookDocument document = BookDocument.parse(json);
+                document.revision = revision;
+                document.author = author;
+                if (signed) document.signed = true;
+                shelf.remember(book, document);
+            });
         }
     }
 

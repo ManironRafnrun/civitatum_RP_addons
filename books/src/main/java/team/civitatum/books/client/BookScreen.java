@@ -24,6 +24,7 @@ import team.civitatum.books.document.BookDocument;
 import team.civitatum.books.document.BookArchive;
 import team.civitatum.books.document.DocumentKind;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import team.civitatum.books.document.BookPage;
 import team.civitatum.books.document.TextLayout;
 import team.civitatum.books.network.BookNetwork;
@@ -44,6 +45,11 @@ public final class BookScreen extends Screen {
     private static final int SHEET_CANVAS_HEIGHT = 660;
     private static final int SHEET_READER_CONTROLS_TOP = 610;
     private static final int[] COLORS = {0x30251a, 0x923c32, 0x3c674e, 0x3f587c};
+    /**
+     * Width of a page preview in the sidebar. Every glyph except zero-width ones is at least one pixel wide, so this
+     * many characters of the page fill it; copying a whole 16K-character page for each row every frame is not needed.
+     */
+    private static final int SIDEBAR_PREVIEW_WIDTH = 86;
     private final UUID session;
     private final UUID book;
     private final boolean lectern;
@@ -61,7 +67,7 @@ public final class BookScreen extends Screen {
     private final Set<String> requestedImages = new HashSet<>();
     /** Width in font pixels by code point and bold/italic bits; the font does not change while the book is open. */
     private final Int2IntOpenHashMap glyphWidths = new Int2IntOpenHashMap();
-    /** Wrapped lines of each page, kept until its text, styles or font size change. */
+    /** Wrapped lines and drawn runs of each page, kept until its text, styles or font size change. */
     private final Map<BookPage, Layout> layouts = new WeakHashMap<>();
     private final List<Control> controls = new ArrayList<>();
     private final BookEditor editor;
@@ -106,7 +112,7 @@ public final class BookScreen extends Screen {
         reading = !administrative;
         expanded = administrative;
         editor = new BookEditor(BookDocument.parse(packet.document()));
-        drafts = new DraftStore(Minecraft.getInstance().gameDirectory.toPath(), book);
+        drafts = new DraftStore(Minecraft.getInstance().gameDirectory.toPath(), book, BookLibrary.IO);
         try {
             recovery = editable ? drafts.recover(editor.document) : null;
         } catch (Exception exception) {
@@ -408,7 +414,9 @@ public final class BookScreen extends Screen {
             graphics.fill(24, y + 8, 44, y + 37, 0xffe1d1ad);
             graphics.drawString(font, Integer.toString(index + 1), 28, y + 18, 0xff493a27, false);
             BookPage page = editor.document.pages.get(index);
-            graphics.drawString(font, font.plainSubstrByWidth(page.text().replace('\n', ' '), 86), 51, y + 13, 0xffd9c7a6, false);
+            String preview = page.text().substring(0, Math.min(page.text().length(), SIDEBAR_PREVIEW_WIDTH));
+            graphics.drawString(font, font.plainSubstrByWidth(preview.replace('\n', ' '), SIDEBAR_PREVIEW_WIDTH),
+                    51, y + 13, 0xffd9c7a6, false);
             if (!page.image.isEmpty()) graphics.drawString(font, "PNG", 51, y + 28, 0xffb6c29c, false);
         }
     }
@@ -422,45 +430,34 @@ public final class BookScreen extends Screen {
         if (index >= editor.document.pages.size()) return;
         BookPage page = editor.document.pages.get(index);
         if (!page.image.isEmpty()) drawImage(graphics, page, x, index == editor.page && imageSelected);
-        var lines = lines(page);
+        Layout layout = layout(page);
+        var lines = layout.lines();
+        int lineHeight = BookEditor.lineHeight(page);
+        int top = textY(page);
+        int capacity = isScroll() ? lines.size() : Math.max(1, BookEditor.textHeight(page) / lineHeight);
+        int firstRow = isScroll() ? Math.max(0, (contentTop() - top) / lineHeight) : 0;
+        int rows = Math.min(lines.size(), capacity);
+        int endRow = firstRow;
+        while (endRow < rows && !(isScroll() && top + endRow * lineHeight >= contentBottom())) endRow++;
+        boolean current = index == editor.page;
+        if (current && editor.selectionStart() < editor.selectionEnd()) {
+            for (int row = firstRow; row < endRow; row++) {
+                drawSelection(graphics, page, lines.get(row), x, top + row * lineHeight);
+            }
+        }
+        // Lines never overlap, so all text of the page can go to the GPU at once instead of one flush per run.
+        int last = endRow;
+        graphics.drawManaged(() -> {
+            for (int row = firstRow; row < last; row++) {
+                drawRuns(graphics, page, layout, row, x, top + row * lineHeight);
+            }
+        });
         int cursorLine = rowAt(lines, editor.cursor);
-        int y = textY(page);
-        int capacity = isScroll() ? lines.size() : Math.max(1, BookEditor.textHeight(page) / BookEditor.lineHeight(page));
-        int firstRow = isScroll() ? Math.max(0, (contentTop() - y) / BookEditor.lineHeight(page)) : 0;
-        y += firstRow * BookEditor.lineHeight(page);
-        for (int row = firstRow; row < Math.min(lines.size(), capacity); row++) {
-            if (isScroll() && y >= contentBottom()) break;
-            TextLayout.Line line = lines.get(row);
-            float runX = lineX(page, line, x);
-            float glyphX = runX;
-            for (int offset = line.start(); offset < line.end();) {
-                int codePoint = page.text().codePointAt(offset);
-                float advance = advance(page, codePoint, page.styleAt(offset));
-                if (index == editor.page && offset >= editor.selectionStart() && offset < editor.selectionEnd()) {
-                    graphics.fill((int) glyphX, y - 1, (int) Math.ceil(glyphX + advance), y + page.fontSize + 2, 0x554c82a0);
-                }
-                glyphX += advance;
-                offset += Character.charCount(codePoint);
-            }
-            for (int start = line.start(); start < line.end();) {
-                int style = page.styleAt(start);
-                int end = TextLayout.next(page.text(), start);
-                while (end < line.end() && page.styleAt(end) == style) end = TextLayout.next(page.text(), end);
-                Component run = Component.literal(page.text().substring(start, end)).withStyle(style(style));
-                graphics.pose().pushPose();
-                graphics.pose().translate(runX, y, 0);
-                float fontScale = page.fontSize / 9f;
-                graphics.pose().scale(fontScale, fontScale, 1);
-                graphics.drawString(font, run, 0, 0, 0xff30251a, false);
-                graphics.pose().popPose();
-                runX += font.width(run) * fontScale;
-                start = end;
-            }
-            if (index == editor.page && !reading && editable && row == cursorLine && ticks % 12 < 6) {
-                float caretX = lineX(page, line, x) + widthBetween(page, line.start(), Math.min(editor.cursor, line.end()));
-                graphics.fill((int) caretX, y - 1, (int) caretX + 1, y + page.fontSize + 2, 0xff30251a);
-            }
-            y += BookEditor.lineHeight(page);
+        if (current && !reading && editable && cursorLine >= firstRow && cursorLine < endRow && ticks % 12 < 6) {
+            TextLayout.Line line = lines.get(cursorLine);
+            int y = top + cursorLine * lineHeight;
+            float caretX = lineX(page, line, x) + widthBetween(page, line.start(), Math.min(editor.cursor, line.end()));
+            graphics.fill((int) caretX, y - 1, (int) caretX + 1, y + page.fontSize + 2, 0xff30251a);
         }
         if (isBook()) graphics.drawCenteredString(font, Integer.toString(index + 1), x + PAGE_WIDTH / 2, PAGE_TOP + PAGE_HEIGHT - 18, 0xff8b7555);
         if (isBook() && editor.document.signed && index == 0) {
@@ -468,7 +465,59 @@ public final class BookScreen extends Screen {
         }
     }
 
-    private record Layout(int changes, int fontSize, List<TextLayout.Line> lines) {}
+    private void drawSelection(GuiGraphics graphics, BookPage page, TextLayout.Line line, int pageX, int y) {
+        float glyphX = lineX(page, line, pageX);
+        for (int offset = line.start(); offset < line.end();) {
+            int codePoint = page.text().codePointAt(offset);
+            float advance = advance(page, codePoint, page.styleAt(offset));
+            if (offset >= editor.selectionStart() && offset < editor.selectionEnd()) {
+                graphics.fill((int) glyphX, y - 1, (int) Math.ceil(glyphX + advance), y + page.fontSize + 2,
+                        0x554c82a0);
+            }
+            glyphX += advance;
+            offset += Character.charCount(codePoint);
+        }
+    }
+
+    private void drawRuns(GuiGraphics graphics, BookPage page, Layout layout, int row, int pageX, int y) {
+        float runX = lineX(page, layout.lines().get(row), pageX);
+        float fontScale = page.fontSize / 9f;
+        for (Run run : runs(page, layout, row)) {
+            graphics.pose().pushPose();
+            graphics.pose().translate(runX, y, 0);
+            graphics.pose().scale(fontScale, fontScale, 1);
+            graphics.drawString(font, run.text(), 0, 0, 0xff30251a, false);
+            graphics.pose().popPose();
+            runX += run.width() * fontScale;
+        }
+    }
+
+    /**
+     * Same-style stretches of a line as {@code drawString(Font, Component)} would draw them: their bidirectional visual
+     * order and width are computed once per layout instead of in every frame.
+     */
+    private Run[] runs(BookPage page, Layout layout, int row) {
+        Run[] runs = layout.runs()[row];
+        if (runs != null) return runs;
+        TextLayout.Line line = layout.lines().get(row);
+        List<Run> result = new ArrayList<>();
+        for (int start = line.start(); start < line.end();) {
+            int style = page.styleAt(start);
+            int end = TextLayout.next(page.text(), start);
+            while (end < line.end() && page.styleAt(end) == style) end = TextLayout.next(page.text(), end);
+            Component run = Component.literal(page.text().substring(start, end)).withStyle(style(style));
+            result.add(new Run(run.getVisualOrderText(), font.width(run)));
+            start = end;
+        }
+        runs = result.toArray(Run[]::new);
+        layout.runs()[row] = runs;
+        return runs;
+    }
+
+    private record Run(FormattedCharSequence text, int width) {}
+
+    /** Wrapped lines of a page and the runs of each line, filled in as the line is first drawn. */
+    private record Layout(int changes, int fontSize, List<TextLayout.Line> lines, Run[][] runs) {}
 
     private record ImageBox(int x, int y, int width, int height) {
         boolean contains(float mouseX, float mouseY) {
@@ -525,14 +574,18 @@ public final class BookScreen extends Screen {
     }
 
     private List<TextLayout.Line> lines(BookPage page) {
+        return layout(page).lines();
+    }
+
+    private Layout layout(BookPage page) {
         Layout layout = layouts.get(page);
         if (layout == null || layout.changes() != page.changeCount() || layout.fontSize() != page.fontSize) {
             var lines = TextLayout.wrap(page, BookEditor.PAGE_WIDTH,
                 (codePoint, encoded) -> advance(page, codePoint, encoded));
-            layout = new Layout(page.changeCount(), page.fontSize, List.copyOf(lines));
+            layout = new Layout(page.changeCount(), page.fontSize, List.copyOf(lines), new Run[lines.size()][]);
             layouts.put(page, layout);
         }
-        return layout.lines();
+        return layout;
     }
 
     private int textY(BookPage page) {
@@ -644,7 +697,7 @@ public final class BookScreen extends Screen {
         if (resizingImage) {
             resizingImage = false;
             try {
-                editor.paginate(this::glyphWidth);
+                editor.paginate(this::glyphWidth, editor.page);
                 changed();
             } catch (RuntimeException exception) {
                 editor.undo();
@@ -793,6 +846,7 @@ public final class BookScreen extends Screen {
     /**
      * A layout failure restores the entire change, including its image and formatting. Unlike {@link #mutate} it does
      * not require the editing mode: an uploaded image belongs on its page even if the author switched to reading.
+     * {@code paginate} reflows from the current page; an action that replaces the whole document reflows it itself.
      */
     private boolean apply(Runnable action, boolean paginate) {
         String before = editor.document.json();
@@ -800,8 +854,8 @@ public final class BookScreen extends Screen {
         int previousCursor = editor.cursor;
         try {
             action.run();
-            if (paginate) editor.paginate(this::glyphWidth);
-            BookDocument.parse(editor.document.bytes());
+            if (paginate) editor.paginate(this::glyphWidth, editor.page);
+            editor.document.checkedJson();
             editor.remember(before);
             changed();
             return true;
@@ -983,11 +1037,8 @@ public final class BookScreen extends Screen {
         }
         // Retain the acknowledged payload, never later unsaved edits in the editor.
         if (capture != null) {
-            BookDocument confirmed = BookDocument.parse(sentDocument);
-            confirmed.revision = packet.revision();
-            confirmed.author = packet.author();
-            if (packet.result() == BookNetwork.Result.SIGN) confirmed.signed = true;
-            capture.remember(confirmed);
+            capture.confirmed(sentDocument, packet.revision(), packet.author(),
+                    packet.result() == BookNetwork.Result.SIGN);
         }
         boolean unchanged = editor.document.json().equals(sentDocument);
         editor.document.revision = packet.revision();
@@ -1057,7 +1108,8 @@ public final class BookScreen extends Screen {
         boolean applied = mutate(() -> {
             editor.document = imported;
             editor.selectPage(0);
-        }, true);
+            editor.paginate(this::glyphWidth);
+        }, false);
         if (applied) {
             requestImages();
             status = text("imported");
@@ -1090,9 +1142,8 @@ public final class BookScreen extends Screen {
     private void save(boolean sign, boolean closeAfter) {
         if (!editable || busy) return;
         try {
-            String json = editor.document.json();
+            String json = editor.document.checkedJson();
             byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
-            BookDocument.parse(bytes);
             backup();
             busy = true;
             requestAt = System.currentTimeMillis();
@@ -1108,10 +1159,19 @@ public final class BookScreen extends Screen {
     }
 
     private void backup() {
+        backup(false);
+    }
+
+    /** {@code wait} when the screen goes away: the game may exit right after, before the disk thread runs. */
+    private void backup(boolean wait) {
         if (localCopy) return;
         try {
-            drafts.write(editor.document);
+            var written = drafts.write(editor.document).exceptionally(failure -> {
+                CivitatumBooks.LOG.warn("Cannot save local book draft {}", book, failure);
+                return null;
+            });
             backupAt = System.currentTimeMillis();
+            if (wait) written.join();
         } catch (Exception exception) {
             CivitatumBooks.LOG.warn("Cannot save local book draft {}", book, exception);
         }
@@ -1123,7 +1183,8 @@ public final class BookScreen extends Screen {
             editor.document = recovery;
             editor.selectPage(0);
             recovery = null;
-        }, true);
+            editor.paginate(this::glyphWidth);
+        }, false);
         requestImages();
     }
 
@@ -1169,7 +1230,7 @@ public final class BookScreen extends Screen {
 
     @Override
     public void removed() {
-        if (dirty) backup();
+        if (dirty) backup(true);
     }
 
     @Override

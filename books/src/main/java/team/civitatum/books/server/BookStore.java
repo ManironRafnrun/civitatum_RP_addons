@@ -1,6 +1,7 @@
 package team.civitatum.books.server;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,9 +37,7 @@ public final class BookStore {
     }
 
     public void write(UUID id, BookDocument document) throws IOException {
-        byte[] bytes = document.bytes();
-        BookDocument.parse(bytes);
-        writeAtomically(books.resolve(id + ".json"), bytes);
+        writeAtomically(books.resolve(id + ".json"), document.checkedJson().getBytes(StandardCharsets.UTF_8));
     }
 
     public String putImage(byte[] normalizedPng) throws IOException {
