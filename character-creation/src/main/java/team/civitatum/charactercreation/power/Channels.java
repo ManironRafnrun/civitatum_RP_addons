@@ -72,12 +72,15 @@ public final class Channels {
             stop(p);
             return;
         }
+        // The breath pulses at 0.5, 1.0 ... 3.0 s: not on the tick it starts (the key press and the player's tick
+        // share it), and the last pulse on the tick it ends.
+        if (c.kind() == ChannelKind.EXHALE) exhale(p, now > c.started() && (now - c.started()) % EXHALE_PULSE == 0);
         if (now >= c.until()) {
             finish(p, true);
             return;
         }
         switch (c.kind()) {
-            case EXHALE -> exhale(p, (now - c.started()) % EXHALE_PULSE == 0);
+            case EXHALE -> {}
             case PATH -> {
                 if (c.at().distanceToSqr(p.position()) > STILL * STILL || p.isUsingItem()) interrupt(p);
                 else if ((c.until() - now) % 20 == 0)
@@ -147,6 +150,9 @@ public final class Channels {
         for (LivingEntity e : Targets.around(p, start, EXHALE_RANGE, e -> Targets.isHostile(p, e))) {
             Vec3 center = e.getBoundingBox().getCenter(), relative = center.subtract(start);
             if (relative.normalize().dot(look) < EXHALE_CONE || !Targets.isVisible(p, center)) continue;
+            // A pulse every 10 ticks is exactly the cooldown a hit leaves; without this every other pulse was lost,
+            // depending on whether the target ticked before or after the player.
+            e.invulnerableTime = 0;
             if (e.hurt(p.damageSources().playerAttack(p), EXHALE_DAMAGE)) e.igniteForSeconds(EXHALE_FIRE_SECONDS);
         }
     }

@@ -4,6 +4,8 @@
 
 - `./gradlew :character-creation:build :hud:build` — сборка и JUnit (`BirthsignTest`: 13 фигур, жребий 1 к 20, замок знака; `LangTest`: тексты всех рас и знаков в ru и en).
 
+- `./gradlew :character-creation:runGameTestServer` — 45 игровых тестов, в конце `All 45 required tests passed :)`; при ошибке сборка падает, в логе `<тест> failed at …! <что> :: <значение>` и список упавших.
+
 ## Запуск
 
 - Сервер и клиент стартуют без ошибок Mixin; в логе нет `civitatum.mixins.json` с `InvalidInjectionException`.
