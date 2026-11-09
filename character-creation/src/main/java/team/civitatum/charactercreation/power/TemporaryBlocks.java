@@ -56,10 +56,20 @@ public final class TemporaryBlocks extends SavedData {
         return true;
     }
 
+    /**
+     * Whether the power's own block still stands here. An entry whose block is gone without its drops being asked
+     * (a command, a piston, another mod) is stale: it no longer keeps the place from a new block of a power.
+     */
     public static boolean isTemporary(Level level, BlockPos pos) {
         if (!(level instanceof ServerLevel server)) return false;
-        for (var e : get(server.getServer()).entries)
-            if (e.pos.equals(pos) && e.dimension.equals(level.dimension())) return true;
+        var data = get(server.getServer());
+        for (var e : data.entries) {
+            if (!e.pos.equals(pos) || !e.dimension.equals(level.dimension())) continue;
+            if (level.getBlockState(pos).getBlock() == e.placed.getBlock()) return true;
+            data.entries.remove(e);
+            data.setDirty();
+            return false;
+        }
         return false;
     }
 

@@ -207,8 +207,12 @@ public final class CombatEvents {
         if (Traits.isSign(e.getEntity(), BirthsignCatalog.SERPENT)) e.setAmount(e.getAmount() / 2);
     }
 
-    /** «Отсрочка» of the Ancestor: once a day a mortal blow leaves 1 HP and Resistance II for 3 s. */
-    @SubscribeEvent(priority = EventPriority.LOW)
+    /**
+     * «Отсрочка» of the Ancestor: once a day a mortal blow leaves 1 HP and Resistance II for 3 s. First of all
+     * handlers: Hardcore Revival would otherwise knock the player out first, and "смерть ждёт" is meant to come before
+     * that. A totem of undying still goes first: vanilla uses it before the death event.
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void death(LivingDeathEvent e) {
         if (e.isCanceled() || !(e.getEntity() instanceof ServerPlayer p)) return;
         var state = p.getData(Civitatum.STATE);
