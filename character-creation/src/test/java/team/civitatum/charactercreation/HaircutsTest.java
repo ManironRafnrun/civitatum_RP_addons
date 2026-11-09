@@ -54,7 +54,7 @@ class HaircutsTest {
     @Test void newChoicesSurviveSaveAndCosmeticEditWithoutChangingBody() {
         var c=RaceCatalog.defaults("dwarf","female");var edit=c.copy();edit.beard=5;edit.mustache=2;edit.hairAsset="hc_moonlit";edit.hairMain=3;edit.hairDecor1=4;edit.hairLinkedShades=false;
         assertDoesNotThrow(()->AppearanceRules.check(c,edit,EditorMode.COSMETIC));
-        var saved=RaceState.read(new RaceState(edit,0,0).json()).character();
+        var saved=RaceState.read(RaceState.of(edit).json()).character();
         assertEquals(DataJson.GSON.toJsonTree(edit),DataJson.GSON.toJsonTree(RaceCatalog.validate(saved)));
         var old=DataJson.GSON.fromJson("{\"selected\":true,\"race\":\"human\",\"sex\":\"male\",\"beard\":2}",CharacterData.class);assertEquals(2,RaceCatalog.validate(old).beard);assertEquals(0,old.mustache);
     }

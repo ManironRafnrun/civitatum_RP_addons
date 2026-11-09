@@ -18,7 +18,7 @@ class EditorRulesTest {
   assertDoesNotThrow(()->AppearanceRules.check(saved,c,EditorMode.COSMETIC));
  }
  @Test void fullLooksAllowsSexAndBodyButNeverRace() {
-  var saved=RaceCatalog.defaults("human","female");var c=saved.copy();c.sex="male";c.height=1.9f;c.birthsign="lady";c.eyeHeight=-2;
+  var saved=RaceCatalog.defaults("human","female");var c=saved.copy();c.sex="male";c.height=1.9f;c.birthsign="spear";c.eyeHeight=-2;
   assertDoesNotThrow(()->AppearanceRules.check(saved,c,EditorMode.FULL));c.race="orc";
   assertThrows(IllegalArgumentException.class,()->AppearanceRules.check(saved,c,EditorMode.FULL));
  }
@@ -27,7 +27,7 @@ class EditorRulesTest {
   var male=RaceCatalog.defaults("human","male");assertEquals("classic",male.armModel);
   female.eyeHeight=99;female.underwearColor=99;female.birthsign="untrusted";female.armModel="../evil";
   var checked=RaceCatalog.validate(female);assertEquals(2,checked.eyeHeight);assertEquals(6,checked.underwearColor);assertEquals("none",checked.birthsign);assertEquals("auto",checked.armModel);
-  assertEquals(7,BirthsignCatalog.all().size());
+  assertEquals(15,BirthsignCatalog.all().size()); // none, the thirteen figures, the lot
  }
  @Test void idleLoopsAtTheAuthoredReturnTickAndUsesRealTracks() {
   assertEquals(0,IdleAnimation.offset("rightLeg","y",150),.00001);assertEquals(12,IdleAnimation.value("rightLeg","y",150),.00001);

@@ -27,7 +27,7 @@ public final class Civitatum {
             if(e.getTabKey()==net.minecraft.world.item.CreativeModeTabs.TOOLS_AND_UTILITIES){e.accept(MIRROR.get());e.accept(SHARD.get());}
         });
         bus.addListener(RaceNetwork::register);
-        bus.addListener((net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent e) -> e.enqueueWork(CompatPatches::init));
+        team.civitatum.charactercreation.power.ModEffects.register(bus);
         RaceCatalog.all();
         ModConfig.load();
     }

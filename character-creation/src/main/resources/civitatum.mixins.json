@@ -4,9 +4,24 @@
   "package": "team.civitatum.charactercreation.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "PlayerMixin",
+    "AbstractFurnaceAccessor",
+    "AnvilMenuMixin",
     "ArmorSlotMixin",
-    "VillagerMixin"
+    "AvoidEntityGoalMixin",
+    "BaseContainerBlockEntityMixin",
+    "BrewingStandMenuMixin",
+    "CatTamingMixin",
+    "EntityMixin",
+    "HealOrHarmMobEffectMixin",
+    "ItemMixin",
+    "ItemStackMixin",
+    "MobMixin",
+    "ParrotTamingMixin",
+    "PiglinAiMixin",
+    "PlayerMixin",
+    "PowderSnowBlockMixin",
+    "VillagerMixin",
+    "WolfTamingMixin"
   ],
   "client": [
     "PlayerRendererMixin",
@@ -14,7 +29,8 @@
     "ClientPlayerSkinMixin",
     "FemaleGenderPreviewMixin",
     "FemaleGenderSyncMixin",
-    "FemaleGenderConfigMixin"
+    "FemaleGenderConfigMixin",
+    "MinecraftMixin"
   ],
   "injectors": {
     "defaultRequire": 1

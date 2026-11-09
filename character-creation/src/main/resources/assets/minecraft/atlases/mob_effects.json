@@ -1,0 +1,99 @@
+{
+  "sources": [
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/speed",
+      "sprite": "civitatum:nabat"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/strength",
+      "sprite": "civitatum:rage"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/hunger",
+      "sprite": "civitatum:comedown"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/slowness",
+      "sprite": "civitatum:roots"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/weakness",
+      "sprite": "civitatum:ring"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/resistance",
+      "sprite": "civitatum:replacement"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/absorption",
+      "sprite": "civitatum:breakfast"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/health_boost",
+      "sprite": "civitatum:underground"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/invisibility",
+      "sprite": "civitatum:shadow"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/weaving",
+      "sprite": "civitatum:knot"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/regeneration",
+      "sprite": "civitatum:trance"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/weakness",
+      "sprite": "civitatum:hoarse"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/slowness",
+      "sprite": "civitatum:rime"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/slow_falling",
+      "sprite": "civitatum:step"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/strength",
+      "sprite": "civitatum:ancestor_name"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/fire_resistance",
+      "sprite": "civitatum:mask"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/nausea",
+      "sprite": "civitatum:aftermath"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/mining_fatigue",
+      "sprite": "civitatum:ram"
+    },
+    {
+      "type": "single",
+      "resource": "minecraft:mob_effect/weaving",
+      "sprite": "civitatum:bound"
+    }
+  ]
+}

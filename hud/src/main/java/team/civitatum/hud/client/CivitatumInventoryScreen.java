@@ -519,8 +519,10 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         ability.visible = powers.visible;
         var selected = AbilitySelection.selected(player);
         ability.active = selected != null && selected.ready().getAsBoolean();
-        ability.setMessage(details != null && details.remainingTicks() > 0
-            ? tr("remaining_short", (details.remainingTicks() + 19) / 20) : tr("activate"));
+        long left = details == null || selected == null ? 0
+            : selected.id().equals(AbilitySelection.SIGN_POWER) ? details.signRemainingTicks()
+            : selected.id().equals(AbilitySelection.RACIAL_GIFT) ? details.remainingTicks() : 0;
+        ability.setMessage(left > 0 ? tr("remaining_short", (left + 19) / 20) : tr("activate"));
     }
 
     private void place(Slot slot, int x, int y) {
@@ -1199,11 +1201,16 @@ public final class CivitatumInventoryScreen extends AbstractContainerScreen<Abst
         lines.add(Component.literal(details.negative()));
         lines.add(tr("ability").copy().withColor(GOLD));
         lines.add(Component.literal(details.ability()));
-        lines.add(tr("cost", details.food()));
         lines.add(AbilitySelection.remaining(details.remainingTicks()));
         lines.add(tr("cooldown", details.cooldown()));
-        if (details.curseDeaths() > 0) lines.add(tr("curse", details.curseDeaths()));
-        if (!details.sign().isBlank()) lines.add(tr("sign", details.sign()));
+        if (!details.sign().isBlank()) {
+            lines.add(tr("sign", details.sign()).copy().withColor(GOLD));
+            lines.add(Component.literal(details.signText()));
+            if (!details.signPower().isBlank()) {
+                lines.add(AbilitySelection.remaining(details.signRemainingTicks()));
+                lines.add(tr("cooldown", details.signCooldown()));
+            }
+        }
         return lines;
     }
 

@@ -3,7 +3,7 @@ loaderVersion="[4,)"
 license="MIT (code); original race lore and supplied concepts belong to their author"
 [[mods]]
 modId="civitatum"
-version="0.4.2"
+version="0.5.0"
 displayName="Civitatum Character Creation"
 authors="Civitatum Team"
 description='''Выбор расы, подрасы и пола, редактор персонажа, ванильные расовые черты и способности.'''
@@ -21,3 +21,6 @@ ordering="NONE"
 side="BOTH"
 [[mixins]]
 config="civitatum.mixins.json"
+# The astral elf's light: LambDynamicLights calls this initializer when it is installed (client only).
+[[modproperties.civitatum."yumi:entrypoints"."lambdynlights:initializer"]]
+value="team.civitatum.charactercreation.client.StarlightCompat"

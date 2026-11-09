@@ -59,9 +59,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 2,
-    "cooldown": 90,
-    "magic": false
+    "cooldown": 1200
   },
   {
     "id": "elf",
@@ -125,9 +123,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 0,
-    "cooldown": 0,
-    "magic": false
+    "cooldown": 0
   },
   {
     "id": "astral_elf",
@@ -191,9 +187,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 3,
-    "cooldown": 35,
-    "magic": true
+    "cooldown": 1200
   },
   {
     "id": "dark_elf",
@@ -257,9 +251,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 2,
-    "cooldown": 60,
-    "magic": true
+    "cooldown": 1200
   },
   {
     "id": "night_elf",
@@ -323,9 +315,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 2,
-    "cooldown": 75,
-    "magic": true
+    "cooldown": 1200
   },
   {
     "id": "wood_elf",
@@ -389,9 +379,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 2,
-    "cooldown": 60,
-    "magic": true
+    "cooldown": 1200
   },
   {
     "id": "dwarf",
@@ -451,9 +439,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 2,
-    "cooldown": 90,
-    "magic": false
+    "cooldown": 1200
   },
   {
     "id": "orc",
@@ -513,9 +499,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 3,
-    "cooldown": 90,
-    "magic": false
+    "cooldown": 1200
   },
   {
     "id": "dragonborn",
@@ -576,9 +560,7 @@
       4
     ],
     "tattoos": 0,
-    "food": 0,
-    "cooldown": 0,
-    "magic": false
+    "cooldown": 0
   },
   {
     "id": "fire_dragonborn",
@@ -636,9 +618,7 @@
       4
     ],
     "tattoos": 0,
-    "food": 3,
-    "cooldown": 40,
-    "magic": true
+    "cooldown": 1200
   },
   {
     "id": "frost_dragonborn",
@@ -696,9 +676,7 @@
       4
     ],
     "tattoos": 0,
-    "food": 3,
-    "cooldown": 40,
-    "magic": true
+    "cooldown": 1200
   },
   {
     "id": "storm_dragonborn",
@@ -756,9 +734,7 @@
       4
     ],
     "tattoos": 0,
-    "food": 3,
-    "cooldown": 40,
-    "magic": true
+    "cooldown": 1200
   },
   {
     "id": "end_dragonborn",
@@ -812,9 +788,7 @@
       4
     ],
     "tattoos": 0,
-    "food": 3,
-    "cooldown": 40,
-    "magic": true
+    "cooldown": 1200
   },
   {
     "id": "firbolg",
@@ -876,9 +850,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 3,
-    "cooldown": 100,
-    "magic": true
+    "cooldown": 1200
   },
   {
     "id": "goblin",
@@ -938,9 +910,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 1,
-    "cooldown": 25,
-    "magic": false
+    "cooldown": 1200
   },
   {
     "id": "forged",
@@ -1002,9 +972,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 2,
-    "cooldown": 90,
-    "magic": false
+    "cooldown": 1200
   },
   {
     "id": "hobbit",
@@ -1066,9 +1034,7 @@
       2
     ],
     "tattoos": 0,
-    "food": 2,
-    "cooldown": 60,
-    "magic": false
+    "cooldown": 1200
   },
   {
     "id": "orthosian",
@@ -1126,9 +1092,7 @@
       2
     ],
     "tattoos": 6,
-    "food": 2,
-    "cooldown": 75,
-    "magic": false
+    "cooldown": 1200
   },
   {
     "id": "algnor",
@@ -1189,9 +1153,7 @@
       9
     ],
     "tattoos": 0,
-    "food": 0,
-    "cooldown": 0,
-    "magic": false
+    "cooldown": 0
   },
   {
     "id": "forest_algnor",
@@ -1252,9 +1214,7 @@
       9
     ],
     "tattoos": 0,
-    "food": 2,
-    "cooldown": 35,
-    "magic": false
+    "cooldown": 1200
   },
   {
     "id": "city_algnor",
@@ -1316,9 +1276,7 @@
       10
     ],
     "tattoos": 0,
-    "food": 2,
-    "cooldown": 75,
-    "magic": false
+    "cooldown": 1200
   },
   {
     "id": "jahar",
@@ -1375,8 +1333,6 @@
       2
     ],
     "tattoos": 4,
-    "food": 2,
-    "cooldown": 45,
-    "magic": true
+    "cooldown": 1200
   }
 ]

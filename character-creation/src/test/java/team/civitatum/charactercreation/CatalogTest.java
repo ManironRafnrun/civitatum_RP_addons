@@ -56,11 +56,14 @@ class CatalogTest {
         var longName=RaceCatalog.defaults("human","male");longName.name="а".repeat(80);
         assertEquals(32,RaceCatalog.validate(longName).name.length());
     }
-    @Test void persistenceKeepsCurseCooldownAndAppearance() {
-        var c=RaceCatalog.defaults("orthosian","female");c.tattoo=6;c.skin=5;c.bust=.8f;c.earYaw=15;
-        var state=new RaceState(c,4,123456);
+    @Test void persistenceKeepsClocksMarkAndAppearance() {
+        var c=RaceCatalog.defaults("orthosian","female");c.tattoo=6;c.skin=5;c.bust=.8f;c.earYaw=15;c.birthsign="tower";
+        var mark=new RaceState.Mark("minecraft:overworld",1.5,64,-2.5);
+        var state=new RaceState(c,123456,777,888,true,999,mark);
         var saved=RaceState.read(state.json());
-        assertEquals(4,saved.curseDeaths());assertEquals(123456,saved.cooldownUntil());
+        assertEquals(123456,saved.cooldownUntil());assertEquals(777,saved.signCooldownUntil());
+        assertEquals(888,saved.reprieveUntil());assertTrue(saved.skyRewritten());assertEquals(999,saved.sleeplessUntil());
+        assertEquals(mark,saved.mark());
         assertEquals(c.json(),saved.character().json());
         assertFalse(RaceState.read("{broken").character().selected);
     }

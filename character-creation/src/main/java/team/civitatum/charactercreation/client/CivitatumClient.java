@@ -15,6 +15,8 @@ import team.civitatum.charactercreation.RaceNetwork;
 @Mod(value = Civitatum.ID, dist = Dist.CLIENT)
 public final class CivitatumClient {
     public static final KeyMapping ABILITY = new KeyMapping("key.civitatum.ability", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.civitatum");
+    /** The birthsign's power ("силу знака повесить на вторую клавишу, рядом с расовой"). */
+    public static final KeyMapping SIGN = new KeyMapping("key.civitatum.sign_ability", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.civitatum");
     public static final KeyMapping EDITOR = new KeyMapping("key.civitatum.appearance", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F6, "key.categories.civitatum");
 
     public CivitatumClient(IEventBus bus) {
@@ -22,6 +24,7 @@ public final class CivitatumClient {
         RaceNetwork.CLIENT_RECEIVER = ClientCharacters::accept;
         bus.addListener((RegisterKeyMappingsEvent e) -> {
             e.register(ABILITY);
+            e.register(SIGN);
             e.register(EDITOR);
         });
         bus.addListener((EntityRenderersEvent.RegisterLayerDefinitions e) -> e.registerLayerDefinition(CharacterLayer.MODEL, CharacterLayer::createModel));
@@ -34,11 +37,20 @@ public final class CivitatumClient {
 
     @EventBusSubscriber(modid = Civitatum.ID, value = Dist.CLIENT)
     public static final class Events {
+        /** Whether the racial key was down last tick: letting it go ends a held power (trance, breath). */
+        private static boolean abilityHeld;
+
         @SubscribeEvent
         public static void tick(ClientTickEvent.Post e) {
             var game = Minecraft.getInstance();
             while (ABILITY.consumeClick()) if (game.player != null && game.screen == null)
                 PacketDistributor.sendToServer(new RaceNetwork.Serverbound(1, 0, ""));
+            boolean held = ABILITY.isDown() && game.screen == null;
+            if (abilityHeld && !held && game.player != null)
+                PacketDistributor.sendToServer(new RaceNetwork.Serverbound(4, 0, ""));
+            abilityHeld = held;
+            while (SIGN.consumeClick()) if (game.player != null && game.screen == null)
+                PacketDistributor.sendToServer(new RaceNetwork.Serverbound(6, 0, ""));
             while (EDITOR.consumeClick()) if (game.player != null && game.screen == null)
                 PacketDistributor.sendToServer(new RaceNetwork.Serverbound(2, 0, ""));
         }

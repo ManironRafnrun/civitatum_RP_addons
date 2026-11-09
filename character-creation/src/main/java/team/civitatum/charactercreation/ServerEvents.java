@@ -2,14 +2,12 @@ package team.civitatum.charactercreation;
 
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.GameRules;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.*;
@@ -18,9 +16,17 @@ import net.neoforged.neoforge.event.entity.EntityEvent;
 import net.neoforged.neoforge.event.entity.living.*;
 import net.neoforged.neoforge.event.entity.player.*;
 import net.minecraft.world.item.ArmorItem;
+import team.civitatum.charactercreation.power.Channels;
+import team.civitatum.charactercreation.power.PassiveAttributes;
+import team.civitatum.charactercreation.power.PassiveTicks;
+import team.civitatum.charactercreation.power.Powers;
+import team.civitatum.charactercreation.power.Traits;
 
 @EventBusSubscriber(modid = Civitatum.ID)
 public final class ServerEvents {
+    /** Passives that depend on the moment (a storm, water, a forest, an empty hand) are recomputed this often. */
+    private static final int PASSIVE_EVERY = 5;
+
     @SubscribeEvent public static void commands(RegisterCommandsEvent e) {
         var choose = Commands.literal("choose")
             .executes(c -> { RaceService.open(c.getSource().getPlayerOrException(), true, false); return 1; })
@@ -39,7 +45,7 @@ public final class ServerEvents {
         var config=Commands.literal("configreload").requires(s -> s.hasPermission(2)).executes(c -> {
             ModConfig.load();for(var p:c.getSource().getServer().getPlayerList().getPlayers()) {RaceService.apply(p);RaceNetwork.sync(p);}return 1;
         });
-        e.getDispatcher().register(Commands.literal("civitatum").then(race).then(config));
+        e.getDispatcher().register(Commands.literal("civitatum").then(race).then(SignCommands.build()).then(config));
     }
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer p)) return;
@@ -48,15 +54,21 @@ public final class ServerEvents {
             if (other != p) RaceNetwork.send(p,new RaceNetwork.Clientbound(0,other.getUUID(),0,other.getData(Civitatum.STATE).json()));
         if (!p.getData(Civitatum.STATE).character().selected)
             p.sendSystemMessage(Civitatum.message("welcome"));
+        else if (p.getData(Civitatum.STATE).character().birthsign.equals(BirthsignCatalog.NONE))
+            p.sendSystemMessage(Civitatum.message("sign_missing"));
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent e) { if(e.getEntity() instanceof ServerPlayer p) RaceService.logout(p); }
     @SubscribeEvent public static void respawn(PlayerEvent.PlayerRespawnEvent e) { if(e.getEntity() instanceof ServerPlayer p) { RaceService.apply(p); RaceNetwork.sync(p); } }
     @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent e) { if(e.getEntity() instanceof ServerPlayer p) { RaceService.apply(p); RaceNetwork.sync(p); } }
     @SubscribeEvent public static void clone(PlayerEvent.Clone e) {
-        if (e.getEntity() instanceof ServerPlayer p) {
-            p.setData(Civitatum.STATE,e.getOriginal().getData(Civitatum.STATE));
-            RaceAbilities.clearTransient(p);
-        }
+        if (!(e.getEntity() instanceof ServerPlayer p)) return;
+        var original = e.getOriginal();
+        p.setData(Civitatum.STATE, original.getData(Civitatum.STATE));
+        Powers.clear(p);
+        // «Тетрадь» of the mechanist: half of the levels stay. With keepInventory vanilla keeps them all anyway.
+        if (e.isWasDeath() && Traits.isRace(p, "forged")
+            && !p.serverLevel().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY))
+            p.giveExperienceLevels(original.experienceLevel / 2);
     }
     @SubscribeEvent public static void tracking(PlayerEvent.StartTracking e) {
         if(e.getEntity() instanceof ServerPlayer p && e.getTarget() instanceof ServerPlayer target)
@@ -68,10 +80,11 @@ public final class ServerEvents {
     }
     @SubscribeEvent public static void tick(PlayerTickEvent.Post e) {
         if(!(e.getEntity() instanceof ServerPlayer p)) return;
-        RaceAbilities.tick(p); MetalEating.tick(p);
-        var character=p.getData(Civitatum.STATE).character();
-        if(character.selected && character.birthsign.equals("lord") && p.tickCount%160==0 && p.getFoodData().getFoodLevel()>=6 && p.isAlive())p.heal(1);
-        if(p.tickCount % 5 == 0) RaceService.updateSpeed(p);
+        Channels.tick(p);
+        PassiveTicks.tick(p);
+        if(p.tickCount % PASSIVE_EVERY == 0) PassiveAttributes.apply(p);
+        var race = RaceService.race(p);
+        if (race != null) CompatPatches.tick(p, race);
         RaceService.enforceBoots(p);
     }
     @SubscribeEvent public static void size(EntityEvent.Size e) {
@@ -84,81 +97,14 @@ public final class ServerEvents {
         if(e.getItemStack().is(Civitatum.SHARD.get()) || e.getItemStack().is(Civitatum.MIRROR.get())) {
             e.setCanceled(true); e.setCancellationResult(InteractionResult.SUCCESS);
             if(e.getEntity() instanceof ServerPlayer p) RaceService.openCosmetic(p,e.getItemStack().getItem());
-        } else if(e.getEntity() instanceof ServerPlayer p && MetalEating.start(p,e.getHand())) {
-            e.setCanceled(true); e.setCancellationResult(InteractionResult.CONSUME);
         } else if(RaceService.forbidsBoots(e.getEntity()) && e.getItemStack().getItem() instanceof ArmorItem a && a.getEquipmentSlot() == EquipmentSlot.FEET) {
             e.setCanceled(true); e.setCancellationResult(InteractionResult.FAIL);
             if(e.getEntity() instanceof ServerPlayer p) p.displayClientMessage(RaceService.bootsMessage(p),true);
         }
     }
-    @SubscribeEvent public static void interactBlock(PlayerInteractEvent.RightClickBlock e) {
-        if(e.getLevel().isClientSide && !e.getEntity().isShiftKeyDown() && e.getEntity().canEat(false)
-            && "forged".equals(e.getEntity().getData(Civitatum.STATE).character().race)
-            && e.getEntity().getData(Civitatum.STATE).character().selected && MetalEating.food(e.getItemStack())!=null) {
-            e.setCanceled(true);e.setCancellationResult(InteractionResult.CONSUME);
-        }
-        if(e.getEntity() instanceof ServerPlayer p && !p.isShiftKeyDown() && MetalEating.start(p,e.getHand())) {
-            e.setCanceled(true); e.setCancellationResult(InteractionResult.CONSUME);
-        }
-    }
-    @SubscribeEvent public static void useFood(LivingEntityUseItemEvent.Start e) {
-        if(e.getEntity() instanceof Player p && "forged".equals(p.getData(Civitatum.STATE).character().race)
-            && p.getData(Civitatum.STATE).character().selected && e.getItem().get(DataComponents.FOOD) != null) {
-            e.setCanceled(true);
-            if(p instanceof ServerPlayer sp) sp.displayClientMessage(Civitatum.message("forged_food"),true);
-        }
-    }
-    @SubscribeEvent public static void ate(LivingEntityUseItemEvent.Finish e) {
-        if(e.getEntity() instanceof ServerPlayer p && "hobbit".equals(p.getData(Civitatum.STATE).character().race)) {
-            var food=e.getItem().get(DataComponents.FOOD);
-            if(food!=null) p.getFoodData().setSaturation(Math.min(p.getFoodData().getFoodLevel(),p.getFoodData().getSaturationLevel()+food.saturation()*.2f));
-        }
-    }
-    @SubscribeEvent public static void attack(AttackEntityEvent e) { if(e.getEntity() instanceof ServerPlayer p) RaceAbilities.attacked(p); }
-    @SubscribeEvent public static void incoming(LivingIncomingDamageEvent e) {
-        float factor=1;
-        var source=e.getSource();
-        if(e.getEntity() instanceof ServerPlayer p) {
-            var r=RaceService.race(p);
-            if(r!=null) {
-                String sign=p.getData(Civitatum.STATE).character().birthsign;
-                if(source.is(DamageTypeTags.IS_FIRE) && sign.equals("lord"))factor*=1.25f;
-                if(source.is(DamageTypeTags.IS_FALL) && sign.equals("thief"))factor*=.9f;
-                if(source.is(DamageTypeTags.IS_FALL) && java.util.List.of("astral_elf","goblin","hobbit","forest_algnor","city_algnor").contains(r.id)) factor*=.8f;
-                boolean fire=source.is(DamageTypeTags.IS_FIRE);
-                if(fire) factor*=switch(r.id) { case "fire_dragonborn" -> .75f; case "frost_dragonborn","jahar" -> 1.25f; case "end_dragonborn" -> 1.15f; default -> 1; };
-                if(source.is(DamageTypes.FREEZE)) factor*=r.id.equals("fire_dragonborn") ? 1.25f : r.id.equals("frost_dragonborn") ? .5f : 1;
-                if(source.is(DamageTypes.LIGHTNING_BOLT) && r.id.equals("storm_dragonborn")) factor*=.5f;
-                if(source.is(DamageTypes.DROWN) && r.id.equals("storm_dragonborn")) factor*=1.2f;
-                if(source.is(DamageTypeTags.IS_PROJECTILE) && r.id.equals("end_dragonborn")) factor*=.85f;
-            }
-        }
-        if(source.getEntity() instanceof ServerPlayer attacker) {
-            var r=RaceService.race(attacker);
-            if(r!=null) {
-                boolean melee=source.is(DamageTypes.PLAYER_ATTACK);
-                if(melee && attacker.getData(Civitatum.STATE).character().birthsign.equals("warrior"))factor*=1.1f;
-                if(melee && r.id.equals("orc")) factor*=1.1f;
-                if(melee && r.id.equals("firbolg")) factor*=.9f;
-                if(r.id.equals("orc") && (source.getDirectEntity() instanceof net.minecraft.world.entity.projectile.AbstractArrow)) factor*=.9f;
-            }
-        }
-        e.setAmount(e.getAmount()*factor);
-    }
-    @SubscribeEvent public static void damaged(LivingDamageEvent.Post e) { if(e.getEntity() instanceof ServerPlayer p && e.getNewDamage()>0) RaceAbilities.hurt(p); }
-    @SubscribeEvent public static void death(LivingDeathEvent e) {
-        if(e.getEntity() instanceof ServerPlayer p) {
-            var state=p.getData(Civitatum.STATE);
-            if(state.character().selected && state.character().race.equals("jahar") && e.getSource().is(DamageTypeTags.IS_FIRE)) {
-                p.setData(Civitatum.STATE,new RaceState(state.character(),state.curseDeaths()+1,state.cooldownUntil()));
-                p.sendSystemMessage(Civitatum.message("jahar_curse"));
-            }
-            RaceAbilities.clearTransient(p); MetalEating.logout(p);
-        }
+    /** Last: the Ancestor's reprieve may still cancel the death. */
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST) public static void death(LivingDeathEvent e) {
+        if(!e.isCanceled() && e.getEntity() instanceof ServerPlayer p) Powers.clear(p);
     }
     @SubscribeEvent public static void target(LivingChangeTargetEvent e) { CompatPatches.target(e); }
-    @SubscribeEvent public static void vibration(VanillaGameEvent e) {
-        if(e.getVanillaEvent() == net.minecraft.world.level.gameevent.GameEvent.STEP
-            && e.getCause() instanceof Player p && RaceAbilities.silentSteps(p)) e.setCanceled(true);
-    }
 }

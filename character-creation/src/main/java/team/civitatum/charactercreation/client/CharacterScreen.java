@@ -192,7 +192,7 @@ public final class CharacterScreen extends Screen {
         String content = I18n.get(r.key("description")) + "\n\n+ " + I18n.get(r.key("positive"))
             + "\n− " + I18n.get(r.key("negative"));
         if (r.hasAbility())
-            content += "\n\n" + I18n.get(r.key("ability")) + "\n" + t("cost", r.magic && net.neoforged.fml.ModList.get().isLoaded("ars_nouveau") ? t("cost.mana") : t("cost.food", r.food), r.cooldown);
+            content += "\n\n" + I18n.get(r.key("ability")) + "\n" + t("cooldown", r.cooldown / 60);
         var lines = font.split(Component.literal(content), 192);
         int visible = 13;
         portraitScroll = Math.clamp(portraitScroll, 0, Math.max(0, lines.size() - visible));
@@ -208,9 +208,10 @@ public final class CharacterScreen extends Screen {
     }
 
     private void selectRace(String id) {
-        String name = draft.name;
+        String name = draft.name, sign = draft.birthsign;
         draft = RaceCatalog.defaults(id, draft.sex);
         draft.name = name;
+        draft.birthsign = sign;
         portraitScroll = 0;
     }
 
@@ -322,14 +323,22 @@ public final class CharacterScreen extends Screen {
             case 5 -> bust(g, r);
             case 6 -> clothing(g);
             case 11 -> {
-                var signs = BirthsignCatalog.all();
+                // One sign for good: a saved sign is shown, not offered ("Сменить знак нельзя").
+                boolean locked = !initial.birthsign.equals(BirthsignCatalog.NONE);
+                var signs = new ArrayList<>(BirthsignCatalog.months());
+                signs.add(BirthsignCatalog.get(BirthsignCatalog.LOT));
                 for (int i = 0; i < signs.size(); i++) {
                     var sign = signs.get(i);
-                    button(716, 178 + i * 26, 211, 23, I18n.get(sign.key("name")), mode.body(), () -> draft.birthsign = sign.id(), draft.birthsign.equals(sign.id()));
+                    button(716 + i % 2 * 108, 176 + i / 2 * 26, 103, 23, I18n.get(sign.key("name")),
+                        mode.body() && !locked, () -> draft.birthsign = sign.id(), draft.birthsign.equals(sign.id()));
                 }
                 var sign = BirthsignCatalog.get(draft.birthsign);
-                g.fill(714, 370, 932, 518, 0x80201710);
-                wrapped(g, I18n.get(sign.key("description")) + "\n\n" + I18n.get(sign.key("effect")), 722, 381, 200, INK, 12);
+                g.fill(714, 364, 932, 518, 0x80201710);
+                String text = I18n.get(sign.key("name")) + "\n" + I18n.get(sign.key("description")) + "\n\n"
+                    + I18n.get(sign.key("effect"));
+                if (sign.hasPower()) text += "\n" + I18n.get(sign.key("power_text"));
+                if (locked) text += "\n\n" + t("sign_locked");
+                wrapped(g, text, 722, 372, 200, INK, 13);
             }
         }
     }

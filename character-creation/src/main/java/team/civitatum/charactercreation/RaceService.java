@@ -7,6 +7,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.*;
 import net.minecraft.core.Holder;
+import team.civitatum.charactercreation.power.PassiveAttributes;
+import team.civitatum.charactercreation.power.Powers;
 
 public final class RaceService {
     private record Edit(long token, EditorMode mode, net.minecraft.world.item.Item item, long expires) {}
@@ -29,7 +31,7 @@ public final class RaceService {
     }
     public static void naked(ServerPlayer p,boolean value) {
         var state=p.getData(Civitatum.STATE);if(!state.character().selected)return;
-        var c=state.character().copy();c.naked=value;p.setData(Civitatum.STATE,new RaceState(c,state.curseDeaths(),state.cooldownUntil()));RaceNetwork.sync(p);
+        var c=state.character().copy();c.naked=value;p.setData(Civitatum.STATE,state.withCharacter(c));RaceNetwork.sync(p);
         p.displayClientMessage(Civitatum.message(value?"clothing_hidden":"clothing_shown"),true);
     }
     public static void cancel(ServerPlayer p, long token) {
@@ -38,8 +40,10 @@ public final class RaceService {
     }
     public static void reset(ServerPlayer p) {
         var previous=p.getData(Civitatum.STATE);
-        EDITS.remove(p.getUUID());RaceAbilities.clearTransient(p);MetalEating.logout(p);
-        p.setData(Civitatum.STATE,new RaceState(new CharacterData(),previous.curseDeaths(),previous.cooldownUntil()));
+        EDITS.remove(p.getUUID());Powers.clear(p);
+        // A new character: its sky may be rewritten again and it has no mark; the clocks of the powers go on.
+        p.setData(Civitatum.STATE,new RaceState(new CharacterData(),previous.cooldownUntil(),previous.signCooldownUntil(),
+            0,false,0,null));
         apply(p);p.refreshDisplayName();RaceNetwork.sync(p);
         p.sendSystemMessage(Civitatum.message("race_reset"));
     }
@@ -62,6 +66,8 @@ public final class RaceService {
             CharacterData c = RaceCatalog.validate(Civitatum.GSON.fromJson(json, CharacterData.class));
             c.selected = true;
             RaceState previous = p.getData(Civitatum.STATE);
+            boolean lot = c.birthsign.equals(BirthsignCatalog.LOT);
+            c.birthsign = SignChoice.resolve(previous.character(), c.birthsign, edit.mode, RANDOM.nextDouble());
             AppearanceRules.check(previous.character(),c,edit.mode);
             boolean changed = !DataJson.GSON.toJsonTree(previous.character()).equals(DataJson.GSON.toJsonTree(c));
             if (edit.item!=null && changed && !p.isCreative()) {
@@ -71,8 +77,10 @@ public final class RaceService {
                 if (slot < 0) throw new IllegalArgumentException(Civitatum.ERROR + "item_missing");
                 p.getInventory().getItem(slot).shrink(1);
             }
-            if (edit.mode==EditorMode.CREATE) RaceAbilities.clearTransient(p);
-            p.setData(Civitatum.STATE, new RaceState(c, previous.curseDeaths(), previous.cooldownUntil()));
+            if (edit.mode==EditorMode.CREATE) Powers.clear(p);
+            p.setData(Civitatum.STATE, previous.withCharacter(c));
+            if (lot) p.sendSystemMessage(Civitatum.message("sign_drawn",
+                Component.translatable(BirthsignCatalog.get(c.birthsign).key("name"))));
             EDITS.remove(p.getUUID());
             apply(p); enforceBoots(p); p.refreshDisplayName(); RaceNetwork.sync(p);
             RaceNetwork.send(p, new RaceNetwork.Clientbound(3, p.getUUID(), token, "message.civitatum.saved"));
@@ -84,48 +92,13 @@ public final class RaceService {
     public static void apply(ServerPlayer p) {
         RaceDefinition r = race(p);
         var state = p.getData(Civitatum.STATE);
-        float hp = r == null ? 20 : switch (r.id) {
-            case "dwarf","firbolg","orthosian" -> 24;
-            case "orc" -> 22;
-            case "goblin" -> 16;
-            case "hobbit","astral_elf","dark_elf","night_elf","wood_elf" -> 18;
-            case "jahar" -> Math.max(ModConfig.INSTANCE.jaharHealthFloor, 20 - 2 * state.curseDeaths());
-            default -> 20;
-        };
-        modifier(p, Attributes.MAX_HEALTH, "health", hp - 20, AttributeModifier.Operation.ADD_VALUE);
-        modifier(p, Attributes.ARMOR, "armor", r != null && (r.dragon() || r.id.equals("forged")) ? 2 : 0, AttributeModifier.Operation.ADD_VALUE);
-        modifier(p, Attributes.KNOCKBACK_RESISTANCE, "knockback",
-            r == null ? 0 : r.id.equals("forged") ? .30 : List.of("dwarf","orthosian").contains(r.id) ? .15 : 0, AttributeModifier.Operation.ADD_VALUE);
         double scale = r == null ? 1 : state.character().height / 1.8;
         // Native SCALE supplies the race contribution once, including the physical dimensions.
         modifier(p, Attributes.SCALE, "scale", scale - 1, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         modifier(p, Attributes.BLOCK_INTERACTION_RANGE, "block_reach", scale - 1, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         modifier(p, Attributes.ENTITY_INTERACTION_RANGE, "entity_reach", scale - 1, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        modifier(p,Attributes.MAX_HEALTH,"birthsign_health",r!=null && state.character().birthsign.equals("lady")?4:0,AttributeModifier.Operation.ADD_VALUE);
-        modifier(p,Attributes.LUCK,"birthsign_luck",r!=null && state.character().birthsign.equals("thief")?1:0,AttributeModifier.Operation.ADD_VALUE);
-        updateSpeed(p);
-        if (p.getHealth() > p.getMaxHealth()) p.setHealth(p.getMaxHealth());
+        PassiveAttributes.apply(p);
         p.refreshDimensions();
-    }
-    public static void updateSpeed(ServerPlayer p) {
-        RaceDefinition r = race(p);
-        double speed = r == null ? 0 : switch(r.id) {
-            case "dwarf" -> -.08;
-            case "forged" -> -.05;
-            case "goblin" -> .10;
-            case "wood_elf" -> p.onGround() ? .08 : 0;
-            case "dark_elf" -> p.level().getMaxLocalRawBrightness(p.blockPosition()) <= 7 ? .10 : 0;
-            case "night_elf" -> p.level().dimensionType().hasSkyLight() && !p.level().dimensionType().hasFixedTime()
-                && p.level().getDayTime() % 24000 >= 13000 && p.level().getDayTime() % 24000 <= 23000 ? .10 : 0;
-            case "forest_algnor" -> isForest(p) ? .10 : 0;
-            default -> 0;
-        };
-        modifier(p, Attributes.MOVEMENT_SPEED, "speed", speed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        modifier(p,Attributes.MOVEMENT_SPEED,"birthsign_speed",r!=null && p.getData(Civitatum.STATE).character().birthsign.equals("steed")?.10:0,AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-    }
-    private static boolean isForest(ServerPlayer p) {
-        String key = p.level().getBiome(p.blockPosition()).unwrapKey().map(k -> k.location().toString()).orElse("");
-        return key.startsWith("minecraft:") && (key.contains("forest") || key.contains("taiga") || key.contains("grove"));
     }
     public static void modifier(ServerPlayer p, Holder<Attribute> attribute, String id, double amount, AttributeModifier.Operation operation) {
         var instance = p.getAttribute(attribute);
@@ -150,5 +123,5 @@ public final class RaceService {
         if (!p.getInventory().add(boots)) p.drop(boots, false);
         p.displayClientMessage(bootsMessage(p), true);
     }
-    public static void logout(ServerPlayer p) { EDITS.remove(p.getUUID()); RaceAbilities.logout(p); MetalEating.logout(p); }
+    public static void logout(ServerPlayer p) { EDITS.remove(p.getUUID()); Powers.logout(p); }
 }

@@ -23,7 +23,7 @@ class AppearanceTest {
   var c=RaceCatalog.defaults("human","female");AppearanceCatalog.outfit(c,"many_layers");
   c.hairAsset="ombre_wreath";c.hairMain=2;c.hairDecor1=3;c.hairDecor2=4;
   c.wardrobe.get("coat").main=2;c.wardrobe.get("coat").decor1=4;c.wardrobe.get("boots").main=3;
-  var saved=RaceState.read(new RaceState(c,0,0).json()).character();
+  var saved=RaceState.read(RaceState.of(c).json()).character();
   assertEquals(DataJson.GSON.toJsonTree(c),DataJson.GSON.toJsonTree(saved));assertEquals(DataJson.GSON.toJsonTree(c),DataJson.GSON.toJsonTree(RaceCatalog.validate(saved)));
   assertEquals(4,saved.hairDecor2);assertEquals(4,saved.wardrobe.get("coat").decor1);assertEquals(3,saved.wardrobe.get("boots").main);
  }

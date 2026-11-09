@@ -4,8 +4,9 @@ public final class RaceDefinition {
     /** Texts live in the lang files under {@link #key}: name, description, positive, negative, ability, ability_name. */
     public String id, parent;
     public float minHeight, maxHeight;
-    public int food, cooldown;
-    public boolean magic, pointedEars, hornsAllowed, hornsRequired, tailAllowed, beardAllowed, hairAllowed = true;
+    /** Seconds before the racial power works again; "1/сутки" is a game day, 1200 s. */
+    public int cooldown;
+    public boolean pointedEars, hornsAllowed, hornsRequired, tailAllowed, beardAllowed, hairAllowed = true;
     public boolean bootsAllowed = true;
     public String[] skinColors, hairColors, eyeColors, hornColors, tattooColors;
     public int[] earStyles, hornStyles;

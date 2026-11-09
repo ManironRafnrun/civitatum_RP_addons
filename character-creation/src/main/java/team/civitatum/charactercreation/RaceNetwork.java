@@ -8,6 +8,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import team.civitatum.charactercreation.power.RacePowers;
+import team.civitatum.charactercreation.power.SignPowers;
 
 public final class RaceNetwork {
     public record Clientbound(int kind, UUID player, long token, String data) implements CustomPacketPayload {
@@ -33,7 +35,9 @@ public final class RaceNetwork {
             if (!(c.player() instanceof ServerPlayer player)) return;
             switch (p.action) {
                 case 0 -> RaceService.save(player, p.token, p.data);
-                case 1 -> RaceAbilities.activate(player);
+                case 1 -> RacePowers.activate(player);
+                case 4 -> RacePowers.release(player);
+                case 6 -> SignPowers.activate(player);
                 case 2 -> RaceService.openWithShard(player);
                 case 3 -> RaceService.cancel(player, p.token);
                 default -> {}

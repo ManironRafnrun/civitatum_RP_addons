@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 /** Client extension point; providers must activate through their own server-validated protocol. */
 public final class AbilitySelection {
     public static final String RACIAL_GIFT = "civitatum:racial_gift";
+    public static final String SIGN_POWER = "civitatum:sign_power";
     /** Ticks are shown as whole seconds, rounded up: 1 tick left still reads as 1 second. */
     private static final int TICKS_PER_SECOND = 20;
 
@@ -30,11 +31,15 @@ public final class AbilitySelection {
         var race = RacesBridge.read(player);
         if (race != null && !race.ability().isBlank()) {
             var description = List.of(Component.literal(race.race()), Component.literal(race.ability()),
-                CivitatumInventoryScreen.tr("cost", race.food()), remaining(race.remainingTicks()));
+                remaining(race.remainingTicks()));
             result.add(new Ability(RACIAL_GIFT, Component.literal(race.ability()), new ItemStack(Items.NETHER_STAR),
-                description,
-                () -> race.remainingTicks() == 0 && player.getFoodData().getFoodLevel() >= race.food(),
-                RacesBridge::activate));
+                description, () -> race.remainingTicks() == 0, RacesBridge::activate));
+        }
+        if (race != null && !race.signPower().isBlank()) {
+            var description = List.of(Component.literal(race.sign()), Component.literal(race.signPower()),
+                remaining(race.signRemainingTicks()));
+            result.add(new Ability(SIGN_POWER, Component.literal(race.signPower()), new ItemStack(Items.CLOCK),
+                description, () -> race.signRemainingTicks() == 0, RacesBridge::activateSign));
         }
         for (var provider : providers.values()) result.addAll(provider.apply(player));
         return result;

@@ -3,7 +3,24 @@ plugins {
     id 'net.neoforged.moddev'
 }
 
+repositories {
+    // LambDynamicLights' own maven: its API with mojmap names; yumi-commons-event is a part of that API
+    maven {
+        url = 'https://maven.gegy.dev/releases'
+        content {
+            includeGroup 'dev.lambdaurora.lambdynamiclights'
+            includeGroup 'dev.yumi.commons'
+        }
+    }
+}
+
 dependencies {
+    // Optional at runtime: only client.StarlightCompat touches it, and LambDynamicLights loads that class itself
+    // through the entry point in neoforge.mods.toml, so without the mod the class is never loaded.
+    compileOnly('dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:4.8.11+1.21.1:mojmap') {
+        transitive = false
+    }
+    compileOnly('dev.yumi.commons:yumi-commons-event:1.0.0') { transitive = false }
     testImplementation 'com.google.code.gson:gson:2.10.1'
     testImplementation 'com.mojang:datafixerupper:8.0.16'
 }
