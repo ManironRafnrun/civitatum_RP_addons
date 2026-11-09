@@ -98,7 +98,7 @@ public final class CharacterLayer extends RenderLayer<AbstractClientPlayer, Play
         var glow = SkinTemplates.glow(texture);
         if (glow != null)
             getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.eyes(glow)), 0xF000F0, OverlayTexture.NO_OVERLAY);
-        if (c.female() && c.bust > 0 && !r.id.equals("forged") && (!FemaleGenderBridge.available() || ClientCharacters.isPreview(p))
+        if (c.female() && c.bust > 0 && !r.id.equals("forged") && !FemaleGenderBridge.available()
                 && (p.getItemBySlot(EquipmentSlot.CHEST).isEmpty() || c.showInArmor)) {
             pose.pushPose();
             getParentModel().body.translateAndRotate(pose);

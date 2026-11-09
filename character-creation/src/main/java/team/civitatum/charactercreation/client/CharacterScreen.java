@@ -424,7 +424,9 @@ public final class CharacterScreen extends Screen {
             number(g, t("bounce"), 190, draft.bounce, .025f, 0, .5f, n -> draft.bounce = n, enabled);
             number(g, t("floppiness"), 240, draft.floppiness, .05f, .25f, 1, n -> draft.floppiness = n, enabled);
             button(716, 305, 211, 24, t("armor_physics", yes(draft.armorPhysics)), enabled, () -> draft.armorPhysics = !draft.armorPhysics);
-            button(716, 350, 211, 24, t("basic_settings"), true, () -> breastAdvanced = false);
+            button(716, 335, 211, 24, t("hurt_sounds", yes(draft.hurtSounds)), enabled,
+                    () -> draft.hurtSounds = !draft.hurtSounds);
+            button(716, 380, 211, 24, t("basic_settings"), true, () -> breastAdvanced = false);
             return;
         }
         number(g, t("bust_size"), 185, draft.bust, .05f, 0, .8f, n -> draft.bust = n, enabled);
@@ -537,6 +539,7 @@ public final class CharacterScreen extends Screen {
                 d.armorPhysics = source.armorPhysics;
                 d.showInArmor = source.showInArmor;
                 d.uniboob = source.uniboob;
+                d.hurtSounds = source.hurtSounds;
             }
             case 11 -> d.birthsign = source.birthsign;
             default -> {

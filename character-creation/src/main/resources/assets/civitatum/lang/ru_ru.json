@@ -91,6 +91,7 @@
   "screen.civitatum.bounce": "Подвижность",
   "screen.civitatum.floppiness": "Мягкость",
   "screen.civitatum.armor_physics": "Физика под бронёй: %s",
+  "screen.civitatum.hurt_sounds": "Женские звуки урона: %s",
   "screen.civitatum.basic_settings": "Основные настройки",
   "screen.civitatum.bust_size": "Размер груди",
   "screen.civitatum.offset_x": "Смещение X",

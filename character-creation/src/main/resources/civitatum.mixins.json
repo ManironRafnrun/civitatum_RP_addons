@@ -12,7 +12,9 @@
     "PlayerRendererMixin",
     "PlayerModelMixin",
     "ClientPlayerSkinMixin",
-    "FemaleGenderPreviewMixin"
+    "FemaleGenderPreviewMixin",
+    "FemaleGenderSyncMixin",
+    "FemaleGenderConfigMixin"
   ],
   "injectors": {
     "defaultRequire": 1

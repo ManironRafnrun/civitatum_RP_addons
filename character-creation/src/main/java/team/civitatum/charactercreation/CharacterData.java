@@ -24,7 +24,7 @@ public final class CharacterData {
     public float earPitch, earYaw, earRoll, earOffset, hornPitch, hornYaw, hornRoll, hornOffset, hornSize = 1;
     public boolean hornOnForehead;
     public float bust = .6f, bustX, bustY, bustZ, cleavage, bounce = .333f, floppiness = .75f;
-    public boolean breastPhysics = true, uniboob = true, showInArmor = true, armorPhysics;
+    public boolean breastPhysics = true, uniboob = true, showInArmor = true, armorPhysics, hurtSounds = true;
     public CharacterData copy() { return DataJson.GSON.fromJson(DataJson.GSON.toJson(this), CharacterData.class); }
     public boolean female() { return "female".equals(sex); }
     public String json() { return DataJson.GSON.toJson(this); }

@@ -91,6 +91,7 @@
   "screen.civitatum.bounce": "Bounce",
   "screen.civitatum.floppiness": "Floppiness",
   "screen.civitatum.armor_physics": "Physics under armour: %s",
+  "screen.civitatum.hurt_sounds": "Female hurt sounds: %s",
   "screen.civitatum.basic_settings": "Basic settings",
   "screen.civitatum.bust_size": "Bust size",
   "screen.civitatum.offset_x": "Offset X",
