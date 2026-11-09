@@ -42,7 +42,7 @@ Jar: `starclock/build/libs/civitatum-starclock-0.1.0.jar`.
 
 ```sh
 ./gradlew :starclock:generateArt        # созвездия, карты, фон, искра, значки (TEXTURES.md)
-./gradlew :starclock:generateTextures   # иконки предметов и атласы моделей (TEXTURES.md)
+./gradlew :starclock:generateTextures   # значок ключа и атласы моделей (иконки инструментов рисованные, TEXTURES.md)
 ./gradlew :starclock:generateSounds     # звуки обряда, нужен ffmpeg (SOUNDS.md)
 ```
 

@@ -4,7 +4,7 @@
 
 Генераторы детерминированные: вывод не зависит от времени и случайного состояния.
 
-Иконки предметов (`item/`) и атласы моделей (`model/`) рисует Java-генератор `src/tools/java/.../tools/textures/TextureGenerator.java`: `./gradlew :starclock:generateTextures`. Результат лежит в `src/main/resources` и хранится в репозитории. Генератор — перенос `tools/generate_textures.py`; совпадает с ним попиксельно.
+Иконки колод, секстантов, чаш и колец (`item/deck_*`, `sextant_*`, `bowl_*`, `ring_*`) нарисованы вручную и хранятся в репозитории как есть: медь — ступень 1, серебро — 2, золото — 3. Генератор их больше не пишет. Значок `item/tower_key.png` и атласы моделей (`model/`) рисует Java-генератор `src/tools/java/.../tools/textures/TextureGenerator.java`: `./gradlew :starclock:generateTextures`. Результат лежит в `src/main/resources` и хранится в репозитории. Генератор — перенос `tools/generate_textures.py`; совпадает с ним попиксельно (кроме иконок инструментов, которые он больше не пишет).
 
 Созвездия, карты, звёздное поле, искру и значки (`constellation/`, `gui/`, `particle/`) и отчёт `starclock-art.json` рисует Java-генератор `src/tools/java/.../tools/art/ArtGenerator.java` из сохранённого в репозитории `starsigns.zip`. Он извлекает цветные линии оригиналов, убирает фон, сохраняет пропорции и переводит линии в палитру мода. Результат лежит в `src/main/resources` и хранится в репозитории; после изменения архива или генератора: `./gradlew :starclock:generateArt`. Генератор — перенос `tools/generate_art.py` и нужных частей Pillow 11.3.0; на текущем архиве совпадает с ним попиксельно.
 

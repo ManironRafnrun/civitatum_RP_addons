@@ -5,8 +5,9 @@ import java.nio.file.Path;
 import team.civitatum.starclock.tools.art.PngFiles;
 
 /**
- * Java port of tools/generate_textures.py: the inventory sprites and the model atlases. Pixels match the Python
- * generator (Pillow 11.3.0); the PNG encoding does not.
+ * Java port of tools/generate_textures.py: the tower key sprite and the model atlases. Pixels match the Python
+ * generator (Pillow 11.3.0); the PNG encoding does not. The icons of the deck, sextant, bowl and ring are drawn by
+ * hand now and kept in the repository; the generator no longer writes them, so a run does not put back the old ones.
  *
  * <p>usage: {@code TextureGenerator --output <resources dir>}
  */
@@ -19,11 +20,8 @@ public final class TextureGenerator {
 
     public static void generate(Path output) throws IOException {
         var items = output.resolve("assets/starclock/textures/item");
-        for (String kind : ItemSprites.TOOLS)
-            for (int tier = 1; tier <= 3; tier++)
-                PngFiles.writeRgba(ItemSprites.tool(kind, tier), items.resolve(kind + "_" + tier + ".png"));
         PngFiles.writeRgba(ItemSprites.towerKey(), items.resolve("tower_key.png"));
-        System.out.println("Создано 13 текстур в " + items);
+        System.out.println("Создана 1 текстура в " + items);
         var models = output.resolve("assets/starclock/textures/model");
         for (String kind : ItemSprites.TOOLS)
             PngFiles.writeRgba(ModelAtlases.atlas(kind), models.resolve(kind + ".png"));
