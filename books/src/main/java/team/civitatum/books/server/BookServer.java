@@ -19,6 +19,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.entity.LecternBlockEntity;
 import net.minecraft.world.level.storage.LevelResource;
+import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
@@ -46,6 +47,11 @@ public final class BookServer {
     private static final int OFFHAND_SLOT = 40;
     /** A lectern can be used from at most 8 blocks away. */
     private static final double LECTERN_REACH_SQR = 8 * 8;
+    /**
+     * The shared library in the config folder, read in every world of the server (see BookStore): books a pack or a
+     * server ships, such as the notes quest rewards hand out, are not tied to the world they were written in.
+     */
+    private static final String LIBRARY = "civitatum_books";
     private static MinecraftServer currentServer;
     private static BookStore store;
 
@@ -85,7 +91,8 @@ public final class BookServer {
 
     private static BookStore storage(MinecraftServer server) throws IOException {
         if (server != currentServer) {
-            store = new BookStore(server.getWorldPath(LevelResource.ROOT).resolve("data/civitatum_books"));
+            store = new BookStore(server.getWorldPath(LevelResource.ROOT).resolve("data/civitatum_books"),
+                    FMLPaths.CONFIGDIR.get().resolve(LIBRARY));
             currentServer = server;
             SESSIONS.clear();
         }

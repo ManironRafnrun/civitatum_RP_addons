@@ -35,6 +35,34 @@ class StorageAndUploadTest {
     }
 
     @Test
+    void sharedLibraryIsReadWhenTheWorldHasNoCopy() throws Exception {
+        Path library = directory.resolve("library");
+        UUID id = UUID.randomUUID();
+        BookDocument shipped = new BookDocument();
+        shipped.title = "Десять медалей";
+        new BookStore(library).write(id, shipped);
+        BookStore store = new BookStore(directory.resolve("world"), library);
+        assertEquals(shipped.json(), store.read(id).json());
+        BookDocument edited = store.read(id);
+        edited.revision++;
+        store.write(id, edited);
+        assertEquals(1, store.read(id).revision);
+        assertEquals(0, new BookStore(library).read(id).revision);
+        assertThrows(java.io.IOException.class, () -> new BookStore(directory.resolve("other"), library)
+                .read(UUID.randomUUID()));
+    }
+
+    @Test
+    void sharedLibraryImagesAreServed() throws Exception {
+        byte[] png = PngImage.normalize(png(16, 16));
+        Path library = directory.resolve("library");
+        String hash = new BookStore(library).putImage(png);
+        BookStore store = new BookStore(directory.resolve("world"), library);
+        assertTrue(store.hasImage(hash));
+        assertArrayEquals(png, store.image(hash));
+    }
+
+    @Test
     void imagesAreDeduplicatedAndTransparencyIsPreserved() throws Exception {
         byte[] png = PngImage.normalize(png(48, 32));
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(png));
